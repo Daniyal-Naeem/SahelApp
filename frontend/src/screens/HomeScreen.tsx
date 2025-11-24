@@ -49,7 +49,7 @@ const TabBarItem: React.FC<TabBarItemProps> = ({
       </View>
       {!cart && (
         <Text
-          className="font-pthin text-base"
+          className="font-mthin text-base"
           style={{color: focused ? 'red' : 'black', fontSize: 12}}>
           {name}
         </Text>

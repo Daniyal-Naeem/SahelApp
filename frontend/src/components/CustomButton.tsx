@@ -1,4 +1,4 @@
-import {View, Text, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {Text, TouchableOpacity, ActivityIndicator} from 'react-native';
 import React from 'react';
 
 type CustomButtonProps = {
@@ -14,7 +14,6 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   title,
   handlePress,
   containerStyle,
-  testStyles,
   isLoading,
   textStyle,
 }) => {
@@ -22,11 +21,11 @@ const CustomButton: React.FC<CustomButtonProps> = ({
     <TouchableOpacity
       onPress={handlePress}
       activeOpacity={0.7}
-      className={` bg-action rounded-xl w-full flex flex-row justify-center items-center ${containerStyle} ${
+      className={` bg-action rounded-lg w-full flex flex-row justify-center items-center py-3 ${containerStyle} ${
         isLoading ? 'opacity-50' : ''
       }  `}
       disabled={isLoading}>
-      <Text className={`text-white font-bold text-2xl ${textStyle} `}>
+      <Text className={`text-white font-mbold text-sm ${textStyle || ''} `}>
         {title}
       </Text>
       {isLoading && (

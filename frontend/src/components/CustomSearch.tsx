@@ -52,7 +52,7 @@ const CustomSearch: React.FC<CustomSearchProps> = ({
           placeholder={placeholder || 'Search any Product..'}
           value={query}
           onChangeText={(e: string) => setQuery(e)}
-          className="text-[#BBBBBB] flex-1 text-lg font-pregular bg-white"
+          className="text-[#BBBBBB] flex-1 text-lg font-mregular bg-white"
           placeholderTextColor={'#BBBBBB'}
           onSubmitEditing={handlePress}
         />

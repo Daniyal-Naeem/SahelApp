@@ -16,6 +16,7 @@ const menu = require('../assets/icons/menu.png');
 const mic = require('../assets/icons/mic.png');
 const offer = require('../assets/icons/offer.png');
 const profile = require('../assets/icons/profile_edit.png');
+const profileIcon = require('../assets/icons/profile.png');
 const search = require('../assets/icons/search.png');
 const setting = require('../assets/icons/setting.png');
 const show_all = require('../assets/icons/show_all.png');
@@ -49,6 +50,7 @@ export default {
   mic,
   offer,
   profile,
+  profileIcon,
   search,
   setting,
   show_all,

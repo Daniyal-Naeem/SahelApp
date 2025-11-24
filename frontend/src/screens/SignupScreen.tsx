@@ -13,11 +13,11 @@ import {icons} from '../constants';
 
 type Props = {};
 // let's go with get started first
-const SignupScreen = (props: Props) => {
+const SignupScreen = (_props: Props) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, _setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
     email: '',
     username: '',
@@ -28,25 +28,20 @@ const SignupScreen = (props: Props) => {
     ForgotPassword: undefined;
     Login: undefined;
   };
-  const handleForgotPassword = () => {
-    navigation.navigate('ForgotPassword');
-  };
-
   const handleLogin = () => {};
   const handleSignInWithProvider = () => {};
   const handleNavigateToLogin = () => {
     navigation.navigate('Login');
   };
   return (
-    <View className="px-5 flex-1 bg-white pt-5">
-      <Text className="text-4xl font-bold text-start ">
-        Create an
-        {'\n'} account
+    <View className="px-5 flex-1 bg-white pt-28">
+      <Text className="text-2xl font-msemibold mb-6">
+        Create an account
       </Text>
       <View>
         {/* text input */}
         <FormField
-          title="Email"
+          title="Username or Email"
           value={form.email}
           setError={setEmailError}
           error={emailError}
@@ -54,75 +49,77 @@ const SignupScreen = (props: Props) => {
             setEmailError('');
             setForm({...form, email: e});
           }}
-          placeholder="username or email"
-          otherStyles="my-5"
+          placeholder="Username or Email"
+          otherStyles="mb-4"
         />
         <View>
           <FormField
             title="Password"
             value={form.password}
             setError={setPasswordError}
-            error={emailError}
-            handleChangeText={(e: any) => {
-              setPasswordError('');
-              setForm({...form, password: e});
-            }}
-            placeholder="Password"
-            otherStyles="mt-5"
-          />
-          <FormField
-            title="Password"
-            value={form.confirmPassword}
-            setError={setPasswordError}
             error={passwordError}
             handleChangeText={(e: any) => {
               setPasswordError('');
               setForm({...form, password: e});
             }}
-            placeholder="ConfirmPassword"
-            otherStyles="mt-5"
+            placeholder="Password"
+            otherStyles="mb-4"
+          />
+          <FormField
+            title="Confirm Password"
+            value={form.confirmPassword}
+            setError={setPasswordError}
+            error={passwordError}
+            handleChangeText={(e: any) => {
+              setPasswordError('');
+              setForm({...form, confirmPassword: e});
+            }}
+            placeholder="Confirm Password"
+            otherStyles="mb-4"
           />
 
-          <Text className="text-[#676767] text-lg font-medium self-end">
-            By clicking the <Text className="text-red-600"> Register</Text>{' '}
-            button, you agree to the public offer
+          <Text className="text-[#676767] text-xs font-mmedium mb-4">
+            By clicking the <Text className="text-red-600">Register</Text> button, you agree to the public offer
           </Text>
         </View>
         {/* submit btn */}
         <CustomButton
-          title="Login"
+          title="Create Account"
           handlePress={handleLogin}
           isLoading={isSubmitting}
-          containerStyle="mt-7 py-5"
+          containerStyle="mb-4"
         />
         {/* or continue with  */}
-        <View className="mt-5 self-center">
-          <Text className="text-[#575757] text-lg self-center mt-5">
-            {' '}
-            - OR Continue with -{' '}
-          </Text>
-          <View className="flex flex-row items-center gap-3 mt-5 justify-between">
-            {ContinueWithData.map((item, index) => {
+        <View className="self-center">
+          <View className="flex flex-row items-center justify-center mb-3">
+            <View className="flex-1 h-px bg-gray-300" />
+            <Text className="text-[#575757] text-xs mx-3">
+              - OR Continue with -
+            </Text>
+            <View className="flex-1 h-px bg-gray-300" />
+          </View>
+          <View className="flex flex-row items-center gap-3 mb-4 justify-center">
+            {ContinueWithData.map((item) => {
               return (
                 <TouchableOpacity
                   key={item.id}
                   onPress={handleSignInWithProvider}
-                  className="rounded-full border-2 bg-red-50 border-red-500 p-4">
+                  className="rounded-full bg-white border border-gray-200 w-10 h-10 items-center justify-center shadow-sm">
                   <Image
                     source={item.image}
-                    className="w-8 h-8 "
+                    className="w-5 h-5"
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
               );
             })}
           </View>
-          <View className="flex flex-row  items-center gap-x-2 justify-center mt-8">
-            <Text className="text-[#575757] text-xl ">
+          <View className="flex flex-row items-center gap-x-1 justify-center">
+            <Text className="text-[#575757] text-sm">
               I Already Have an Account
             </Text>
             <TouchableOpacity onPress={handleNavigateToLogin}>
-              <Text className="text-xl font-bold underline text-action ">
+              <Text className="text-sm font-mbold underline text-action">
                 Login
               </Text>
             </TouchableOpacity>

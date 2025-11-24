@@ -1,6 +1,5 @@
 import {
   View,
-  Text,
   Animated,
   Image,
   TextInput,
@@ -8,7 +7,7 @@ import {
   Easing,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {icons} from '../constants';
+import {icons, images} from '../constants';
 
 type FormFieldProps = {
   title: string;
@@ -54,13 +53,16 @@ const FormField: React.FC<FormFieldProps> = ({
     if (error) {
       shake();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [error]);
 
   // get Icon source
   const getIconSource = () => {
     if (title === 'Password') return icons.lock;
     if (title === 'Email') return icons.mail;
-    return icons.user; //default one!
+    if (title === 'Username or Email') return images.user;
+    if (title === 'Confirm Password') return icons.lock;
+    return images.user; //default one!
   };
 
   return (
@@ -78,22 +80,23 @@ const FormField: React.FC<FormFieldProps> = ({
           ],
         }}
         // let's continue styling it:)
-        className={`flex flex-row items-center justify-center rounded-xl w-full h-[72px] px-4 bg-[#F3F3F3] border-2 border-[#A8A8A9] focus:border-black-200 ${
+        className={`flex flex-row items-center justify-center rounded-lg w-full h-[48px] px-3 bg-[#F5F5F5] border border-[#E5E5E5] ${
           error ? 'border border-red-600  ' : ''
         } `}>
         {/* icon => user icon, or password, or email... */}
         <Image
           source={getIconSource()}
-          className="w-8 h-8 mr-1 bg-b"
+          className="w-4 h-4 mr-2"
           resizeMode="contain"
+          tintColor="#424242"
         />
         {/* TextInput */}
         <TextInput
-          className="flex-1 text-black-100 font-semibold text-lg"
+          className="flex-1 text-black-100 font-mmedium text-sm"
           value={value}
           placeholder={placeholder}
           onChangeText={handleChangeText}
-          placeholderTextColor={'#676767'}
+          placeholderTextColor={'#9E9E9E'}
           secureTextEntry={title === 'Password' && !showPassword} // hide it if it's the password... | set showpassword to false
           onBlur={() => error && shake()}
           {...props}
@@ -105,8 +108,9 @@ const FormField: React.FC<FormFieldProps> = ({
             <Image
               // if show password is true so hide the password else show it
               source={!showPassword ? icons.eye : icons.eyeHide}
-              className="w-6 h-6"
+              className="w-5 h-5"
               resizeMode="contain"
+              tintColor="#424242"
             />
           </TouchableOpacity>
         )}
@@ -114,7 +118,7 @@ const FormField: React.FC<FormFieldProps> = ({
       {/* display the error here if there... */}
       {error && (
         <Animated.View
-          className={` text-red-500 font-pregular text-sm mt-3 self-center `}>
+          className={` text-red-500 font-mregular text-sm mt-3 self-center `}>
           {error}
         </Animated.View>
       )}

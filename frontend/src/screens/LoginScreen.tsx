@@ -13,11 +13,11 @@ import {icons} from '../constants';
 
 type Props = {};
 
-const LoginScreen = (props: Props) => {
+const LoginScreen = (_props: Props) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting] = useState(false);
   const [form, setForm] = useState({
     email: '',
     username: '',
@@ -37,14 +37,14 @@ const LoginScreen = (props: Props) => {
     navigation.navigate('Signup');
   };
   return (
-    <View className="px-5 flex-1 bg-white pt-5">
-      <Text className="text-4xl font-bold text-start ">
-        Welcome {'\n'} Back!
+    <View className="px-5 flex-1 bg-white pt-28">
+      <Text className="text-2xl font-msemibold mb-6">
+        Welcome back
       </Text>
       <View>
         {/* text input */}
         <FormField
-          title="Email"
+          title="Username or Email"
           value={form.email}
           setError={setEmailError}
           error={emailError}
@@ -52,8 +52,8 @@ const LoginScreen = (props: Props) => {
             setEmailError('');
             setForm({...form, email: e});
           }}
-          placeholder="username or email"
-          otherStyles="my-5"
+          placeholder="Username or Email"
+          otherStyles="mb-4"
         />
         <View>
           <FormField
@@ -66,10 +66,10 @@ const LoginScreen = (props: Props) => {
               setForm({...form, password: e});
             }}
             placeholder="Password"
-            otherStyles="mt-5"
+            otherStyles="mb-2"
           />
-          <TouchableOpacity onPress={handleForgotPassword}>
-            <Text className="text-red-600 text-lg font-medium self-end">
+          <TouchableOpacity onPress={handleForgotPassword} className="mb-4">
+            <Text className="text-action text-xs font-mmedium self-end">
               Forgot Password?
             </Text>
           </TouchableOpacity>
@@ -79,34 +79,37 @@ const LoginScreen = (props: Props) => {
           title="Login"
           handlePress={handleLogin}
           isLoading={isSubmitting}
-          containerStyle="mt-7 py-5"
+          containerStyle="mb-4"
         />
         {/* or continue with  */}
-        <View className="mt-5 self-center">
-          <Text className="text-[#575757] text-lg self-center mt-5">
-            {' '}
-            - OR Continue with -{' '}
-          </Text>
-          <View className="flex flex-row items-center gap-3 mt-5 justify-between">
-            {ContinueWithData.map((item, index) => {
+        <View className="self-center">
+          <View className="flex flex-row items-center justify-center mb-3">
+            <View className="flex-1 h-px bg-gray-300" />
+            <Text className="text-[#575757] text-xs mx-3">
+              - OR Continue with -
+            </Text>
+            <View className="flex-1 h-px bg-gray-300" />
+          </View>
+          <View className="flex flex-row items-center gap-3 mb-4 justify-center">
+            {ContinueWithData.map((item) => {
               return (
                 <TouchableOpacity
                   key={item.id}
                   onPress={handleSignInWithProvider}
-                  className="rounded-full border-2 bg-red-50 border-red-500 p-4">
+                  className="rounded-full bg-white border border-action w-10 h-10 items-center justify-center">
                   <Image
                     source={item.image}
-                    className="w-8 h-8 "
+                    className="w-5 h-5"
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
               );
             })}
           </View>
-          <View className="flex flex-row  items-center gap-x-2 justify-center mt-8">
-            <Text className="text-[#575757] text-xl ">Create An Account</Text>
+          <View className="flex flex-row items-center gap-x-1 justify-center">
+            <Text className="text-[#575757] text-sm">Create An Account</Text>
             <TouchableOpacity onPress={handleNavigateToSignUp}>
-              <Text className="text-xl font-bold underline text-action ">
+              <Text className="text-sm font-mbold underline text-action">
                 Sign Up
               </Text>
             </TouchableOpacity>

@@ -13,6 +13,7 @@ import {
   ProductsDetailsScreen,
   ProfileScreen,
   SignupScreen,
+  SplashScreen,
 } from './src/screens';
 import GetStartedScreen from './src/screens/GetStartedScreen';
 import {ItemDetails} from './src/constants/types';
@@ -33,10 +34,32 @@ export type RouteStackParamList = {
   ProductDetails: {itemDetails: ItemDetails} | undefined;
 };
 
+const Drawer = createDrawerNavigator();
+
+const DrawerNavigator = () => (
+  <Drawer.Navigator
+    screenOptions={{
+      headerShown: false,
+      drawerType: 'front',
+      swipeEdgeWidth: 80,
+    }}>
+    <Drawer.Screen
+      name="Dashboard"
+      component={HomeScreen}
+      options={{title: 'Home'}}
+    />
+    <Drawer.Screen
+      name="ProfileDrawer"
+      component={ProfileScreen}
+      options={{title: 'Profile'}}
+    />
+  </Drawer.Navigator>
+);
+
 const App = () => {
   const Stack = createNativeStackNavigator<RouteStackParamList>();
-  const Drawer = createDrawerNavigator();
   const [showOnboarded, setShowOnboarded] = useState<boolean | null>(null);
+  const [showSplash, setShowSplash] = useState<boolean>(true);
 
   useEffect(() => {
     checkIfAlreadyOnboarded();
@@ -55,6 +78,14 @@ const App = () => {
     }
   };
 
+  const handleSplashFinish = () => {
+    setShowSplash(false);
+  };
+
+  if (showSplash) {
+    return <SplashScreen onFinish={handleSplashFinish} />;
+  }
+
   if (showOnboarded === null) {
     return (
       <View className="flex flex-1 justify-center items-center">
@@ -62,25 +93,6 @@ const App = () => {
       </View>
     );
   }
-  const DrawerNavigator = () => (
-    <Drawer.Navigator
-      screenOptions={{
-        headerShown: false,
-        drawerType: 'front',
-        swipeEdgeWidth: 80,
-      }}>
-      <Drawer.Screen
-        name="Dashboard"
-        component={HomeScreen}
-        options={{title: 'Home'}}
-      />
-      <Drawer.Screen
-        name="ProfileDrawer"
-        component={ProfileScreen}
-        options={{title: 'Profile'}}
-      />
-    </Drawer.Navigator>
-  );
 
   return (
     <ProductsProvider>

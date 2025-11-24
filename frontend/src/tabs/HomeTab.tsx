@@ -54,7 +54,7 @@ const HomeTab = (props: Props) => {
         <Image source={icons.menu} className="w-8 h-8" resizeMode="contain" />
 
         <Image
-          source={images.logo}
+          source={images.newSplash}
           className="w-24 h-24"
           resizeMode="contain"
         />

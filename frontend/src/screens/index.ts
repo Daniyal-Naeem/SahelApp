@@ -7,6 +7,7 @@ import PlaceOrder from './PlaceOrder';
 import ProfileScreen from './ProfileScreen';
 import SignupScreen from './SignupScreen';
 import ProductsDetailsScreen from './ProductsDetailsScreen';
+import SplashScreen from './SplashScreen';
 export {
   CheckoutScreen,
   ForgotPasswordScreen,
@@ -16,5 +17,6 @@ export {
   PlaceOrder,
   ProfileScreen,
   SignupScreen,
-  ProductsDetailsScreen
+  ProductsDetailsScreen,
+  SplashScreen,
 };
