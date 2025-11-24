@@ -1,0 +1,24 @@
+diff --git a/node_modules/nativewind/dist/postcss/extract-styles.js b/node_modules/nativewind/dist/postcss/extract-styles.js
+index 2af8d00..64c5cb2 100644
+--- a/node_modules/nativewind/dist/postcss/extract-styles.js
++++ b/node_modules/nativewind/dist/postcss/extract-styles.js
+@@ -8,6 +8,7 @@ const postcss_1 = __importDefault(require("postcss"));
+ const tailwindcss_1 = __importDefault(require("tailwindcss"));
+ const postcss_2 = __importDefault(require("../postcss"));
+ const serialize_1 = require("./serialize");
++const deasync = require("deasync");
+ function extractStyles(tailwindConfig, cssInput = "@tailwind components;@tailwind utilities;") {
+     let errors = [];
+     let output = {
+@@ -29,7 +30,10 @@ function extractStyles(tailwindConfig, cssInput = "@tailwind components;@tailwin
+             },
+         }),
+     ];
+-    (0, postcss_1.default)(plugins).process(cssInput).css;
++    const processor = (0, postcss_1.default)(plugins);
++    const result = deasync((cb) => {
++        processor.process(cssInput, { from: undefined }).then(() => cb()).catch(cb);
++    })();
+     return {
+         ...(0, serialize_1.serializer)(output),
+         errors,
