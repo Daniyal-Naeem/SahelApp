@@ -31,8 +31,7 @@ Follow these steps to set up the project locally on your machine.
 **Cloning the Repository**
 
 ```bash
-git clone https://github.com/Abdullah0Dev/stylish.git
-cd stylish
+git clone https://github.com/DaniyalNaeemRopstam/SahelApp.git
 ```
 
 
