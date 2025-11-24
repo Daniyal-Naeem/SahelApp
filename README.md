@@ -76,6 +76,6 @@ Open the app on your simulator or real device to view the project.
 Find all assets [here](https://drive.google.com/drive/folders/1L1rxpyGG27UXTISyfPVtNuSHLIEc08FV?usp=sharing).
 
 ## <a name="links">🔗 Links</a>
-- **🎨 Design** : [Figma App Desing✍](https://www.figma.com/design/r2oLfsjVOOHBRAmV9zxc8p/eCommerce-App-UI-Kit---Case-Study-Ecommerce-Mobile-App-UI-kit-(Community)?node-id=1-16990&t=aGKMq0fjCva2xjBh-1)
+- **🎨 Design** : [Figma App Desing✍](https://www.figma.com/design/wHv1gs7Mfa9r8yryetnSY8/Sahal---Ecommerce-App?node-id=2-16800&t=RhtUWkj0ivGc4un1-0)
 
  
