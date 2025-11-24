@@ -25,7 +25,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
         isLoading ? 'opacity-50' : ''
       }  `}
       disabled={isLoading}>
-      <Text className={`text-white font-mbold text-sm ${textStyle || ''} `}>
+      <Text className={`text-white font-mbold text-lg ${textStyle || ''} `}>
         {title}
       </Text>
       {isLoading && (

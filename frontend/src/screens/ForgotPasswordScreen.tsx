@@ -1,15 +1,29 @@
 import {View, Text, TouchableOpacity} from 'react-native';
 import React, {useState} from 'react';
+import {useNavigation} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {SvgXml} from 'react-native-svg';
 import {CustomButton} from '../components';
+import {radio} from '../assets/svgs/radio';
+import {activeRadio} from '../assets/svgs/activeRadio';
 
 type Props = {};
 
 const ForgotPasswordScreen = (_props: Props) => {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [selectedOption, setSelectedOption] = useState<'SMS' | 'Email'>('SMS');
+
+  type RootStackParamList = {
+    OTP: undefined;
+  };
+
+  const handleNext = () => {
+    navigation.navigate('OTP');
+  };
 
   return (
     <View className="px-5 flex-1 bg-white pt-28">
-      <Text className="text-2xl font-msemibold mb-6">
+      <Text className="text-3xl mb-6" style={{fontFamily: 'Montserrat-SemiBold'}}>
         Forgot Password?
       </Text>
       <View>
@@ -21,14 +35,16 @@ const ForgotPasswordScreen = (_props: Props) => {
         <TouchableOpacity
           onPress={() => setSelectedOption('SMS')}
           className="flex flex-row items-center mb-3 p-3 border border-gray-200 rounded-lg">
-          <View className="w-5 h-5 rounded-full border-2 border-gray-300 mr-3 items-center justify-center">
-            {selectedOption === 'SMS' && (
-              <View className="w-3 h-3 rounded-full bg-green-500 items-center justify-center">
-                <Text className="text-white text-[10px] font-bold">✓</Text>
-              </View>
-            )}
+          <View className="mr-3">
+            <SvgXml 
+              xml={selectedOption === 'SMS' ? activeRadio : radio} 
+              width={26} 
+              height={26} 
+            />
           </View>
-          <Text className={`text-sm font-mmedium ${selectedOption === 'SMS' ? 'text-green-500' : 'text-black-100'}`}>
+          <Text 
+            className={`text-sm ${selectedOption === 'SMS' ? 'text-green-700' : 'text-black-100'}`}
+            style={{fontFamily: 'Montserrat-Medium'}}>
             SMS
           </Text>
         </TouchableOpacity>
@@ -37,14 +53,16 @@ const ForgotPasswordScreen = (_props: Props) => {
         <TouchableOpacity
           onPress={() => setSelectedOption('Email')}
           className="flex flex-row items-center mb-6 p-3 border border-gray-200 rounded-lg">
-          <View className="w-5 h-5 rounded-full border-2 border-gray-300 mr-3 items-center justify-center">
-            {selectedOption === 'Email' && (
-              <View className="w-3 h-3 rounded-full bg-green-500 items-center justify-center">
-                <Text className="text-white text-[10px] font-bold">✓</Text>
-              </View>
-            )}
+          <View className="mr-3">
+            <SvgXml 
+              xml={selectedOption === 'Email' ? activeRadio : radio} 
+              width={26} 
+              height={26} 
+            />
           </View>
-          <Text className={`text-sm font-mmedium ${selectedOption === 'Email' ? 'text-green-500' : 'text-black-100'}`}>
+          <Text 
+            className={`text-sm ${selectedOption === 'Email' ? 'text-green-700' : 'text-black-100'}`}
+            style={{fontFamily: 'Montserrat-Medium'}}>
             Email
           </Text>
         </TouchableOpacity>
@@ -52,7 +70,7 @@ const ForgotPasswordScreen = (_props: Props) => {
         {/* Next Button */}
         <CustomButton
           title="Next"
-          handlePress={() => {}}
+          handlePress={handleNext}
           containerStyle="mt-auto mb-4"
         />
       </View>

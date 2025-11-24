@@ -3,6 +3,7 @@ module.exports = {
   content: ["./App.{js,jsx,ts,tsx}", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      // For React Native, fontFamily should match the PostScript name from font files
       colors: {
         primary: "#FFFFFF",
         action: "#F83758",
@@ -17,28 +18,29 @@ module.exports = {
         } 
       },
       fontFamily: {
-        // Set Montserrat as default font
-        sans: ["Montserrat", "sans-serif"],
-        // Montserrat explicit classes (use with fontWeight classes)
-        mthin: ["Montserrat", "sans-serif"],
-        mextralight: ["Montserrat", "sans-serif"],
-        mlight: ["Montserrat", "sans-serif"],
-        mregular: ["Montserrat", "sans-serif"],
-        mmedium: ["Montserrat", "sans-serif"],
-        msemibold: ["Montserrat", "sans-serif"],
-        mbold: ["Montserrat", "sans-serif"],
-        mextrabold: ["Montserrat", "sans-serif"],
-        mblack: ["Montserrat", "sans-serif"],
-        // Poppins fonts (keeping existing for backward compatibility)
-        pthin: ["Poppins", "sans-serif"],
-        pextralight: ["Poppins", "sans-serif"],
-        plight: ["Poppins", "sans-serif"],
-        pregular: ["Poppins", "sans-serif"],
-        pmedium: ["Poppins", "sans-serif"],
-        psemibold: ["Poppins", "sans-serif"],
-        pbold: ["Poppins", "sans-serif"],
-        pextrabold: ["Poppins", "sans-serif"],
-        pblack: ["Poppins", "sans-serif"],
+        // React Native font families - must match PostScript names from font files
+        // Using strings directly for NativeWind compatibility
+        sans: "Montserrat-Regular",
+        // Montserrat font families - using exact PostScript names
+        mthin: "Montserrat-Thin",
+        mextralight: "Montserrat-ExtraLight",
+        mlight: "Montserrat-Light",
+        mregular: "Montserrat-Regular",
+        mmedium: "Montserrat-Medium",
+        msemibold: "Montserrat-SemiBold",
+        mbold: "Montserrat-Bold",
+        mextrabold: "Montserrat-ExtraBold",
+        mblack: "Montserrat-Black",
+        // Poppins fonts
+        pthin: "Poppins-Thin",
+        pextralight: "Poppins-ExtraLight",
+        plight: "Poppins-Light",
+        pregular: "Poppins-Regular",
+        pmedium: "Poppins-Medium",
+        psemibold: "Poppins-SemiBold",
+        pbold: "Poppins-Bold",
+        pextrabold: "Poppins-ExtraBold",
+        pblack: "Poppins-Black",
       },
       fontWeight: {
         thin: '100',

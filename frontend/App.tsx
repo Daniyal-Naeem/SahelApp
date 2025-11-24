@@ -9,9 +9,11 @@ import {
   HomeScreen,
   LoginScreen,
   OnboardingScreen,
+  OTPScreen,
   PlaceOrder,
   ProductsDetailsScreen,
   ProfileScreen,
+  ResetPasswordScreen,
   SignupScreen,
   SplashScreen,
 } from './src/screens';
@@ -20,6 +22,7 @@ import {ItemDetails} from './src/constants/types';
 import {getItem} from './src/utils/AsyncStorage';
 import {ActivityIndicator, View} from 'react-native';
 import {ProductsProvider} from './src/context/ProductsContext';
+import CustomDrawerContent from './src/components/CustomDrawerContent';
 
 export type RouteStackParamList = {
   Onboarding: undefined;
@@ -31,6 +34,8 @@ export type RouteStackParamList = {
   Checkout: undefined;
   PlaceOrder: {itemDetails: ItemDetails} | undefined;
   ForgotPassword: undefined;
+  OTP: undefined;
+  ResetPassword: undefined;
   ProductDetails: {itemDetails: ItemDetails} | undefined;
 };
 
@@ -38,6 +43,7 @@ const Drawer = createDrawerNavigator();
 
 const DrawerNavigator = () => (
   <Drawer.Navigator
+    drawerContent={props => <CustomDrawerContent {...props} />}
     screenOptions={{
       headerShown: false,
       drawerType: 'front',
@@ -105,8 +111,10 @@ const App = () => {
           <Stack.Screen name="GetStarted" component={GetStartedScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+          <Stack.Screen name="OTP" component={OTPScreen} />
           <Stack.Screen name="PlaceOrder" component={PlaceOrder} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
           <Stack.Screen name="Signup" component={SignupScreen} />
           <Stack.Screen name="Checkout" component={CheckoutScreen} />
           <Stack.Screen

@@ -1,6 +1,7 @@
 import React, {useEffect} from 'react';
-import {View, Image, StyleSheet} from 'react-native';
-import images from '../constants/images';
+import {View, StyleSheet} from 'react-native';
+import {SvgXml} from 'react-native-svg';
+import {homeLogo} from '../assets/svgs/homeLogo';
 
 interface SplashScreenProps {
   onFinish: () => void;
@@ -18,11 +19,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({onFinish}) => {
   return (
     <View style={styles.container}>
       <View style={styles.logoWrapper}>
-        <Image
-          source={images.newSplash}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <SvgXml xml={homeLogo} />
       </View>
     </View>
   );
@@ -39,12 +36,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    marginTop: -40, // Adjust to visually center accounting for status bar
+    marginTop: -40, 
   },
-  logo: {
-    width: 300,
-    height: 300,
-  },
+
 });
 
 export default SplashScreen;

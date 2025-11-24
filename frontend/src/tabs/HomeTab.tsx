@@ -11,6 +11,7 @@ import React, {useEffect, useState} from 'react';
 import {icons, images} from '../constants';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
+import {DrawerNavigationProp} from '@react-navigation/drawer';
 import {CustomSearch, ProductItem} from '../components';
 import {CategoriesData, ProductData} from '../constants/data';
 import {removeItem} from '../utils/AsyncStorage';
@@ -19,7 +20,7 @@ import {ProductTypes} from '../constants/types';
 type Props = {};
 
 const HomeTab = (props: Props) => {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList> & DrawerNavigationProp<any>>();
   type RootStackParamList = {
     Setting: undefined;
   };
@@ -46,15 +47,20 @@ const HomeTab = (props: Props) => {
     navigation.navigate('Setting');
     await removeItem('onboarded'); // will reset to onboarding
   };
+  const handleOpenDrawer = () => {
+    navigation.openDrawer();
+  };
   const handleSelectCategory = () => {};
   return (
     <ScrollView>
       {/* header */}
       <View className="flex flex-row items-center justify-between mx-5">
-        <Image source={icons.menu} className="w-8 h-8" resizeMode="contain" />
+        <TouchableOpacity onPress={handleOpenDrawer}>
+          <Image source={icons.menu} className="w-8 h-8" resizeMode="contain" />
+        </TouchableOpacity>
 
         <Image
-          source={images.newSplash}
+          source={images.homeLogo}
           className="w-24 h-24"
           resizeMode="contain"
         />

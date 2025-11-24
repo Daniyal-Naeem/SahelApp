@@ -26,19 +26,22 @@ const LoginScreen = (_props: Props) => {
   type RootStackParamList = {
     ForgotPassword: undefined;
     Signup: undefined;
+    HomeScreen: undefined;
   };
   const handleForgotPassword = () => {
     navigation.navigate('ForgotPassword');
   };
 
-  const handleLogin = () => {};
+  const handleLogin = () => {
+    navigation.navigate('HomeScreen');
+  };
   const handleSignInWithProvider = () => {};
   const handleNavigateToSignUp = () => {
     navigation.navigate('Signup');
   };
   return (
     <View className="px-5 flex-1 bg-white pt-28">
-      <Text className="text-2xl font-msemibold mb-6">
+      <Text className="text-3xl mb-6" style={{fontFamily: 'Montserrat-SemiBold'}}>
         Welcome back
       </Text>
       <View>
@@ -69,7 +72,7 @@ const LoginScreen = (_props: Props) => {
             otherStyles="mb-2"
           />
           <TouchableOpacity onPress={handleForgotPassword} className="mb-4">
-            <Text className="text-action text-xs font-mmedium self-end">
+            <Text className="text-action text-xs self-end" style={{fontFamily: 'Montserrat-Medium'}}>
               Forgot Password?
             </Text>
           </TouchableOpacity>
@@ -109,7 +112,7 @@ const LoginScreen = (_props: Props) => {
           <View className="flex flex-row items-center gap-x-1 justify-center">
             <Text className="text-[#575757] text-sm">Create An Account</Text>
             <TouchableOpacity onPress={handleNavigateToSignUp}>
-              <Text className="text-sm font-mbold underline text-action">
+              <Text className="text-sm underline text-action" style={{fontFamily: 'Montserrat-Bold'}}>
                 Sign Up
               </Text>
             </TouchableOpacity>

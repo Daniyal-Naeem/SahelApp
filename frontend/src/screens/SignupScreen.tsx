@@ -35,7 +35,7 @@ const SignupScreen = (_props: Props) => {
   };
   return (
     <View className="px-5 flex-1 bg-white pt-28">
-      <Text className="text-2xl font-msemibold mb-6">
+      <Text className="text-3xl mb-6" style={{fontFamily: 'Montserrat-SemiBold'}}>
         Create an account
       </Text>
       <View>
@@ -78,7 +78,7 @@ const SignupScreen = (_props: Props) => {
             otherStyles="mb-4"
           />
 
-          <Text className="text-[#676767] text-xs font-mmedium mb-4">
+          <Text className="text-[#676767] text-xs mb-4" style={{fontFamily: 'Montserrat-Medium'}}>
             By clicking the <Text className="text-red-600">Register</Text> button, you agree to the public offer
           </Text>
         </View>
@@ -119,7 +119,7 @@ const SignupScreen = (_props: Props) => {
               I Already Have an Account
             </Text>
             <TouchableOpacity onPress={handleNavigateToLogin}>
-              <Text className="text-sm font-mbold underline text-action">
+              <Text className="text-sm underline text-action" style={{fontFamily: 'Montserrat-Bold'}}>
                 Login
               </Text>
             </TouchableOpacity>
