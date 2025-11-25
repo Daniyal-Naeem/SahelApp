@@ -4,17 +4,21 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
+  Text,
   Easing,
+  StyleSheet,
+  ViewStyle,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {icons, images} from '../constants';
+import {Colors, Spacing, FontSizes, FontFamilies} from '../constants/styles';
 
 type FormFieldProps = {
   title: string;
   value: string;
   placeholder: string;
   handleChangeText: (text: string) => void;
-  otherStyles?: string;
+  otherStyles?: ViewStyle;
   setError?: (error: string) => void;
   error: string;
   [key: string]: any; // add more props ...props
@@ -66,38 +70,38 @@ const FormField: React.FC<FormFieldProps> = ({
   };
 
   return (
-    <View className={otherStyles + ' '}>
+    <View style={otherStyles}>
       <Animated.View
         // handle shake here with interpolate ..
-        style={{
-          transform: [
-            {
-              translateX: shakeAnimation.interpolate({
-                inputRange: [0, 1, 2, 3, 4], // when this do the output</View>
-                outputRange: [0, -10, 10, -10, 0],
-              }),
-            },
-          ],
-        }}
-        // let's continue styling it:)
-        className={`flex flex-row items-center justify-center rounded-lg w-full h-[48px] px-3 bg-[#F5F5F5] border border-[#E5E5E5] ${
-          error ? 'border border-red-600  ' : ''
-        } `}>
+        style={[
+          styles.inputContainer,
+          {
+            transform: [
+              {
+                translateX: shakeAnimation.interpolate({
+                  inputRange: [0, 1, 2, 3, 4],
+                  outputRange: [0, -10, 10, -10, 0],
+                }),
+              },
+            ],
+          },
+          error && styles.inputContainerError,
+        ]}>
         {/* icon => user icon, or password, or email... */}
         <Image
           source={getIconSource()}
-          className="w-4 h-4 mr-2"
+          style={styles.icon}
           resizeMode="contain"
           tintColor="#424242"
         />
         {/* TextInput */}
         <TextInput
-          className="flex-1 text-black-100 font-mmedium text-sm"
+          style={styles.input}
           value={value}
           placeholder={placeholder}
           onChangeText={handleChangeText}
           placeholderTextColor={'#9E9E9E'}
-          secureTextEntry={title === 'Password' && !showPassword} // hide it if it's the password... | set showpassword to false
+          secureTextEntry={title === 'Password' && !showPassword}
           onBlur={() => error && shake()}
           {...props}
         />
@@ -106,9 +110,8 @@ const FormField: React.FC<FormFieldProps> = ({
         {title === 'Password' && (
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
             <Image
-              // if show password is true so hide the password else show it
               source={!showPassword ? icons.eye : icons.eyeHide}
-              className="w-5 h-5"
+              style={styles.eyeIcon}
               resizeMode="contain"
               tintColor="#424242"
             />
@@ -117,13 +120,55 @@ const FormField: React.FC<FormFieldProps> = ({
       </Animated.View>
       {/* display the error here if there... */}
       {error && (
-        <Animated.View
-          className={` text-red-500 font-mregular text-sm mt-3 self-center `}>
-          {error}
-        </Animated.View>
+        <View style={styles.errorText}>
+          <Text style={styles.errorTextContent}>{error}</Text>
+        </View>
       )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    width: '100%',
+    height: 48,
+    paddingHorizontal: Spacing[3],
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+  },
+  inputContainerError: {
+    borderWidth: 1,
+    borderColor: Colors.red[600],
+  },
+  icon: {
+    width: 16,
+    height: 16,
+    marginRight: Spacing[2],
+  },
+  input: {
+    flex: 1,
+    color: Colors.black[100],
+    fontFamily: FontFamilies.mmedium,
+    fontSize: FontSizes.sm,
+  },
+  eyeIcon: {
+    width: 20,
+    height: 20,
+  },
+  errorText: {
+    marginTop: Spacing[3],
+    alignSelf: 'center',
+  },
+  errorTextContent: {
+    color: Colors.red[500],
+    fontFamily: FontFamilies.mregular,
+    fontSize: FontSizes.sm,
+  },
+});
 
 export default FormField;

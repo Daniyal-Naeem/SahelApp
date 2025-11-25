@@ -7,9 +7,11 @@ import {
   Text,
   TouchableOpacity,
   View,
+  StyleSheet,
 } from 'react-native';
 import {CustomButton, FormField} from '../components';
 import {icons} from '../constants';
+import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 
 type Props = {};
 // let's go with get started first
@@ -34,8 +36,8 @@ const SignupScreen = (_props: Props) => {
     navigation.navigate('Login');
   };
   return (
-    <View className="px-5 flex-1 bg-white pt-28">
-      <Text className="text-3xl mb-6" style={{fontFamily: 'Montserrat-SemiBold'}}>
+    <View style={styles.container}>
+      <Text style={[styles.title, {fontFamily: FontFamilies.msemibold}]}>
         Create an account
       </Text>
       <View>
@@ -50,7 +52,7 @@ const SignupScreen = (_props: Props) => {
             setForm({...form, email: e});
           }}
           placeholder="Username or Email"
-          otherStyles="mb-4"
+          otherStyles={styles.formField}
         />
         <View>
           <FormField
@@ -63,7 +65,7 @@ const SignupScreen = (_props: Props) => {
               setForm({...form, password: e});
             }}
             placeholder="Password"
-            otherStyles="mb-4"
+            otherStyles={styles.formField}
           />
           <FormField
             title="Confirm Password"
@@ -75,11 +77,11 @@ const SignupScreen = (_props: Props) => {
               setForm({...form, confirmPassword: e});
             }}
             placeholder="Confirm Password"
-            otherStyles="mb-4"
+            otherStyles={styles.formField}
           />
 
-          <Text className="text-[#676767] text-xs mb-4" style={{fontFamily: 'Montserrat-Medium'}}>
-            By clicking the <Text className="text-red-600">Register</Text> button, you agree to the public offer
+          <Text style={[styles.termsText, {fontFamily: FontFamilies.mmedium}]}>
+            By clicking the <Text style={styles.termsTextRed}>Register</Text> button, you agree to the public offer
           </Text>
         </View>
         {/* submit btn */}
@@ -87,39 +89,39 @@ const SignupScreen = (_props: Props) => {
           title="Create Account"
           handlePress={handleLogin}
           isLoading={isSubmitting}
-          containerStyle="mb-4"
+          containerStyle={styles.buttonContainer}
         />
         {/* or continue with  */}
-        <View className="self-center">
-          <View className="flex flex-row items-center justify-center mb-3">
-            <View className="flex-1 h-px bg-gray-300" />
-            <Text className="text-[#575757] text-xs mx-3">
+        <View style={styles.centerContainer}>
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerText}>
               - OR Continue with -
             </Text>
-            <View className="flex-1 h-px bg-gray-300" />
+            <View style={styles.divider} />
           </View>
-          <View className="flex flex-row items-center gap-3 mb-4 justify-center">
+          <View style={styles.socialContainer}>
             {ContinueWithData.map((item) => {
               return (
                 <TouchableOpacity
                   key={item.id}
                   onPress={handleSignInWithProvider}
-                  className="rounded-full bg-white border border-gray-200 w-10 h-10 items-center justify-center shadow-sm">
+                  style={styles.socialButton}>
                   <Image
                     source={item.image}
-                    className="w-5 h-5"
+                    style={styles.socialIcon}
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
               );
             })}
           </View>
-          <View className="flex flex-row items-center gap-x-1 justify-center">
-            <Text className="text-[#575757] text-sm">
+          <View style={styles.loginContainer}>
+            <Text style={styles.loginText}>
               I Already Have an Account
             </Text>
             <TouchableOpacity onPress={handleNavigateToLogin}>
-              <Text className="text-sm underline text-action" style={{fontFamily: 'Montserrat-Bold'}}>
+              <Text style={[styles.loginLink, {fontFamily: FontFamilies.mbold}]}>
                 Login
               </Text>
             </TouchableOpacity>
@@ -129,6 +131,98 @@ const SignupScreen = (_props: Props) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: Spacing[5],
+    flex: 1,
+    backgroundColor: Colors.white,
+    paddingTop: Spacing[28],
+  },
+  title: {
+    fontSize: FontSizes['3xl'],
+    marginBottom: Spacing[8],
+  },
+  formField: {
+    marginBottom: Spacing[6],
+  },
+  termsText: {
+    color: '#676767',
+    fontSize: FontSizes.xs,
+    marginBottom: Spacing[6],
+    marginTop: Spacing[2],
+  },
+  termsTextRed: {
+    color: Colors.red[600],
+  },
+  buttonContainer: {
+    marginBottom: Spacing[8],
+  },
+  centerContainer: {
+    alignSelf: 'center',
+    marginTop: Spacing[4],
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing[5],
+  },
+  divider: {
+    flex: 1,
+    height: r(1),
+    backgroundColor: Colors.gray[300],
+  },
+  dividerText: {
+    color: '#575757',
+    fontSize: FontSizes.xs,
+    marginHorizontal: Spacing[3],
+  },
+  socialContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[3],
+    marginBottom: Spacing[6],
+    justifyContent: 'center',
+  },
+  socialButton: {
+    borderRadius: 9999,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+    width: r(40),
+    height: r(40),
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  socialIcon: {
+    width: r(20),
+    height: r(20),
+  },
+  loginContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: r(4),
+    justifyContent: 'center',
+  },
+  loginText: {
+    color: '#575757',
+    fontSize: FontSizes.sm,
+  },
+  loginLink: {
+    fontSize: FontSizes.sm,
+    textDecorationLine: 'underline',
+    color: Colors.action,
+  },
+});
 
 export default SignupScreen;
 

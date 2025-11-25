@@ -1,8 +1,9 @@
-import {View, Text} from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
 import React, {useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {FormField, CustomButton} from '../components';
+import {Colors, Spacing, FontSizes, FontFamilies} from '../constants/styles';
 
 type Props = {};
 
@@ -12,7 +13,7 @@ const ResetPasswordScreen = (_props: Props) => {
   const [emailError, setEmailError] = useState('');
 
   type RootStackParamList = {
-    Login: undefined;
+    GetStarted: undefined;
   };
 
   const handleSubmit = () => {
@@ -22,16 +23,16 @@ const ResetPasswordScreen = (_props: Props) => {
     }
     // Handle submit logic here
     console.log('Reset password for:', email);
-    // Navigate to login screen
-    navigation.navigate('Login');
+    // Navigate to GetStarted screen
+    navigation.navigate('GetStarted');
   };
 
   return (
-    <View className="px-5 flex-1 bg-white pt-28">
-      <Text className="text-3xl mb-6" style={{fontFamily: 'Montserrat-SemiBold'}}>
+    <View style={styles.container}>
+      <Text style={[styles.title, {fontFamily: FontFamilies.msemibold}]}>
         Forgot password?
       </Text>
-      <View className="flex-1">
+      <View style={styles.content}>
         <FormField
           title="Email"
           value={email}
@@ -42,24 +43,50 @@ const ResetPasswordScreen = (_props: Props) => {
             setEmail(e);
           }}
           placeholder="Enter your email address"
-          otherStyles="mb-4"
+          otherStyles={styles.formField}
         />
 
-        <Text className="text-gray-500 text-sm mb-6">
+        <Text style={styles.infoText}>
           * We will send you a message to set or reset your new password
         </Text>
 
-       
-          <CustomButton
-            title="Submit"
-            handlePress={handleSubmit}
-            containerStyle="mb-4"
-          />
-  
+        <CustomButton
+          title="Submit"
+          handlePress={handleSubmit}
+          containerStyle={styles.buttonContainer}
+        />
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: Spacing[5],
+    flex: 1,
+    backgroundColor: Colors.white,
+    paddingTop: Spacing[28],
+  },
+  title: {
+    fontSize: FontSizes['3xl'],
+    marginBottom: Spacing[8],
+  },
+  content: {
+    flex: 1,
+  },
+  formField: {
+    marginBottom: Spacing[6],
+  },
+  infoText: {
+    color: Colors.gray[500],
+    fontSize: FontSizes.sm,
+    marginBottom: Spacing[8],
+    marginTop: Spacing[2],
+  },
+  buttonContainer: {
+    marginBottom: Spacing[6],
+  },
+});
 
 export default ResetPasswordScreen;
 

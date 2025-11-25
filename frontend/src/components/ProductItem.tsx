@@ -1,4 +1,4 @@
-import {View, Text, TouchableOpacity, Image} from 'react-native';
+import {View, Text, TouchableOpacity, Image, StyleSheet} from 'react-native';
 import React from 'react';
 import {ItemDetails, ProductTypes} from '../constants/types';
 import {images} from '../constants';
@@ -7,6 +7,7 @@ import {useNavigation} from '@react-navigation/native';
 import {RootStackParamList} from '../screens/OnboardingScreen';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteStackParamList} from '../../App';
+import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 
 type ProductItemProps = {
   image: string;
@@ -39,28 +40,26 @@ const ProductItem: React.FC<ProductItemProps> = ({
 
   return (
     <TouchableOpacity
-      className="w-72 bg-white rounded-xl"
+      style={styles.container}
       onPress={NavigateToProductsDetails}>
-      <Image source={{uri: image}} className="w-full rounded-t-xl h-40  " />
-      <View className="px-3">
-        <Text className="text-3xl text-black-100 my-2 text-start font-bold">
+      <Image source={{uri: image}} style={styles.image} />
+      <View style={styles.content}>
+        <Text style={styles.title}>
           {title}
         </Text>
-        <Text className="text-xl text-black-100/50 text-start font-medium">
+        <Text style={styles.description}>
           {description}
         </Text>
-        <Text className="text-black-100 font-bold text-2xl text-start">
-          {' '}
-          ${price}{' '}
+        <Text style={styles.price}>
+          ${price}
         </Text>
-        <View className="flex flex-row items-center gap-x-3">
-          <Text className="text-black-100/50 font-thin text-xl  line-through text-start">
-            {' '}
-            {priceBeforeDeal}{' '}
+        <View style={styles.priceContainer}>
+          <Text style={styles.priceBeforeDeal}>
+            {priceBeforeDeal}
           </Text>
-          <Text className="text-action font-thin text-xl "> {priceOff} </Text>
+          <Text style={styles.priceOff}> {priceOff} </Text>
         </View>
-        <View className="flex flex-row items-center mb-3">
+        <View style={styles.ratingContainer}>
           <View>
             <AirbnbRating
               count={stars}
@@ -71,14 +70,76 @@ const ProductItem: React.FC<ProductItemProps> = ({
             />
           </View>
 
-          <Text className="text-xl font-thin text-black-100/90 ">
-            {' '}
-            {numberOfReview}{' '}
+          <Text style={styles.reviewCount}>
+            {numberOfReview}
           </Text>
         </View>
       </View>
     </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    width: r(288),
+    backgroundColor: Colors.white,
+    borderRadius: r(12),
+  },
+  image: {
+    width: '100%',
+    borderTopLeftRadius: r(12),
+    borderTopRightRadius: r(12),
+    height: r(160),
+  },
+  content: {
+    paddingHorizontal: Spacing[3],
+  },
+  title: {
+    fontSize: FontSizes['3xl'],
+    color: Colors.black[100],
+    marginVertical: Spacing[2],
+    textAlign: 'left',
+    fontFamily: FontFamilies.mbold,
+  },
+  description: {
+    fontSize: FontSizes.xl,
+    color: 'rgba(0, 0, 0, 0.5)',
+    textAlign: 'left',
+    fontFamily: FontFamilies.pmedium,
+  },
+  price: {
+    color: Colors.black[100],
+    fontFamily: FontFamilies.mbold,
+    fontSize: FontSizes['2xl'],
+    textAlign: 'left',
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[3],
+  },
+  priceBeforeDeal: {
+    color: 'rgba(0, 0, 0, 0.5)',
+    fontFamily: FontFamilies.mthin,
+    fontSize: FontSizes.xl,
+    textDecorationLine: 'line-through',
+    textAlign: 'left',
+  },
+  priceOff: {
+    color: Colors.action,
+    fontFamily: FontFamilies.mthin,
+    fontSize: FontSizes.xl,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing[3],
+  },
+  reviewCount: {
+    fontSize: FontSizes.xl,
+    fontFamily: FontFamilies.mthin,
+    color: 'rgba(0, 0, 0, 0.9)',
+  },
+});
 
 export default ProductItem;

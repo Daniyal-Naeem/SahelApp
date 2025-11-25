@@ -20,7 +20,8 @@ import {
 import GetStartedScreen from './src/screens/GetStartedScreen';
 import {ItemDetails} from './src/constants/types';
 import {getItem} from './src/utils/AsyncStorage';
-import {ActivityIndicator, View} from 'react-native';
+import {ActivityIndicator, View, StyleSheet} from 'react-native';
+import {Colors} from './src/constants/styles';
 import {ProductsProvider} from './src/context/ProductsContext';
 import CustomDrawerContent from './src/components/CustomDrawerContent';
 
@@ -94,8 +95,8 @@ const App = () => {
 
   if (showOnboarded === null) {
     return (
-      <View className="flex flex-1 justify-center items-center">
-        <ActivityIndicator size={'large'} color={'#F3F3F3'} />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size={'large'} color={Colors.black[300]} />
       </View>
     );
   }
@@ -131,5 +132,13 @@ const App = () => {
     </ProductsProvider>
   );
 };
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 export default App;

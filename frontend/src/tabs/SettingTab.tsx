@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   FlatList,
   ScrollView,
+  StyleSheet,
 } from 'react-native';
 import React, {useState} from 'react';
 import {icons} from '../constants';
@@ -12,6 +13,7 @@ import {CustomButton, CustomWrapper, DetailsItem} from '../components';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteStackParamList} from '../../App';
+import {Colors, Spacing, FontSizes, FontFamilies} from '../constants/styles';
 
 type Props = {};
 
@@ -27,19 +29,19 @@ const SettingTab = (props: Props) => {
   const handleEditPic = () => {};
   return (
     <CustomWrapper>
-      <View className="pt-2 px-3">
+      <View style={styles.container}>
         {/* image profile */}
-        <View className="flex justify-center items-center">
-          <Image source={icons.profile} className="w-40 h-40 rounded-full " />
+        <View style={styles.profileContainer}>
+          <Image source={icons.profile} style={styles.profileImage} />
           <TouchableOpacity
             onPress={handleEditPic}
-            className=" p-2 border-white border rounded-full  bg-blue-500 absolute bottom-3 right-[31%] items-center justify-center">
-            <Image source={icons.pen} className=" w-6 h-6" />
+            style={styles.editButton}>
+            <Image source={icons.pen} style={styles.editIcon} />
           </TouchableOpacity>
         </View>
         {/* Personal Details */}
         <View>
-          <Text className="text-2xl font-bold text-black-100">
+          <Text style={styles.sectionTitle}>
             Personal Details
           </Text>
           <FlatList
@@ -47,13 +49,13 @@ const SettingTab = (props: Props) => {
             renderItem={({item}) => (
               <DetailsItem title={item.title} placeholder={item.placeholder} />
             )}
-            keyExtractor={item => item.id.toString()} // have to be in string format
+            keyExtractor={item => item.id.toString()}
           />
         </View>
-        <View className="h-px w-full my-5 bg-black-100/20" />
+        <View style={styles.divider} />
         {/* Business info */}
-        <View className="mt-4">
-          <Text className="text-2xl font-bold text-black-100">
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
             Business Address Details
           </Text>
           <FlatList
@@ -61,13 +63,13 @@ const SettingTab = (props: Props) => {
             renderItem={({item}) => (
               <DetailsItem title={item.title} placeholder={item.placeholder} />
             )}
-            keyExtractor={item => item.id.toString()} // have to be in string format
+            keyExtractor={item => item.id.toString()}
           />
         </View>
-        <View className="h-px w-full my-5 bg-black-100/20" />
+        <View style={styles.divider} />
         {/* Bank Account Details */}
-        <View className="my-4">
-          <Text className="text-2xl font-bold text-black-100">
+        <View style={styles.bankSection}>
+          <Text style={styles.sectionTitle}>
             Bank Account Details
           </Text>
           <FlatList
@@ -75,7 +77,7 @@ const SettingTab = (props: Props) => {
             renderItem={({item}) => (
               <DetailsItem title={item.title} placeholder={item.placeholder} />
             )}
-            keyExtractor={item => item.id.toString()} // have to be in string format
+            keyExtractor={item => item.id.toString()}
           />
         </View>
         {/* save changes */}
@@ -83,12 +85,66 @@ const SettingTab = (props: Props) => {
           title="Login"
           handlePress={handleLogin}
           isLoading={isSubmitting}
-          containerStyle="mt-7 py-5"
+          containerStyle={styles.buttonContainer}
         />
       </View>
     </CustomWrapper>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    paddingTop: Spacing[2],
+    paddingHorizontal: Spacing[3],
+  },
+  profileContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileImage: {
+    width: 160,
+    height: 160,
+    borderRadius: 9999,
+  },
+  editButton: {
+    padding: Spacing[2],
+    borderWidth: 1,
+    borderColor: Colors.white,
+    borderRadius: 9999,
+    backgroundColor: Colors.blue[500],
+    position: 'absolute',
+    bottom: Spacing[3],
+    right: '31%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editIcon: {
+    width: 24,
+    height: 24,
+  },
+  sectionTitle: {
+    fontSize: FontSizes['2xl'],
+    fontFamily: FontFamilies.mbold,
+    color: Colors.black[100],
+  },
+  section: {
+    marginTop: Spacing[4],
+  },
+  divider: {
+    height: 1,
+    width: '100%',
+    marginVertical: Spacing[5],
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+  },
+  bankSection: {
+    marginVertical: Spacing[4],
+  },
+  buttonContainer: {
+    marginTop: 28,
+    paddingVertical: Spacing[5],
+  },
+});
 
 export default SettingTab;
 

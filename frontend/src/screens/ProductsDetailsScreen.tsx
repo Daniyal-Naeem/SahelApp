@@ -9,6 +9,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  StyleSheet,
 } from 'react-native';
 import {AirbnbRating} from 'react-native-ratings';
 import {RouteStackParamList} from '../../App';
@@ -18,6 +19,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import {FeaturesData} from '../tabs/HomeTab';
 import {ProductItem} from '../components';
 import {ProductData} from '../constants/data';
+import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 
 type ScreenRouteProps = RouteProp<RouteStackParamList, 'ProductDetails'>;
 
@@ -37,53 +39,51 @@ const ProductsDetailsScreen: React.FC<ProductDetailsProps> = ({route}) => {
     navigation.navigate('Cart', {itemDetails: itemDetails!});
   };
   return (
-    <ScrollView className="pt-5 px-3">
+    <ScrollView style={styles.container}>
       {/* header */}
-      <View className="flex flex-row justify-between items-center">
+      <View style={styles.header}>
         <TouchableOpacity onPress={GoBack}>
           <Image
             source={icons.next1}
-            className="rotate-180 w-8 h-8"
+            style={[styles.backIcon, {transform: [{rotate: '180deg'}]}]}
             resizeMode="contain"
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={NavigateToCart}>
-          <Image source={icons.cart} className="w-6 h-6" resizeMode="contain" />
+          <Image source={icons.cart} style={styles.cartIcon} resizeMode="contain" />
         </TouchableOpacity>
       </View>
       {/* image slider */}
-      <View className="mt-5">
+      <View style={styles.imageContainer}>
         <Image
           source={{uri: itemDetails?.image[0]}}
-          className=" h-72 rounded-2xl"
+          style={styles.productImage}
         />
       </View>
       {/* size uk */}
       <View>
-        <Text className="text-black-100 text-lg font-bold ">Size: 7UK</Text>
-        <View className="flex flex-row gap-x-5 mt-5 items-center">
+        <Text style={styles.sizeTitle}>Size: 7UK</Text>
+        <View style={styles.sizeContainer}>
           {sizeData.map(item => (
             <View
               key={item.id}
-              className="bg-transparent py-1 px-2 rounded-lg border border-red-500">
-              <Text className="text-action text-xl font-medium">
-                {item.size} uk{' '}
+              style={styles.sizeButton}>
+              <Text style={styles.sizeText}>
+                {item.size} uk
               </Text>
             </View>
           ))}
         </View>
       </View>
       {/* details */}
-      <View className=" mt-5">
-        <Text className="text-2xl font-bold text-black-100">
-          {' '}
-          {itemDetails?.title}{' '}
+      <View style={styles.detailsContainer}>
+        <Text style={styles.title}>
+          {itemDetails?.title}
         </Text>
-        <Text className="text-neutral-400 font-medium text-lg">
-          {' '}
-          Vision Alta Men’s Shoes Size (All Colours){' '}
+        <Text style={styles.subtitle}>
+          Vision Alta Men's Shoes Size (All Colours)
         </Text>
-        <View className="flex flex-row items-center mb-3">
+        <View style={styles.ratingContainer}>
           <View>
             <AirbnbRating
               count={itemDetails?.stars}
@@ -94,134 +94,126 @@ const ProductsDetailsScreen: React.FC<ProductDetailsProps> = ({route}) => {
             />
           </View>
 
-          <Text className="text-xl font-thin text-black-100/90 ">
-            {' '}
-            {itemDetails?.numberOfReview}{' '}
+          <Text style={styles.reviewCount}>
+            {itemDetails?.numberOfReview}
           </Text>
         </View>
-        <View className="flex flex-row items-center gap-x-3">
-          <Text className="text-black-100 font-bold text-2xl text-start">
-            {' '}
-            ${itemDetails?.price}{' '}
+        <View style={styles.priceContainer}>
+          <Text style={styles.price}>
+            ${itemDetails?.price}
           </Text>
-          <Text className="text-black-100/50 font-thin text-xl  line-through text-start">
-            {' '}
-            {itemDetails?.priceBeforeDeal}{' '}
+          <Text style={styles.priceBeforeDeal}>
+            {itemDetails?.priceBeforeDeal}
           </Text>
-          <Text className="text-action font-thin text-xl ">
-            {' '}
-            {itemDetails?.priceOff}{' '}
+          <Text style={styles.priceOff}>
+            {itemDetails?.priceOff}
           </Text>
         </View>
-        <View className="mt-3">
-          <Text className="text-xl font-semibold text-black-100">
+        <View style={styles.productDetailsContainer}>
+          <Text style={styles.productDetailsTitle}>
             Product Details
           </Text>
-          <Text className="text-md font-medium text-neutral-400">
+          <Text style={styles.productDetailsText}>
             {itemDetails?.description}
           </Text>
         </View>
         {/* status */}
-        <View className="flex flex-row items-center gap-x-3  mt-5">
+        <View style={styles.statusContainer}>
           <FlatList
             data={StatusData}
             renderItem={({item}) => (
-              <View className="bg-transparent py-1 px-2 border flex flex-row gap-x-1 rounded-lg border-neutral-500">
+              <View style={styles.statusItem}>
                 <Image
-                  className="w-6 h-6"
+                  style={styles.statusIcon}
                   resizeMode="contain"
                   source={item.icon}
                 />
-                <Text className="text-neutral-400 font-medium text-lg">
-                  {' '}
-                  {item.name}{' '}
+                <Text style={styles.statusText}>
+                  {item.name}
                 </Text>
               </View>
             )}
             horizontal
             showsHorizontalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View className="w-3" />}
+            ItemSeparatorComponent={() => <View style={styles.statusSeparator} />}
           />
         </View>
         {/* go to cart/ buy now */}
-        <View className="flex flex-row gap-x-5 items-center mt-5">
-          <View className="flex flex-row items-center">
-            <View className="z-20">
+        <View style={styles.actionButtonsContainer}>
+          <View style={styles.actionButtonWrapper}>
+            <View style={styles.actionIconContainer}>
               <Image
                 source={icons.cart_circle}
-                className="w-12 h-12  -mr-1"
+                style={styles.actionIcon}
                 resizeMode="contain"
               />
             </View>
-            <View className="bg-blue-600 py-[6px] px-4 -ml-4 rounded-xl z-10">
-              <Text className="text-white font-medium text-2xl">
-                {' '}
-                Go To Cart{' '}
+            <View style={styles.cartButton}>
+              <Text style={styles.actionButtonText}>
+                Go To Cart
               </Text>
             </View>
           </View>
-          <View className="flex flex-row items-center">
-            <View className="z-20">
+          <View style={styles.actionButtonWrapper}>
+            <View style={styles.actionIconContainer}>
               <Image
                 source={icons.buy}
-                className="w-12 h-12  -mr-1"
+                style={styles.actionIcon}
                 resizeMode="contain"
               />
             </View>
-            <View className="bg-green-500 py-[6px] px-4 -ml-4 rounded-xl z-10">
-              <Text className="text-white font-medium text-2xl">
-                {' '}
-                Go To Cart{' '}
+            <View style={styles.buyButton}>
+              <Text style={styles.actionButtonText}>
+                Buy Now
               </Text>
             </View>
           </View>
         </View>
         {/* delivery in ... */}
-        <View className="bg-red-300 px-3 py-3 my-5">
-          <Text className="text-black-100 text-lg ">Delivery in </Text>
-          <Text className="text-black-100 text-2xl font-bold ">
+        <View style={styles.deliveryContainer}>
+          <Text style={styles.deliveryText}>Delivery in </Text>
+          <Text style={styles.deliveryTime}>
             1 within Hour
           </Text>
         </View>
         {/* View similar */}
-        <View className="flex flex-row items-center justify-between mb-8">
+        <View style={styles.similarActionsContainer}>
           <FlatList
             data={similarData}
             renderItem={({item}) => (
-              <View className="bg-white py-3 px-3 rounded-lg border border-neutral-200 flex flex-row gap-x-2">
+              <View style={styles.similarActionItem}>
                 <Image
                   source={item.icon}
-                  className="w-6 h-6"
+                  style={styles.similarActionIcon}
                   resizeMode="contain"
                 />
-                <Text className="text-black-100 text-xl font-medium ">
-                  {' '}
-                  {item.name}{' '}
+                <Text style={styles.similarActionText}>
+                  {item.name}
                 </Text>
               </View>
             )}
             horizontal
             showsHorizontalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View className="w-3" />}
+            ItemSeparatorComponent={() => <View style={styles.similarSeparator} />}
           />
         </View>
         {/* similar to */}
-        <View className="mb-5">
-          <Text className="text-2xl text-black-100 font-bold text-start">
+        <View style={styles.similarSection}>
+          <Text style={styles.similarTitle}>
             Similar To
           </Text>
           {/* features */}
-          <View className="flex my-5 flex-row mx-5 justify-between ">
-            <Text className="text-2xl font-bold ">282+ Items </Text>
-            <View className="flex flex-row gap-x-3 ">
+          <View style={styles.similarFeaturesContainer}>
+            <Text style={styles.similarItemsCount}>282+ Items </Text>
+            <View style={styles.similarFeaturesButtons}>
               {FeaturesData.map(item => (
                 <View
-                  className="bg-white  rounded-lg  flex-row flex items-center px-2 "
+                  style={styles.similarFeatureButton}
                   key={item.id}>
-                  <Text className="text-black-100"> {item.title} </Text>
+                  <Text style={styles.similarFeatureText}> {item.title} </Text>
                   <Image
                     source={item.image}
-                    className="w-4 h-4"
+                    style={styles.similarFeatureIcon}
                     resizeMode="contain"
                   />
                 </View>
@@ -230,7 +222,7 @@ const ProductsDetailsScreen: React.FC<ProductDetailsProps> = ({route}) => {
           </View>
         </View>
         {/* similar products */}
-        <View className="my-8">
+        <View style={styles.similarProductsContainer}>
           <FlatList
             data={itemDetails ? [itemDetails] : []}
             renderItem={({item}) => (
@@ -248,15 +240,279 @@ const ProductsDetailsScreen: React.FC<ProductDetailsProps> = ({route}) => {
             )}
             horizontal
             showsHorizontalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View className="w-8" />}
-            ListFooterComponent={<View className="w-8" />}
-            ListHeaderComponent={<View className="w-8" />}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            ListFooterComponent={<View style={styles.separator} />}
+            ListHeaderComponent={<View style={styles.separator} />}
           />
         </View>
       </View>
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    paddingTop: Spacing[5],
+    paddingHorizontal: Spacing[3],
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  backIcon: {
+    width: r(32),
+    height: r(32),
+  },
+  cartIcon: {
+    width: r(24),
+    height: r(24),
+  },
+  imageContainer: {
+    marginTop: Spacing[5],
+  },
+  productImage: {
+    height: r(288),
+    borderRadius: r(16),
+  },
+  sizeTitle: {
+    color: Colors.black[100],
+    fontSize: FontSizes.lg,
+    fontFamily: FontFamilies.mbold,
+  },
+  sizeContainer: {
+    flexDirection: 'row',
+    gap: Spacing[5],
+    marginTop: Spacing[5],
+    alignItems: 'center',
+  },
+  sizeButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: Spacing[1],
+    paddingHorizontal: Spacing[2],
+    borderRadius: r(8),
+    borderWidth: 1,
+    borderColor: Colors.red[500],
+  },
+  sizeText: {
+    color: Colors.action,
+    fontSize: FontSizes.xl,
+    fontFamily: FontFamilies.pmedium,
+  },
+  detailsContainer: {
+    marginTop: Spacing[5],
+  },
+  title: {
+    fontSize: FontSizes['2xl'],
+    fontFamily: FontFamilies.mbold,
+    color: Colors.black[100],
+  },
+  subtitle: {
+    color: Colors.neutral[400],
+    fontFamily: FontFamilies.pmedium,
+    fontSize: FontSizes.lg,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing[3],
+  },
+  reviewCount: {
+    fontSize: FontSizes.xl,
+    fontFamily: FontFamilies.mthin,
+    color: 'rgba(0, 0, 0, 0.9)',
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[3],
+  },
+  price: {
+    color: Colors.black[100],
+    fontFamily: FontFamilies.mbold,
+    fontSize: FontSizes['2xl'],
+    textAlign: 'left',
+  },
+  priceBeforeDeal: {
+    color: 'rgba(0, 0, 0, 0.5)',
+    fontFamily: FontFamilies.mthin,
+    fontSize: FontSizes.xl,
+    textDecorationLine: 'line-through',
+    textAlign: 'left',
+  },
+  priceOff: {
+    color: Colors.action,
+    fontFamily: FontFamilies.mthin,
+    fontSize: FontSizes.xl,
+  },
+  productDetailsContainer: {
+    marginTop: Spacing[3],
+  },
+  productDetailsTitle: {
+    fontSize: FontSizes.xl,
+    fontFamily: FontFamilies.psemibold,
+    color: Colors.black[100],
+  },
+  productDetailsText: {
+    fontSize: r(16),
+    fontFamily: FontFamilies.pmedium,
+    color: Colors.neutral[400],
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[3],
+    marginTop: Spacing[5],
+  },
+  statusItem: {
+    backgroundColor: 'transparent',
+    paddingVertical: Spacing[1],
+    paddingHorizontal: Spacing[2],
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: r(4),
+    borderRadius: r(8),
+    borderColor: Colors.neutral[500],
+  },
+  statusIcon: {
+    width: r(24),
+    height: r(24),
+  },
+  statusText: {
+    color: Colors.neutral[400],
+    fontFamily: FontFamilies.pmedium,
+    fontSize: FontSizes.lg,
+  },
+  statusSeparator: {
+    width: Spacing[3],
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: Spacing[5],
+    alignItems: 'center',
+    marginTop: Spacing[5],
+  },
+  actionButtonWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionIconContainer: {
+    zIndex: 20,
+  },
+  actionIcon: {
+    width: r(48),
+    height: r(48),
+    marginRight: r(-4),
+  },
+  cartButton: {
+    backgroundColor: '#2563EB',
+    paddingVertical: r(6),
+    paddingHorizontal: Spacing[4],
+    marginLeft: r(-16),
+    borderRadius: r(12),
+    zIndex: 10,
+  },
+  buyButton: {
+    backgroundColor: '#10B981',
+    paddingVertical: r(6),
+    paddingHorizontal: Spacing[4],
+    marginLeft: r(-16),
+    borderRadius: r(12),
+    zIndex: 10,
+  },
+  actionButtonText: {
+    color: Colors.white,
+    fontFamily: FontFamilies.pmedium,
+    fontSize: FontSizes['2xl'],
+  },
+  deliveryContainer: {
+    backgroundColor: '#FCA5A5',
+    paddingHorizontal: Spacing[3],
+    paddingVertical: Spacing[3],
+    marginVertical: Spacing[5],
+  },
+  deliveryText: {
+    color: Colors.black[100],
+    fontSize: FontSizes.lg,
+  },
+  deliveryTime: {
+    color: Colors.black[100],
+    fontSize: FontSizes['2xl'],
+    fontFamily: FontFamilies.mbold,
+  },
+  similarActionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing[8],
+  },
+  similarActionItem: {
+    backgroundColor: Colors.white,
+    paddingVertical: Spacing[3],
+    paddingHorizontal: Spacing[3],
+    borderRadius: r(8),
+    borderWidth: 1,
+    borderColor: Colors.neutral[200],
+    flexDirection: 'row',
+    gap: Spacing[2],
+  },
+  similarActionIcon: {
+    width: r(24),
+    height: r(24),
+  },
+  similarActionText: {
+    color: Colors.black[100],
+    fontSize: FontSizes.xl,
+    fontFamily: FontFamilies.pmedium,
+  },
+  similarSeparator: {
+    width: Spacing[3],
+  },
+  similarSection: {
+    marginBottom: Spacing[5],
+  },
+  similarTitle: {
+    fontSize: FontSizes['2xl'],
+    color: Colors.black[100],
+    fontFamily: FontFamilies.mbold,
+    textAlign: 'left',
+  },
+  similarFeaturesContainer: {
+    flexDirection: 'row',
+    marginVertical: Spacing[5],
+    marginHorizontal: Spacing[5],
+    justifyContent: 'space-between',
+  },
+  similarItemsCount: {
+    fontSize: FontSizes['2xl'],
+    fontFamily: FontFamilies.mbold,
+  },
+  similarFeaturesButtons: {
+    flexDirection: 'row',
+    gap: Spacing[3],
+  },
+  similarFeatureButton: {
+    backgroundColor: Colors.white,
+    borderRadius: r(8),
+    flexDirection: 'row',
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: Spacing[2],
+  },
+  similarFeatureText: {
+    color: Colors.black[100],
+  },
+  similarFeatureIcon: {
+    width: r(16),
+    height: r(16),
+  },
+  similarProductsContainer: {
+    marginVertical: Spacing[8],
+  },
+  separator: {
+    width: Spacing[8],
+  },
+});
 
 export default ProductsDetailsScreen;
 

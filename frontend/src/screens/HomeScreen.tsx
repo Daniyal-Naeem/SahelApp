@@ -4,6 +4,7 @@ import {HomeTab, WishlistTab, CartTab, SearchTab, SettingTab} from '../tabs';
 import {Image, Text, View} from 'react-native';
 import {icons} from '../constants';
 import { ItemDetails } from '../constants/types';
+import {FontFamilies} from '../constants/styles';
 
 type TabBarItemProps = {
   source: any; // Adjust type according to your image sources
@@ -49,8 +50,7 @@ const TabBarItem: React.FC<TabBarItemProps> = ({
       </View>
       {!cart && (
         <Text
-          className="font-mthin text-base"
-          style={{color: focused ? 'red' : 'black', fontSize: 12}}>
+          style={{fontFamily: FontFamilies.mthin, fontSize: 12, color: focused ? 'red' : 'black'}}>
           {name}
         </Text>
       )}

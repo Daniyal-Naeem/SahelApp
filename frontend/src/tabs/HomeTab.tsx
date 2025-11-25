@@ -6,6 +6,7 @@ import {
   FlatList,
   ScrollView,
   ImageSourcePropType,
+  StyleSheet,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {icons, images} from '../constants';
@@ -16,6 +17,7 @@ import {CustomSearch, ProductItem} from '../components';
 import {CategoriesData, ProductData} from '../constants/data';
 import {removeItem} from '../utils/AsyncStorage';
 import {ProductTypes} from '../constants/types';
+import {Colors, Spacing, FontSizes, FontFamilies} from '../constants/styles';
 
 type Props = {};
 
@@ -54,20 +56,20 @@ const HomeTab = (props: Props) => {
   return (
     <ScrollView>
       {/* header */}
-      <View className="flex flex-row items-center justify-between mx-5">
+      <View style={styles.header}>
         <TouchableOpacity onPress={handleOpenDrawer}>
-          <Image source={icons.menu} className="w-8 h-8" resizeMode="contain" />
+          <Image source={icons.menu} style={styles.headerIcon} resizeMode="contain" />
         </TouchableOpacity>
 
         <Image
           source={images.homeLogo}
-          className="w-24 h-24"
+          style={styles.logo}
           resizeMode="contain"
         />
         <TouchableOpacity onPress={NavigateToProfile}>
           <Image
             source={icons.profile}
-            className="w-8 h-8"
+            style={styles.headerIcon}
             resizeMode="contain"
           />
         </TouchableOpacity>
@@ -75,17 +77,17 @@ const HomeTab = (props: Props) => {
       {/* search */}
       <CustomSearch initialQuery="" />
       {/* features */}
-      <View className="flex my-5 flex-row mx-5 justify-between ">
-        <Text className="text-2xl font-bold ">All Features </Text>
-        <View className="flex flex-row gap-x-3 ">
+      <View style={styles.featuresContainer}>
+        <Text style={styles.featuresTitle}>All Features </Text>
+        <View style={styles.featuresButtons}>
           {FeaturesData.map(item => (
             <View
-              className="bg-white  rounded-lg  flex-row flex items-center px-2 "
+              style={styles.featureButton}
               key={item.id}>
-              <Text className="text-black-100"> {item.title} </Text>
+              <Text style={styles.featureButtonText}> {item.title} </Text>
               <Image
                 source={item.image}
-                className="w-4 h-4"
+                style={styles.featureIcon}
                 resizeMode="contain"
               />
             </View>
@@ -99,20 +101,19 @@ const HomeTab = (props: Props) => {
           renderItem={({item}) => (
             <TouchableOpacity onPress={handleSelectCategory}>
               <Image
-                source={{uri: item.image}} // it's url
-                className="w-24 h-24 rounded-full"
+                source={{uri: item.image}}
+                style={styles.categoryImage}
               />
-              <Text className="text-black-100/80 text-center text-lg font-medium">
-                {' '}
-                {item.title}{' '}
+              <Text style={styles.categoryText}>
+                {item.title}
               </Text>
             </TouchableOpacity>
           )}
           horizontal
           showsHorizontalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View className="w-8" />}
-          ListFooterComponent={<View className="w-8" />}
-          ListHeaderComponent={<View className="w-8" />}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ListFooterComponent={<View style={styles.separator} />}
+          ListHeaderComponent={<View style={styles.separator} />}
         />
       </View>
       {/* offer */}
@@ -120,38 +121,37 @@ const HomeTab = (props: Props) => {
         <Image
           source={images.deal_off}
           resizeMode="contain"
-          className="w-full mt-8 "
+          style={styles.dealImage}
         />
       </View>
       {/* daily .. */}
-      <View className="bg-[#4392F9] rounded-xl justify-between flex flex-row mx-5 pl-5 py-5">
+      <View style={styles.dailyContainer}>
         <View>
-          <Text className="text-white  text-2xl font-semibold">
+          <Text style={styles.dailyTitle}>
             Daily of the Day
           </Text>
-          <View className="flex flex-row mt-3 items-center gap-x-1">
+          <View style={styles.dailyTimeContainer}>
             <Image
               source={icons.calender}
               resizeMode="contain"
-              className="w-6 h-6"
+              style={styles.dailyIcon}
             />
-            <Text className="text-white text-base font-medium">
-              {' '}
-              22h 55m 20s remaining{' '}
+            <Text style={styles.dailyTime}>
+              22h 55m 20s remaining
             </Text>
           </View>
         </View>
-        <View className="rounded-lg border-white border-2 mr-3 h-12 px-3 flex flex-row gap-x-px items-center">
-          <Text className="text-white font-medium text-lg">View all</Text>
+        <View style={styles.viewAllButton}>
+          <Text style={styles.viewAllText}>View all</Text>
           <Image
             source={icons.show_all}
             resizeMode="contain"
-            className="w-6 h-6"
+            style={styles.viewAllIcon}
           />
         </View>
       </View>
       {/* Products */}
-      <View className="my-8">
+      <View style={styles.productsContainer}>
         <FlatList
           data={products}
           renderItem={({item}) => (
@@ -169,64 +169,63 @@ const HomeTab = (props: Props) => {
           )}
           horizontal
           showsHorizontalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View className="w-8" />}
-          ListFooterComponent={<View className="w-8" />}
-          ListHeaderComponent={<View className="w-8" />}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ListFooterComponent={<View style={styles.separator} />}
+          ListHeaderComponent={<View style={styles.separator} />}
         />
       </View>
       {/* special Offer */}
-      <View className="flex my-5 justify-between bg-white flex-row items-center py-3 px-4 mx-5 rounded-lg">
+      <View style={styles.specialOfferContainer}>
         <Image
           source={icons.offer}
-          className="w-24 h-24"
+          style={styles.offerIcon}
           resizeMode="contain"
         />
-        <View className="">
-          <Text className="text-2xl mb-1 text-black-100 font-bold">
+        <View>
+          <Text style={styles.specialOfferTitle}>
             Special Offers
           </Text>
-          <Text className="text-neutral-500 text-base w-52">
+          <Text style={styles.specialOfferText}>
             We make sure you get the offer you need at best prices
           </Text>
         </View>
       </View>
       {/* Flat Shoes Offer */}
-      <View className="my-5">
+      <View style={styles.flatContainer}>
         <Image
           source={images.flat}
-          className="self-center "
+          style={styles.flatImage}
           resizeMode="contain"
         />
       </View>
       {/* Trending Products */}
-      <View className="bg-red-500 rounded-xl justify-between flex flex-row mx-5 pl-5 py-5">
+      <View style={styles.trendingContainer}>
         <View>
-          <Text className="text-white  text-2xl font-semibold">
+          <Text style={styles.trendingTitle}>
             Daily of the Day
           </Text>
-          <View className="flex flex-row mt-3 items-center gap-x-1">
+          <View style={styles.trendingTimeContainer}>
             <Image
               source={icons.calender}
               resizeMode="contain"
-              className="w-6 h-6"
+              style={styles.trendingIcon}
             />
-            <Text className="text-white text-base font-medium">
-              {' '}
-              22h 55m 20s remaining{' '}
+            <Text style={styles.trendingTime}>
+              22h 55m 20s remaining
             </Text>
           </View>
         </View>
-        <View className="rounded-lg border-white border-2 mr-3 h-12 px-3 flex flex-row gap-x-px items-center">
-          <Text className="text-white font-medium text-lg">View all</Text>
+        <View style={styles.trendingViewAllButton}>
+          <Text style={styles.trendingViewAllText}>View all</Text>
           <Image
             source={icons.show_all}
             resizeMode="contain"
-            className="w-6 h-6"
+            style={styles.trendingViewAllIcon}
           />
         </View>
       </View>
       {/* Products */}
-      <View className="my-8">
+      <View style={styles.productsContainer}>
         <FlatList
           data={products}
           renderItem={({item}) => (
@@ -244,15 +243,212 @@ const HomeTab = (props: Props) => {
           )}
           horizontal
           showsHorizontalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View className="w-8" />}
-          ListFooterComponent={<View className="w-8" />}
-          ListHeaderComponent={<View className="w-8" />}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ListFooterComponent={<View style={styles.separator} />}
+          ListHeaderComponent={<View style={styles.separator} />}
         />
       </View>
       {/* .... */}
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: Spacing[5],
+  },
+  headerIcon: {
+    width: 32,
+    height: 32,
+  },
+  logo: {
+    width: 96,
+    height: 96,
+  },
+  featuresContainer: {
+    flexDirection: 'row',
+    marginVertical: Spacing[5],
+    marginHorizontal: Spacing[5],
+    justifyContent: 'space-between',
+  },
+  featuresTitle: {
+    fontSize: FontSizes['2xl'],
+    fontFamily: FontFamilies.mbold,
+  },
+  featuresButtons: {
+    flexDirection: 'row',
+    gap: Spacing[3],
+  },
+  featureButton: {
+    backgroundColor: Colors.white,
+    borderRadius: 8,
+    flexDirection: 'row',
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: Spacing[2],
+  },
+  featureButtonText: {
+    color: Colors.black[100],
+  },
+  featureIcon: {
+    width: 16,
+    height: 16,
+  },
+  categoryImage: {
+    width: 96,
+    height: 96,
+    borderRadius: 9999,
+  },
+  categoryText: {
+    color: 'rgba(0, 0, 0, 0.8)',
+    textAlign: 'center',
+    fontSize: FontSizes.lg,
+    fontFamily: FontFamilies.pmedium,
+  },
+  separator: {
+    width: Spacing[8],
+  },
+  dealImage: {
+    width: '100%',
+    marginTop: Spacing[8],
+  },
+  dailyContainer: {
+    backgroundColor: '#4392F9',
+    borderRadius: 12,
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    marginHorizontal: Spacing[5],
+    paddingLeft: Spacing[5],
+    paddingVertical: Spacing[5],
+  },
+  dailyTitle: {
+    color: Colors.white,
+    fontSize: FontSizes['2xl'],
+    fontFamily: FontFamilies.psemibold,
+  },
+  dailyTimeContainer: {
+    flexDirection: 'row',
+    marginTop: Spacing[3],
+    alignItems: 'center',
+    gap: 4,
+  },
+  dailyIcon: {
+    width: 24,
+    height: 24,
+  },
+  dailyTime: {
+    color: Colors.white,
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.pmedium,
+  },
+  viewAllButton: {
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: Colors.white,
+    marginRight: Spacing[3],
+    height: 48,
+    paddingHorizontal: Spacing[3],
+    flexDirection: 'row',
+    gap: 1,
+    alignItems: 'center',
+  },
+  viewAllText: {
+    color: Colors.white,
+    fontFamily: FontFamilies.pmedium,
+    fontSize: FontSizes.lg,
+  },
+  viewAllIcon: {
+    width: 24,
+    height: 24,
+  },
+  productsContainer: {
+    marginVertical: Spacing[8],
+  },
+  specialOfferContainer: {
+    flexDirection: 'row',
+    marginVertical: Spacing[5],
+    justifyContent: 'space-between',
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    paddingVertical: Spacing[3],
+    paddingHorizontal: Spacing[4],
+    marginHorizontal: Spacing[5],
+    borderRadius: 8,
+  },
+  offerIcon: {
+    width: 96,
+    height: 96,
+  },
+  specialOfferTitle: {
+    fontSize: FontSizes['2xl'],
+    marginBottom: Spacing[1],
+    color: Colors.black[100],
+    fontFamily: FontFamilies.mbold,
+  },
+  specialOfferText: {
+    color: Colors.neutral[500],
+    fontSize: FontSizes.base,
+    width: 208,
+  },
+  flatContainer: {
+    marginVertical: Spacing[5],
+  },
+  flatImage: {
+    alignSelf: 'center',
+  },
+  trendingContainer: {
+    backgroundColor: Colors.red[500],
+    borderRadius: 12,
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    marginHorizontal: Spacing[5],
+    paddingLeft: Spacing[5],
+    paddingVertical: Spacing[5],
+  },
+  trendingTitle: {
+    color: Colors.white,
+    fontSize: FontSizes['2xl'],
+    fontFamily: FontFamilies.psemibold,
+  },
+  trendingTimeContainer: {
+    flexDirection: 'row',
+    marginTop: Spacing[3],
+    alignItems: 'center',
+    gap: 4,
+  },
+  trendingIcon: {
+    width: 24,
+    height: 24,
+  },
+  trendingTime: {
+    color: Colors.white,
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.pmedium,
+  },
+  trendingViewAllButton: {
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: Colors.white,
+    marginRight: Spacing[3],
+    height: 48,
+    paddingHorizontal: Spacing[3],
+    flexDirection: 'row',
+    gap: 1,
+    alignItems: 'center',
+  },
+  trendingViewAllText: {
+    color: Colors.white,
+    fontFamily: FontFamilies.pmedium,
+    fontSize: FontSizes.lg,
+  },
+  trendingViewAllIcon: {
+    width: 24,
+    height: 24,
+  },
+});
 
 export default HomeTab;
 

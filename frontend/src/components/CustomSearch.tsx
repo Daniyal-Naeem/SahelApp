@@ -5,11 +5,13 @@ import {
   Image,
   TextInput,
   Alert,
+  StyleSheet,
 } from 'react-native';
 import React, {useState} from 'react';
 import {icons} from '../constants';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
+import {Colors, Spacing, FontSizes, FontFamilies} from '../constants/styles';
 
 type CustomSearchProps = {
   placeholder?: string;
@@ -39,12 +41,12 @@ const CustomSearch: React.FC<CustomSearchProps> = ({
   };
 
   return (
-    <View className="mx-3">
-      <View className="flex flex-row items-center justify-between bg-white w-full rounded-xl pr-5  h-16">
+    <View style={styles.container}>
+      <View style={styles.searchContainer}>
         <TouchableOpacity onPress={handlePress}>
           <Image
             source={icons.search}
-            className="w-6 h-6 mx-4"
+            style={styles.searchIcon}
             resizeMode="contain"
           />
         </TouchableOpacity>
@@ -52,14 +54,46 @@ const CustomSearch: React.FC<CustomSearchProps> = ({
           placeholder={placeholder || 'Search any Product..'}
           value={query}
           onChangeText={(e: string) => setQuery(e)}
-          className="text-[#BBBBBB] flex-1 text-lg font-mregular bg-white"
+          style={styles.input}
           placeholderTextColor={'#BBBBBB'}
           onSubmitEditing={handlePress}
         />
-        <Image source={icons.mic} className="w-8 h-8" resizeMode="contain" />
+        <Image source={icons.mic} style={styles.micIcon} resizeMode="contain" />
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginHorizontal: Spacing[3],
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.white,
+    width: '100%',
+    borderRadius: 12,
+    paddingRight: Spacing[5],
+    height: 64,
+  },
+  searchIcon: {
+    width: 24,
+    height: 24,
+    marginHorizontal: Spacing[4],
+  },
+  input: {
+    color: '#BBBBBB',
+    flex: 1,
+    fontSize: FontSizes.lg,
+    fontFamily: FontFamilies.mregular,
+    backgroundColor: Colors.white,
+  },
+  micIcon: {
+    width: 32,
+    height: 32,
+  },
+});
 
 export default CustomSearch;

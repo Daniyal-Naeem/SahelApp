@@ -1,8 +1,9 @@
-import {View, Text, TextInput} from 'react-native';
+import {View, Text, TextInput, StyleSheet} from 'react-native';
 import React, {useState, useRef, useEffect} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {CustomButton} from '../components';
+import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 
 type Props = {};
 
@@ -68,32 +69,32 @@ const OTPScreen = (_props: Props) => {
   };
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="px-5 pt-28">
+    <View style={styles.container}>
+      <View style={styles.content}>
         {/* Title */}
-        <Text className="text-3xl text-black mb-4" style={{fontFamily: 'Montserrat-SemiBold'}}>
+        <Text style={[styles.title, {fontFamily: FontFamilies.msemibold}]}>
           Enter Code
         </Text>
 
         {/* Instructions */}
-        <Text className="text-base text-black/60 mb-2">
+        <Text style={styles.instruction}>
           Enter 4-digit code we sent you on your number.
         </Text>
 
         {/* Phone Number */}
-        <Text className="text-base text-black/60 mb-10">
+        <Text style={styles.phoneNumber}>
           +98*******00
         </Text>
 
         {/* OTP Input Fields */}
-        <View className="flex-row justify-center items-center mb-8">
+        <View style={styles.otpContainer}>
           {code.map((digit, index) => (
             <TextInput
               key={index}
               ref={ref => {
                 inputRefs.current[index] = ref;
               }}
-              className="w-16 h-16 rounded-full border border-gray-300 bg-gray-50 text-center text-2xl font-bold text-black mx-3"
+              style={styles.otpInput}
               value={digit}
               onChangeText={text => handleChangeText(text, index)}
               onKeyPress={({nativeEvent}) => handleKeyPress(nativeEvent.key, index)}
@@ -108,12 +109,56 @@ const OTPScreen = (_props: Props) => {
         <CustomButton
           title="Next"
           handlePress={handleNext}
-          containerStyle=""
         />
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
+  content: {
+    paddingHorizontal: Spacing[5],
+    paddingTop: Spacing[28],
+  },
+  title: {
+    fontSize: FontSizes['3xl'],
+    color: Colors.black[100],
+    marginBottom: Spacing[6],
+  },
+  instruction: {
+    fontSize: FontSizes.base,
+    color: 'rgba(0, 0, 0, 0.6)',
+    marginBottom: Spacing[3],
+  },
+  phoneNumber: {
+    fontSize: FontSizes.base,
+    color: 'rgba(0, 0, 0, 0.6)',
+    marginBottom: Spacing[12],
+  },
+  otpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing[10],
+  },
+  otpInput: {
+    width: r(64),
+    height: r(64),
+    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: Colors.gray[300],
+    backgroundColor: Colors.gray[50],
+    textAlign: 'center',
+    fontSize: FontSizes['2xl'],
+    fontWeight: '700',
+    color: Colors.black[100],
+    marginHorizontal: Spacing[4],
+  },
+});
 
 export default OTPScreen;
 
