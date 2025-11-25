@@ -47,6 +47,16 @@ const productSchema = new Schema({
             required: [true, "Status Name is required"]
         },
 
+    },
+    // Category relationship
+    category: {
+        type: Schema.Types.ObjectId,
+        ref: 'categoryModel'
+    },
+    // Vendor who created this product
+    vendor: {
+        type: Schema.Types.ObjectId,
+        ref: 'userModel'
     }
 }, { timestamps: true })
 // let's add the timestamp to enable createdAt, and _id

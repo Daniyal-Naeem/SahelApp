@@ -1456,7 +1456,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/types@npm:7.19.0":
+"@babel/types@npm:7.19.0, @babel/types@npm:^7.18.6":
   version: 7.19.0
   resolution: "@babel/types@npm:7.19.0"
   dependencies:
@@ -1467,7 +1467,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/types@npm:^7.0.0, @babel/types@npm:^7.18.6, @babel/types@npm:^7.20.7, @babel/types@npm:^7.25.2, @babel/types@npm:^7.27.1, @babel/types@npm:^7.27.3, @babel/types@npm:^7.28.2, @babel/types@npm:^7.28.4, @babel/types@npm:^7.28.5, @babel/types@npm:^7.3.3, @babel/types@npm:^7.4.4":
+"@babel/types@npm:^7.0.0, @babel/types@npm:^7.20.7, @babel/types@npm:^7.25.2, @babel/types@npm:^7.27.1, @babel/types@npm:^7.27.3, @babel/types@npm:^7.28.2, @babel/types@npm:^7.28.4, @babel/types@npm:^7.28.5, @babel/types@npm:^7.3.3, @babel/types@npm:^7.4.4":
   version: 7.28.5
   resolution: "@babel/types@npm:7.28.5"
   dependencies:
@@ -2749,11 +2749,11 @@ __metadata:
   linkType: hard
 
 "@types/react@npm:*, @types/react@npm:^19.1.1":
-  version: 19.2.7
-  resolution: "@types/react@npm:19.2.7"
+  version: 19.2.6
+  resolution: "@types/react@npm:19.2.6"
   dependencies:
     csstype: ^3.2.2
-  checksum: b1f4c9a45862ea392b9ead060a5b5730b4c41b21fde097db35e639a8a0978460468d8da87f47226230bd4681d6de48ffee695595540084a8a849dde027c66a46
+  checksum: 76b726fc5069e9445b884734642b2b11424839d9335b80ee327d25a78f1c040c40d6a7103f9a1e07502a119c4cf34fd05d8aad7a6a3f278138c95b91f67ce3fd
   languageName: node
   linkType: hard
 
@@ -3286,13 +3286,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"async-generator-function@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "async-generator-function@npm:1.0.0"
-  checksum: 74a71a4a2dd7afd06ebb612f6d612c7f4766a351bedffde466023bf6dae629e46b0d2cd38786239e0fbf245de0c7df76035465e16d1213774a0efb22fec0d713
-  languageName: node
-  linkType: hard
-
 "async-limiter@npm:~1.0.0":
   version: 1.0.1
   resolution: "async-limiter@npm:1.0.1"
@@ -3700,9 +3693,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30001754":
-  version: 1.0.30001757
-  resolution: "caniuse-lite@npm:1.0.30001757"
-  checksum: 84ce069d2457f2d2dc68ef9a23870962c89f2bc2a3a67b6b47a431842cfe74a27b8d156b05e5e36f320b501642ecbaf24526963b01468a8b64512ccb8267d135
+  version: 1.0.30001756
+  resolution: "caniuse-lite@npm:1.0.30001756"
+  checksum: abcbb01eceb921f3462721792ede7ab9dc95eb676e2f6873837ebf5c163f5fe74a629de20b56b8bd10147af2ba255a608d422e72597149e19c91b9b760593bb6
   languageName: node
   linkType: hard
 
@@ -5307,23 +5300,20 @@ __metadata:
   linkType: hard
 
 "get-intrinsic@npm:^1.2.4, get-intrinsic@npm:^1.2.5, get-intrinsic@npm:^1.2.6, get-intrinsic@npm:^1.2.7, get-intrinsic@npm:^1.3.0":
-  version: 1.3.1
-  resolution: "get-intrinsic@npm:1.3.1"
+  version: 1.3.0
+  resolution: "get-intrinsic@npm:1.3.0"
   dependencies:
-    async-function: ^1.0.0
-    async-generator-function: ^1.0.0
     call-bind-apply-helpers: ^1.0.2
     es-define-property: ^1.0.1
     es-errors: ^1.3.0
     es-object-atoms: ^1.1.1
     function-bind: ^1.1.2
-    generator-function: ^2.0.0
     get-proto: ^1.0.1
     gopd: ^1.2.0
     has-symbols: ^1.1.0
     hasown: ^2.0.2
     math-intrinsics: ^1.1.0
-  checksum: c02b3b6a445f9cd53e14896303794ac60f9751f58a69099127248abdb0251957174c6524245fc68579dc8e6a35161d3d94c93e665f808274716f4248b269436a
+  checksum: 301008e4482bb9a9cb49e132b88fee093bff373b4e6def8ba219b1e96b60158a6084f273ef5cafe832e42cd93462f4accb46a618d35fe59a2b507f2388c5b79d
   languageName: node
   linkType: hard
 

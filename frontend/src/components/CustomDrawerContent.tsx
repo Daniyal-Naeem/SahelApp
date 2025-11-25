@@ -89,8 +89,8 @@ const CustomDrawerContent = (props: any) => {
             resizeMode="cover"
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>SAM KAMERON</Text>
-            <Text style={styles.profileEmail}>samkam@gmail.com</Text>
+            <Text style={styles.profileName}>Daniyal</Text>
+            <Text style={styles.profileEmail}>sahal@gmail.com</Text>
           </View>
         </View>
 

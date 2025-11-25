@@ -52,14 +52,16 @@ const createNewProduct = async (req, res) => {
     try {
         // get the input fields
         const { image, title, description, price, priceBeforeDeal, priceOff, stars, numberOfReview, ukSide,
-            tags, status } = req.body;
+            tags, status, category, vendor } = req.body;
         // destructure status to icon, and name
         const { icon, name } = status;
 
         // create the product
         const newProduct = await productsModel.create({
             image, title, description, price, priceBeforeDeal, priceOff, stars, numberOfReview, ukSide,
-            tags, status: { icon, name }
+            tags, status: { icon, name },
+            ...(category && { category }),
+            ...(vendor && { vendor })
         })
         // return it
         return res.status(200).json(newProduct)
