@@ -128,7 +128,7 @@ const HomeTab = (props: Props) => {
       <View style={styles.dailyContainer}>
         <View>
           <Text style={styles.dailyTitle}>
-            Daily of the Day
+            Deals of the Day
           </Text>
           <View style={styles.dailyTimeContainer}>
             <Image
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing[8],
   },
   dailyContainer: {
-    backgroundColor: '#4392F9',
+    backgroundColor: '#FFCA28',
     borderRadius: 12,
     justifyContent: 'space-between',
     flexDirection: 'row',

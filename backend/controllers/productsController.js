@@ -13,7 +13,10 @@ const productsModel = require('../models/productsModel')
 // get all products
 const getAllProducts = async (req, res) => {
     try {
-        const products = await productsModel.find({}).sort({ createdAt: -1 }) // sort by newest
+        const products = await productsModel.find({})
+            .populate('category', 'name description icon')
+            .populate('vendor', 'name email businessName')
+            .sort({ createdAt: -1 }) // sort by newest
         //   check if there no products
         if (products.length === 0) {
             return res.status(404).json({ message: " No Products Found " })
@@ -31,13 +34,15 @@ const getSingleProduct = async (req, res) => {
         const { id } = req.params;
         // validate the id
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            res.status(400).json({ error: "No Such ID" })
+            return res.status(400).json({ error: "No Such ID" })
         }
-        // get the post by its id
-        const Product = productsModel.findById(id)
+        // get the post by its id with populated fields
+        const Product = await productsModel.findById(id)
+            .populate('category', 'name description icon')
+            .populate('vendor', 'name email businessName')
         // check if valid product
         if (!Product) {
-            res.status(400).json("Not Valid Product")
+            return res.status(404).json({ error: "Not Valid Product" })
         }
         // if it's ok return it
         return res.status(200).json(Product)

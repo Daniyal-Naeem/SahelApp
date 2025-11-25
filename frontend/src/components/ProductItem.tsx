@@ -1,7 +1,7 @@
 import {View, Text, TouchableOpacity, Image, StyleSheet} from 'react-native';
-import React from 'react';
+import React, {useState} from 'react';
 import {ItemDetails, ProductTypes} from '../constants/types';
-import {images} from '../constants';
+import {images, icons} from '../constants';
 import {Rating, AirbnbRating} from 'react-native-ratings';
 import {useNavigation} from '@react-navigation/native';
 import {RootStackParamList} from '../screens/OnboardingScreen';
@@ -15,7 +15,7 @@ type ProductItemProps = {
   description: string;
   price: number;
   priceBeforeDeal: number;
-  priceOff: string;
+  priceOff: string | number;
   stars: number;
   numberOfReview: number;
   ukSide?: number[];
@@ -34,44 +34,78 @@ const ProductItem: React.FC<ProductItemProps> = ({
   itemDetails,
 }) => {
   const navigation = useNavigation<StackNavigationProp<RouteStackParamList, 'ProductDetails'>>();
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  
   const NavigateToProductsDetails = () => {
     navigation.navigate('ProductDetails', {itemDetails});
   };
 
+  const toggleWishlist = () => {
+    setIsWishlisted(!isWishlisted);
+  };
+
+  // Format number with commas
+  const formatNumber = (num: number) => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
+  // Calculate discount percentage
+  const discountPercent = Math.round(((priceBeforeDeal - price) / priceBeforeDeal) * 100);
+
   return (
     <TouchableOpacity
       style={styles.container}
-      onPress={NavigateToProductsDetails}>
-      <Image source={{uri: image}} style={styles.image} />
+      onPress={NavigateToProductsDetails}
+      activeOpacity={0.9}>
+      <View style={styles.imageContainer}>
+        <Image source={{uri: image}} style={styles.image} resizeMode="cover" />
+        <TouchableOpacity 
+          style={styles.wishlistButton}
+          onPress={toggleWishlist}
+          hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+          <Image 
+            source={icons.heart} 
+            style={[styles.wishlistIcon, isWishlisted && styles.wishlistIconActive]} 
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+        {discountPercent > 0 && (
+          <View style={styles.discountBadge}>
+            <Text style={styles.discountText}>{discountPercent}% Off</Text>
+          </View>
+        )}
+      </View>
       <View style={styles.content}>
-        <Text style={styles.title}>
+        <Text style={styles.title} numberOfLines={2}>
           {title}
         </Text>
-        <Text style={styles.description}>
+        <Text style={styles.description} numberOfLines={2}>
           {description}
         </Text>
-        <Text style={styles.price}>
-          ${price}
-        </Text>
-        <View style={styles.priceContainer}>
-          <Text style={styles.priceBeforeDeal}>
-            {priceBeforeDeal}
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>
+            SAR {price.toFixed(2)}
           </Text>
-          <Text style={styles.priceOff}> {priceOff} </Text>
+          {priceBeforeDeal > price && (
+            <Text style={styles.priceBeforeDeal}>
+              SAR {priceBeforeDeal.toFixed(2)}
+            </Text>
+          )}
         </View>
         <View style={styles.ratingContainer}>
-          <View>
+          <View style={styles.starsContainer}>
             <AirbnbRating
-              count={stars}
-              reviews={['Terrible', 'Bad', 'Okay', 'Good', 'Great']}
+              count={5}
               defaultRating={stars}
-              size={20}
-              ratingContainerStyle={{flex: 1, flexDirection: 'row'}}
+              size={12}
+              showRating={false}
+              isDisabled={true}
+              selectedColor="#FFD700"
+              ratingContainerStyle={styles.ratingStars}
             />
           </View>
-
           <Text style={styles.reviewCount}>
-            {numberOfReview}
+            {formatNumber(numberOfReview)}
           </Text>
         </View>
       </View>
@@ -81,64 +115,124 @@ const ProductItem: React.FC<ProductItemProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: r(288),
+    width: r(180),
     backgroundColor: Colors.white,
     borderRadius: r(12),
+    marginHorizontal: Spacing[2],
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+    overflow: 'hidden',
+  },
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: r(180),
   },
   image: {
     width: '100%',
-    borderTopLeftRadius: r(12),
-    borderTopRightRadius: r(12),
-    height: r(160),
+    height: '100%',
+    backgroundColor: Colors.background[200],
+  },
+  wishlistButton: {
+    position: 'absolute',
+    top: Spacing[2],
+    right: Spacing[2],
+    width: r(32),
+    height: r(32),
+    borderRadius: r(16),
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  wishlistIcon: {
+    width: r(18),
+    height: r(18),
+    tintColor: Colors.neutral[500],
+  },
+  wishlistIconActive: {
+    tintColor: Colors.action,
+  },
+  discountBadge: {
+    position: 'absolute',
+    bottom: Spacing[2],
+    left: Spacing[2],
+    backgroundColor: '#FF6B9D',
+    paddingHorizontal: Spacing[2],
+    paddingVertical: r(4),
+    borderRadius: r(6),
+  },
+  discountText: {
+    color: Colors.white,
+    fontSize: r(11),
+    fontFamily: FontFamilies.psemibold,
   },
   content: {
-    paddingHorizontal: Spacing[3],
+    padding: Spacing[3],
   },
   title: {
-    fontSize: FontSizes['3xl'],
+    fontSize: FontSizes.base,
     color: Colors.black[100],
-    marginVertical: Spacing[2],
-    textAlign: 'left',
-    fontFamily: FontFamilies.mbold,
+    marginBottom: Spacing[1],
+    fontFamily: FontFamilies.psemibold,
+    lineHeight: r(20),
+    minHeight: r(40),
   },
   description: {
-    fontSize: FontSizes.xl,
-    color: 'rgba(0, 0, 0, 0.5)',
-    textAlign: 'left',
-    fontFamily: FontFamilies.pmedium,
+    fontSize: FontSizes.xs,
+    color: Colors.neutral[500],
+    marginBottom: Spacing[2],
+    fontFamily: FontFamilies.pregular,
+    lineHeight: r(16),
+    minHeight: r(32),
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    marginBottom: Spacing[2],
   },
   price: {
     color: Colors.black[100],
     fontFamily: FontFamilies.mbold,
-    fontSize: FontSizes['2xl'],
-    textAlign: 'left',
-  },
-  priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing[3],
+    fontSize: FontSizes.lg,
   },
   priceBeforeDeal: {
-    color: 'rgba(0, 0, 0, 0.5)',
-    fontFamily: FontFamilies.mthin,
-    fontSize: FontSizes.xl,
+    color: Colors.neutral[400],
+    fontFamily: FontFamilies.pregular,
+    fontSize: FontSizes.sm,
     textDecorationLine: 'line-through',
-    textAlign: 'left',
-  },
-  priceOff: {
-    color: Colors.action,
-    fontFamily: FontFamilies.mthin,
-    fontSize: FontSizes.xl,
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing[3],
+    gap: Spacing[1],
+  },
+  starsContainer: {
+    flexDirection: 'row',
+  },
+  ratingStars: {
+    flexDirection: 'row',
+    gap: r(2),
   },
   reviewCount: {
-    fontSize: FontSizes.xl,
-    fontFamily: FontFamilies.mthin,
-    color: 'rgba(0, 0, 0, 0.9)',
+    fontSize: FontSizes.xs,
+    fontFamily: FontFamilies.pregular,
+    color: Colors.neutral[500],
+    marginLeft: Spacing[1],
   },
 });
 
