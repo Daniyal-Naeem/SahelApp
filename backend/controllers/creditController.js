@@ -1,6 +1,9 @@
 const mongoose = require('mongoose')
 const userModel = require('../models/userModel')
+const walletModel = require('../models/walletModel')
 const creditTransactionModel = require('../models/creditTransactionModel')
+const auditLogModel = require('../models/auditLogModel')
+const { syncUserWallet } = require('../utils/walletSync')
 
 /**
  * getUserCredits,
@@ -20,8 +23,14 @@ const getUserCredits = async (req, res) => {
             return res.status(404).json({ error: "User not found" })
         }
 
+        // Get or create wallet (sync with user.credits for backward compatibility)
+        await syncUserWallet(userId)
+        const wallet = await walletModel.findOne({ userId })
+
         return res.status(200).json({
-            credits: user.credits || 0,
+            credits: wallet ? wallet.balance : (user.credits || 0),
+            balance: wallet ? wallet.balance : (user.credits || 0), // New field
+            currency: wallet ? wallet.currency : 'USD',
             user: {
                 name: user.name,
                 email: user.email
@@ -75,27 +84,71 @@ const addCredits = async (userId, amount, description, options = {}) => {
             throw new Error('User not found')
         }
 
-        const currentBalance = user.credits || 0;
+        // Get or create wallet
+        await syncUserWallet(userId)
+        const wallet = await walletModel.findOne({ userId })
+        if (!wallet) {
+            throw new Error('Wallet not found')
+        }
+
+        const currentBalance = wallet.balance || 0;
         const newBalance = currentBalance + amount;
 
-        // Update user credits
-        user.credits = newBalance;
-        await user.save()
+        // Use MongoDB transaction for atomicity
+        const session = await mongoose.startSession()
+        session.startTransaction()
 
-        // Create transaction record
-        const transaction = await creditTransactionModel.create({
-            user: userId,
-            type: options.type || 'earned',
-            amount: amount,
-            balanceAfter: newBalance,
-            description: description,
-            relatedEntity: options.relatedEntity || 'none',
-            relatedEntityId: options.relatedEntityId || null,
-            adminUser: options.adminUser || null,
-            status: 'completed'
-        })
+        try {
+            // Update wallet balance
+            wallet.balance = newBalance
+            wallet.lastTransactionAt = new Date()
+            if (options.type === 'earned' || options.type === 'bonus') {
+                wallet.totalEarned = (wallet.totalEarned || 0) + amount
+            }
+            await wallet.save({ session })
 
-        return transaction
+            // Update user.credits for backward compatibility
+            user.credits = newBalance
+            await user.save({ session })
+
+            // Create transaction record
+            const transaction = await creditTransactionModel.create([{
+                user: userId,
+                type: options.type || 'earned',
+                amount: amount,
+                balanceAfter: newBalance,
+                description: description,
+                relatedEntity: options.relatedEntity || 'none',
+                relatedEntityId: options.relatedEntityId || null,
+                adminUser: options.adminUser || null,
+                status: 'completed',
+                completedAt: new Date()
+            }], { session })
+
+            await session.commitTransaction()
+
+            // Log audit
+            await auditLogModel.log({
+                action: 'credit_adjust',
+                userId: userId,
+                adminId: options.adminUser || null,
+                transactionId: transaction[0]._id,
+                details: {
+                    amount,
+                    type: options.type || 'earned',
+                    description,
+                    balanceAfter: newBalance
+                },
+                status: 'success'
+            })
+
+            return transaction[0]
+        } catch (error) {
+            await session.abortTransaction()
+            throw error
+        } finally {
+            session.endSession()
+        }
     } catch (error) {
         console.error('Error adding credits:', error)
         throw error
@@ -110,7 +163,14 @@ const deductCredits = async (userId, amount, description, options = {}) => {
             throw new Error('User not found')
         }
 
-        const currentBalance = user.credits || 0;
+        // Get or create wallet
+        await syncUserWallet(userId)
+        const wallet = await walletModel.findOne({ userId })
+        if (!wallet) {
+            throw new Error('Wallet not found')
+        }
+
+        const currentBalance = wallet.balance || 0;
         
         if (currentBalance < amount) {
             throw new Error('Insufficient credits')
@@ -118,23 +178,58 @@ const deductCredits = async (userId, amount, description, options = {}) => {
 
         const newBalance = currentBalance - amount;
 
-        // Update user credits
-        user.credits = newBalance;
-        await user.save()
+        // Use MongoDB transaction for atomicity
+        const session = await mongoose.startSession()
+        session.startTransaction()
 
-        // Create transaction record
-        const transaction = await creditTransactionModel.create({
-            user: userId,
-            type: 'spent',
-            amount: amount,
-            balanceAfter: newBalance,
-            description: description,
-            relatedEntity: options.relatedEntity || 'none',
-            relatedEntityId: options.relatedEntityId || null,
-            status: 'completed'
-        })
+        try {
+            // Update wallet balance
+            wallet.balance = newBalance
+            wallet.lastTransactionAt = new Date()
+            wallet.totalSpent = (wallet.totalSpent || 0) + amount
+            await wallet.save({ session })
 
-        return transaction
+            // Update user.credits for backward compatibility
+            user.credits = newBalance
+            await user.save({ session })
+
+            // Create transaction record
+            const transaction = await creditTransactionModel.create([{
+                user: userId,
+                type: options.type || 'consume',
+                amount: amount,
+                balanceAfter: newBalance,
+                description: description,
+                relatedEntity: options.relatedEntity || 'none',
+                relatedEntityId: options.relatedEntityId || null,
+                status: 'completed',
+                completedAt: new Date()
+            }], { session })
+
+            await session.commitTransaction()
+
+            // Log audit
+            await auditLogModel.log({
+                action: 'credit_consume',
+                userId: userId,
+                transactionId: transaction[0]._id,
+                details: {
+                    amount,
+                    description,
+                    balanceAfter: newBalance,
+                    relatedEntity: options.relatedEntity,
+                    relatedEntityId: options.relatedEntityId
+                },
+                status: 'success'
+            })
+
+            return transaction[0]
+        } catch (error) {
+            await session.abortTransaction()
+            throw error
+        } finally {
+            session.endSession()
+        }
     } catch (error) {
         console.error('Error deducting credits:', error)
         throw error
@@ -214,4 +309,5 @@ module.exports = {
     adminAddCredits,
     adminDeductCredits
 }
+
 

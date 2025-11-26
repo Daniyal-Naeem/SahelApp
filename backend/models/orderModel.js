@@ -56,13 +56,25 @@ const orderSchema = new Schema({
     // Payment information
     paymentMethod: {
         type: String,
-        enum: ['credit', 'cash', 'card', 'other'],
+        enum: ['credit', 'cash', 'card', 'other', 'mixed'],
         default: 'credit'
     },
     paymentStatus: {
         type: String,
         enum: ['pending', 'paid', 'failed', 'refunded'],
         default: 'pending'
+    },
+    // Credit usage (for partial payments)
+    creditUsed: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    // Payment gateway amount (if using card/gateway)
+    gatewayAmount: {
+        type: Number,
+        default: 0,
+        min: 0
     },
     // Shipping information
     shippingAddress: {
@@ -116,4 +128,5 @@ orderSchema.pre('save', function(next) {
 })
 
 module.exports = mongoose.model("orderModel", orderSchema)
+
 

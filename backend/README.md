@@ -95,3 +95,4 @@ Use Postman, Insomnia, or curl to test the APIs. See `API_DOCUMENTATION.md` for 
 - All timestamps are automatically managed (createdAt, updatedAt)
 - The server uses CORS for cross-origin requests
 
+

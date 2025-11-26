@@ -27,3 +27,4 @@ router.delete('/:id', authenticate, authorize('admin'), deleteCategory)
 
 module.exports = router
 
+

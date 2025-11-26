@@ -204,3 +204,4 @@ npm run create-admin admin@mysite.com SecurePass123 "My Admin"
 - Ensure all dependencies are installed: `npm install`
 - Check `.env` file has correct `MONGODB_URI`
 
+

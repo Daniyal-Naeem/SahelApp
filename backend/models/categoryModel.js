@@ -38,3 +38,4 @@ const categorySchema = new Schema({
 
 module.exports = mongoose.model("categoryModel", categorySchema)
 
+

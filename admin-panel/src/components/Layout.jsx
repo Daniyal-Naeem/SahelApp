@@ -16,6 +16,24 @@ const Layout = ({ children }) => {
     if (path === '/products') {
       return location.pathname.startsWith('/products')
     }
+    if (path === '/credits') {
+      return location.pathname.startsWith('/credits')
+    }
+    if (path === '/banners') {
+      return location.pathname.startsWith('/banners')
+    }
+    if (path === '/deals') {
+      return location.pathname.startsWith('/deals')
+    }
+    if (path === '/gift-cards') {
+      return location.pathname.startsWith('/gift-cards')
+    }
+    if (path === '/coupons') {
+      return location.pathname.startsWith('/coupons')
+    }
+    if (path === '/reviews') {
+      return location.pathname.startsWith('/reviews')
+    }
     return location.pathname === path
   }
 
@@ -50,6 +68,56 @@ const Layout = ({ children }) => {
           >
             <span>🏪</span> Vendors
           </Link>
+          <div className="nav-section-divider"></div>
+          <Link 
+            to="/credits/balances" 
+            className={`nav-item ${isActive('/credits') ? 'active' : ''}`}
+          >
+            <span>💰</span> Credit Balances
+          </Link>
+          <Link 
+            to="/credits/transactions" 
+            className={`nav-item ${isActive('/credits/transactions') ? 'active' : ''}`}
+          >
+            <span>📝</span> Transactions
+          </Link>
+          <Link 
+            to="/credits/adjust" 
+            className={`nav-item ${isActive('/credits/adjust') ? 'active' : ''}`}
+          >
+            <span>⚙️</span> Adjust Credits
+          </Link>
+          <div className="nav-section-divider"></div>
+          <Link 
+            to="/banners" 
+            className={`nav-item ${isActive('/banners') ? 'active' : ''}`}
+          >
+            <span>🖼️</span> Banners
+          </Link>
+          <Link 
+            to="/deals" 
+            className={`nav-item ${isActive('/deals') ? 'active' : ''}`}
+          >
+            <span>🎯</span> Deals
+          </Link>
+          <Link 
+            to="/gift-cards" 
+            className={`nav-item ${isActive('/gift-cards') ? 'active' : ''}`}
+          >
+            <span>🎁</span> Gift Cards
+          </Link>
+          <Link 
+            to="/coupons" 
+            className={`nav-item ${isActive('/coupons') ? 'active' : ''}`}
+          >
+            <span>🎫</span> Coupons
+          </Link>
+          <Link 
+            to="/reviews" 
+            className={`nav-item ${isActive('/reviews') ? 'active' : ''}`}
+          >
+            <span>⭐</span> Reviews
+          </Link>
         </nav>
         <div className="sidebar-footer">
           <div className="user-info">
@@ -68,6 +136,14 @@ const Layout = ({ children }) => {
             {location.pathname.startsWith('/products') && 'Product Management'}
             {location.pathname === '/users' && 'User Management'}
             {location.pathname === '/vendors' && 'Vendor Management'}
+            {location.pathname.startsWith('/credits/balances') && 'Credit Balances'}
+            {location.pathname.startsWith('/credits/transactions') && 'Credit Transactions'}
+            {location.pathname.startsWith('/credits/adjust') && 'Adjust Credits'}
+            {location.pathname.startsWith('/banners') && 'Banner Management'}
+            {location.pathname.startsWith('/deals') && 'Deal Management'}
+            {location.pathname.startsWith('/gift-cards') && 'Gift Card Management'}
+            {location.pathname.startsWith('/coupons') && 'Coupon Management'}
+            {location.pathname.startsWith('/reviews') && 'Review Moderation'}
           </h1>
         </header>
         <div className="content-area">

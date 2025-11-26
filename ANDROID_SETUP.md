@@ -262,3 +262,4 @@ cd frontend && nvm use 20.19.4 && npm start
 cd frontend && nvm use 20.19.4 && npm run android
 ```
 
+

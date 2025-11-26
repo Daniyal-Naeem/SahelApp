@@ -33,3 +33,4 @@ router.put('/vendors/:id/reject', rejectVendor)
 
 module.exports = router
 
+

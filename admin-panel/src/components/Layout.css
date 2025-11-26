@@ -31,6 +31,12 @@
   padding: 1rem 0;
 }
 
+.nav-section-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 10px 0;
+}
+
 .nav-item {
   display: flex;
   align-items: center;
@@ -116,4 +122,5 @@
   flex: 1;
   padding: 2rem;
 }
+
 

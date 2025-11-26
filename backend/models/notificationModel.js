@@ -18,7 +18,7 @@ const notificationSchema = new Schema({
     },
     type: {
         type: String,
-        enum: ['order', 'payment', 'system', 'promotion', 'vendor', 'other'],
+        enum: ['order', 'payment', 'system', 'promotion', 'vendor', 'credit_transfer_sent', 'credit_transfer_received', 'other'],
         default: 'system'
     },
     // Related entity (order, product, etc.)
@@ -47,6 +47,10 @@ const notificationSchema = new Schema({
         type: String,
         enum: ['low', 'medium', 'high', 'urgent'],
         default: 'medium'
+    },
+    // Additional data (flexible field for transaction IDs, amounts, etc.)
+    data: {
+        type: Schema.Types.Mixed
     }
 }, { timestamps: true })
 
@@ -62,4 +66,5 @@ notificationSchema.pre('save', function(next) {
 notificationSchema.index({ user: 1, isRead: 1, createdAt: -1 })
 
 module.exports = mongoose.model("notificationModel", notificationSchema)
+
 

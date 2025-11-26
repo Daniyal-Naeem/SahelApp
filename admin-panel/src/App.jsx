@@ -11,6 +11,15 @@ import CreateUserPage from './pages/CreateUserPage'
 import CreateVendorPage from './pages/CreateVendorPage'
 import CreateProductPage from './pages/CreateProductPage'
 import CreateCategoryPage from './pages/CreateCategoryPage'
+import CreditBalancesPage from './pages/CreditBalancesPage'
+import CreditTransactionsPage from './pages/CreditTransactionsPage'
+import CreditAdjustPage from './pages/CreditAdjustPage'
+import BannersPage from './pages/BannersPage'
+import CreateBannerPage from './pages/CreateBannerPage'
+import DealsPage from './pages/DealsPage'
+import GiftCardsPage from './pages/GiftCardsPage'
+import CouponsPage from './pages/CouponsPage'
+import ReviewsPage from './pages/ReviewsPage'
 
 function App() {
   return (
@@ -98,6 +107,96 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <CreateCategoryPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/credits/balances"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CreditBalancesPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/credits/transactions"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CreditTransactionsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/credits/adjust"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CreditAdjustPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/banners"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <BannersPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/banners/create"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CreateBannerPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/deals"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <DealsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gift-cards"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <GiftCardsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coupons"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CouponsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reviews"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ReviewsPage />
               </Layout>
             </ProtectedRoute>
           }
