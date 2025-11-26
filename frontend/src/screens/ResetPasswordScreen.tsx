@@ -49,12 +49,12 @@ const ResetPasswordScreen = (_props: Props) => {
         <Text style={styles.infoText}>
           * We will send you a message to set or reset your new password
         </Text>
-
-        <CustomButton
-          title="Submit"
-          handlePress={handleSubmit}
+       
+          <CustomButton
+            title="Submit"
+            handlePress={handleSubmit}
           containerStyle={styles.buttonContainer}
-        />
+          />
       </View>
     </View>
   );

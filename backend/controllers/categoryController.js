@@ -88,26 +88,52 @@ const createCategory = async (req, res) => {
 const updateCategory = async (req, res) => {
     try {
         const { id } = req.params;
+        const { name, description, image, icon, parentCategory, displayOrder } = req.body;
         
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: "No such ID" })
         }
+
+        // Check if category exists
+        const existingCategory = await categoryModel.findById(id)
+        if (!existingCategory) {
+            return res.status(404).json({ error: "Category not found" })
+        }
+
+        // If name is being changed, check for duplicates
+        if (name && name.trim() !== existingCategory.name) {
+            const duplicateCategory = await categoryModel.findOne({ 
+                name: name.trim(),
+                _id: { $ne: id } // Exclude current category
+            })
+            if (duplicateCategory) {
+                return res.status(400).json({ error: "Category with this name already exists" })
+            }
+        }
+        
+        // Prepare update data
+        const updateData = {}
+        if (name !== undefined) updateData.name = name.trim()
+        if (description !== undefined) updateData.description = description || ""
+        if (image !== undefined) updateData.image = image || ""
+        if (icon !== undefined) updateData.icon = icon || ""
+        if (parentCategory !== undefined) updateData.parentCategory = parentCategory || null
+        if (displayOrder !== undefined) updateData.displayOrder = displayOrder || 0
         
         const updatedCategory = await categoryModel.findByIdAndUpdate(
             id,
-            { ...req.body },
+            updateData,
             { new: true, runValidators: true }
         )
-        
-        if (!updatedCategory) {
-            return res.status(404).json({ error: "Category not found" })
-        }
         
         return res.status(200).json(updatedCategory)
     } catch (error) {
         let errorMessage = "";
         if (error.errors) {
-            errorMessage = Object.values(error.errors).map(error => error.message).join(", ")
+            errorMessage = Object.values(error.errors).map(err => err.message).join(", ")
+        } else if (error.code === 11000) {
+            // MongoDB duplicate key error
+            errorMessage = "Category with this name already exists"
         } else {
             errorMessage = error.message;
         }

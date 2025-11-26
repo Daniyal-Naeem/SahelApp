@@ -1,12 +1,12 @@
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   FlatList,
   ScrollView,
   StyleSheet,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import React, {useState} from 'react';
 import {icons} from '../constants';
 import {CustomButton, CustomWrapper, DetailsItem} from '../components';
@@ -32,11 +32,11 @@ const SettingTab = (props: Props) => {
       <View style={styles.container}>
         {/* image profile */}
         <View style={styles.profileContainer}>
-          <Image source={icons.profile} style={styles.profileImage} />
+          <FastImage source={icons.profile} style={styles.profileImage} />
           <TouchableOpacity
             onPress={handleEditPic}
             style={styles.editButton}>
-            <Image source={icons.pen} style={styles.editIcon} />
+            <FastImage source={icons.pen} style={styles.editIcon} />
           </TouchableOpacity>
         </View>
         {/* Personal Details */}
@@ -95,7 +95,7 @@ const SettingTab = (props: Props) => {
 const styles = StyleSheet.create({
   container: {
     paddingTop: Spacing[2],
-    paddingHorizontal: Spacing[3],
+    paddingHorizontal: Spacing[5], // Consistent horizontal padding
   },
   profileContainer: {
     flexDirection: 'row',

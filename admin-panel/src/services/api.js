@@ -24,7 +24,7 @@ api.interceptors.request.use(
   }
 )
 
-// Handle token expiration
+// Handle token expiration and errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -33,6 +33,20 @@ api.interceptors.response.use(
       localStorage.removeItem('admin_user')
       window.location.href = '/login'
     }
+    
+    // Log network errors for debugging
+    if (!error.response) {
+      console.error('Network Error:', {
+        message: error.message,
+        code: error.code,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          baseURL: error.config?.baseURL
+        }
+      })
+    }
+    
     return Promise.reject(error)
   }
 )

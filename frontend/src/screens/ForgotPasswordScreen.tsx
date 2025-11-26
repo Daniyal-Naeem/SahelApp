@@ -76,11 +76,11 @@ const ForgotPasswordScreen = (_props: Props) => {
 
         {/* Next Button */}
         <View style={styles.buttonWrapper}>
-          <CustomButton
-            title="Next"
-            handlePress={handleNext}
+        <CustomButton
+          title="Next"
+          handlePress={handleNext}
             containerStyle={styles.buttonContainer}
-          />
+        />
         </View>
       </View>
     </View>
