@@ -92,4 +92,17 @@
   color: #e74c3c;
 }
 
+.dashboard-section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 2rem 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.dashboard-section-title:first-child {
+  margin-top: 0;
+}
+
 

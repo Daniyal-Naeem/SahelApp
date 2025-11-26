@@ -160,5 +160,13 @@ export const reviewAPI = {
   reportReview: (id, data) => api.post(`/reviews/${id}/report`, data),
 }
 
+// Order APIs
+export const orderAPI = {
+  getAllOrders: (params) => api.get('/orders/all', { params }),
+  getOrderById: (id) => api.get(`/orders/${id}`),
+  updateOrderStatus: (id, data) => api.put(`/orders/${id}/status`, data),
+  cancelOrder: (id) => api.put(`/orders/${id}/cancel`),
+}
+
 export default api
 

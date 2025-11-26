@@ -37,6 +37,7 @@ const DashboardPage = () => {
 
   return (
     <div className="dashboard">
+      <h2 className="dashboard-section-title">Overview</h2>
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon">👥</div>
@@ -77,6 +78,87 @@ const DashboardPage = () => {
           <div className="stat-content">
             <h3>Total Revenue</h3>
             <p className="stat-value">${stats.revenue?.total?.toLocaleString() || 0}</p>
+          </div>
+        </div>
+      </div>
+
+      <h2 className="dashboard-section-title">Content Management</h2>
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon">🖼️</div>
+          <div className="stat-content">
+            <h3>Banners</h3>
+            <p className="stat-value">{stats.banners?.total || 0}</p>
+            <p className="stat-subtitle">{stats.banners?.active || 0} active</p>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon">🎯</div>
+          <div className="stat-content">
+            <h3>Deals</h3>
+            <p className="stat-value">{stats.deals?.total || 0}</p>
+            <p className="stat-subtitle">{stats.deals?.active || 0} active</p>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon">📌</div>
+          <div className="stat-content">
+            <h3>Pinned Products</h3>
+            <p className="stat-value">{stats.pinnedProducts?.total || 0}</p>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon">📢</div>
+          <div className="stat-content">
+            <h3>App Ads</h3>
+            <p className="stat-value">{stats.appAds?.total || 0}</p>
+            <p className="stat-subtitle">{stats.appAds?.active || 0} active</p>
+          </div>
+        </div>
+      </div>
+
+      <h2 className="dashboard-section-title">Promotions & Reviews</h2>
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-icon">🎁</div>
+          <div className="stat-content">
+            <h3>Gift Cards</h3>
+            <p className="stat-value">{stats.giftCards?.total || 0}</p>
+            <p className="stat-subtitle">
+              {stats.giftCards?.active || 0} active, {stats.giftCards?.redeemed || 0} redeemed
+            </p>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon">🎫</div>
+          <div className="stat-content">
+            <h3>Coupons</h3>
+            <p className="stat-value">{stats.coupons?.total || 0}</p>
+            <p className="stat-subtitle">{stats.coupons?.active || 0} active</p>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon">⭐</div>
+          <div className="stat-content">
+            <h3>Reviews</h3>
+            <p className="stat-value">{stats.reviews?.total || 0}</p>
+            <p className="stat-subtitle">
+              {stats.reviews?.pending || 0} pending, {stats.reviews?.flagged || 0} flagged
+            </p>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon">✓</div>
+          <div className="stat-content">
+            <h3>Approved Reviews</h3>
+            <p className="stat-value">{stats.reviews?.approved || 0}</p>
+            <p className="stat-subtitle">Total approved</p>
           </div>
         </div>
       </div>

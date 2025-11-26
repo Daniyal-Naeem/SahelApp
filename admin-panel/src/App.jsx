@@ -20,6 +20,8 @@ import DealsPage from './pages/DealsPage'
 import GiftCardsPage from './pages/GiftCardsPage'
 import CouponsPage from './pages/CouponsPage'
 import ReviewsPage from './pages/ReviewsPage'
+import OrdersPage from './pages/OrdersPage'
+import OrderDetailPage from './pages/OrderDetailPage'
 
 function App() {
   return (
@@ -197,6 +199,26 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <ReviewsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <OrdersPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders/:id"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <OrderDetailPage />
               </Layout>
             </ProtectedRoute>
           }

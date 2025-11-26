@@ -9,7 +9,8 @@
     "create-admin": "node scripts/createAdmin.js",
     "reset-admin": "node scripts/resetAdminPassword.js",
     "create-sample-products": "node scripts/createSampleProducts.js",
-    "sync-wallets": "node scripts/syncWallets.js"
+    "sync-wallets": "node scripts/syncWallets.js",
+    "create-dummy-data": "node scripts/createDummyData.js"
   },
   "keywords": [],
   "author": "",

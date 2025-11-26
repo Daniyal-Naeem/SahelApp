@@ -2,6 +2,13 @@ const mongoose = require('mongoose')
 const userModel = require('../models/userModel')
 const orderModel = require('../models/orderModel')
 const productsModel = require('../models/productsModel')
+const bannerModel = require('../models/bannerModel')
+const dealModel = require('../models/dealModel')
+const giftCardModel = require('../models/giftCardModel')
+const couponModel = require('../models/couponModel')
+const reviewModel = require('../models/reviewModel')
+const appAdModel = require('../models/appAdModel')
+const pinnedProductModel = require('../models/pinnedProductModel')
 
 /**
  * Admin Panel APIs:
@@ -251,6 +258,7 @@ const rejectVendor = async (req, res) => {
 // Get dashboard statistics
 const getDashboardStats = async (req, res) => {
     try {
+        const now = new Date()
         const [
             totalUsers,
             totalVendors,
@@ -258,7 +266,23 @@ const getDashboardStats = async (req, res) => {
             totalOrders,
             pendingOrders,
             totalProducts,
-            totalRevenue
+            totalRevenue,
+            totalBanners,
+            activeBanners,
+            totalDeals,
+            activeDeals,
+            totalGiftCards,
+            activeGiftCards,
+            redeemedGiftCards,
+            totalCoupons,
+            activeCoupons,
+            totalReviews,
+            pendingReviews,
+            flaggedReviews,
+            approvedReviews,
+            totalAppAds,
+            activeAppAds,
+            totalPinnedProducts
         ] = await Promise.all([
             userModel.countDocuments({ role: 'user' }),
             userModel.countDocuments({ role: 'vendor', vendorStatus: 'approved' }),
@@ -269,7 +293,54 @@ const getDashboardStats = async (req, res) => {
             orderModel.aggregate([
                 { $match: { paymentStatus: 'paid' } },
                 { $group: { _id: null, total: { $sum: '$total' } } }
-            ])
+            ]),
+            bannerModel.countDocuments(),
+            bannerModel.countDocuments({ 
+                isActive: true,
+                $or: [
+                    { startDate: { $exists: false } },
+                    { startDate: { $lte: now } }
+                ],
+                $or: [
+                    { endDate: { $exists: false } },
+                    { endDate: { $gte: now } }
+                ]
+            }),
+            dealModel.countDocuments(),
+            dealModel.countDocuments({ 
+                isActive: true,
+                startDate: { $lte: now },
+                endDate: { $gte: now }
+            }),
+            giftCardModel.countDocuments(),
+            giftCardModel.countDocuments({ status: 'active' }),
+            giftCardModel.countDocuments({ status: 'redeemed' }),
+            couponModel.countDocuments(),
+            couponModel.countDocuments({ 
+                isActive: true,
+                startsAt: { $lte: now },
+                $or: [
+                    { expiresAt: { $exists: false } },
+                    { expiresAt: { $gte: now } }
+                ]
+            }),
+            reviewModel.countDocuments(),
+            reviewModel.countDocuments({ status: 'pending' }),
+            reviewModel.countDocuments({ flagged: true }),
+            reviewModel.countDocuments({ status: 'approved' }),
+            appAdModel.countDocuments(),
+            appAdModel.countDocuments({ 
+                isActive: true,
+                $or: [
+                    { startDate: { $exists: false } },
+                    { startDate: { $lte: now } }
+                ],
+                $or: [
+                    { endDate: { $exists: false } },
+                    { endDate: { $gte: now } }
+                ]
+            }),
+            pinnedProductModel.countDocuments({ isActive: true })
         ])
 
         const revenue = totalRevenue.length > 0 ? totalRevenue[0].total : 0;
@@ -292,6 +363,36 @@ const getDashboardStats = async (req, res) => {
                 },
                 revenue: {
                     total: revenue
+                },
+                banners: {
+                    total: totalBanners,
+                    active: activeBanners
+                },
+                deals: {
+                    total: totalDeals,
+                    active: activeDeals
+                },
+                giftCards: {
+                    total: totalGiftCards,
+                    active: activeGiftCards,
+                    redeemed: redeemedGiftCards
+                },
+                coupons: {
+                    total: totalCoupons,
+                    active: activeCoupons
+                },
+                reviews: {
+                    total: totalReviews,
+                    pending: pendingReviews,
+                    flagged: flaggedReviews,
+                    approved: approvedReviews
+                },
+                appAds: {
+                    total: totalAppAds,
+                    active: activeAppAds
+                },
+                pinnedProducts: {
+                    total: totalPinnedProducts
                 }
             }
         })

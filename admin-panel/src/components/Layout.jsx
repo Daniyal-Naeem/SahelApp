@@ -34,6 +34,9 @@ const Layout = ({ children }) => {
     if (path === '/reviews') {
       return location.pathname.startsWith('/reviews')
     }
+    if (path === '/orders') {
+      return location.pathname.startsWith('/orders')
+    }
     return location.pathname === path
   }
 
@@ -118,6 +121,13 @@ const Layout = ({ children }) => {
           >
             <span>⭐</span> Reviews
           </Link>
+          <div className="nav-section-divider"></div>
+          <Link 
+            to="/orders" 
+            className={`nav-item ${isActive('/orders') ? 'active' : ''}`}
+          >
+            <span>📦</span> Orders
+          </Link>
         </nav>
         <div className="sidebar-footer">
           <div className="user-info">
@@ -144,6 +154,7 @@ const Layout = ({ children }) => {
             {location.pathname.startsWith('/gift-cards') && 'Gift Card Management'}
             {location.pathname.startsWith('/coupons') && 'Coupon Management'}
             {location.pathname.startsWith('/reviews') && 'Review Moderation'}
+            {location.pathname.startsWith('/orders') && 'Order Management'}
           </h1>
         </header>
         <div className="content-area">
