@@ -1,8 +1,6 @@
 import icons from './icons';
 import images from './images';
 import {FeaturesTypes, ProductTypes, SplashTypes, TabBarTypes} from './types';
-// random number between 1 to 1000 :)
-const randomNumber = () => Math.floor(Math.random() * 1000) + 1;
 // set the random number to the URL
 const randomImage = (): string =>
   `https://picsum.photos/${Math.floor(Math.random() * 1000) + 1}/${
@@ -48,7 +46,16 @@ const CategoriesData: FeaturesTypes[] = [
   },
   {
     image: randomImage(),
-    title: 'Womans',
+    title: 'Womens',
+  },
+
+  {
+    image: randomImage(),
+    title: 'Home & Kitchen',
+  },
+  {
+    image: randomImage(),
+    title: 'Gifts',
   },
 ];
 
@@ -82,7 +89,7 @@ const randomPriceBeforeDeal = (): number =>
 const randomPriceOff = (price: number, priceBeforeDeal: number): string =>
   ((1 - price / priceBeforeDeal) * 100).toFixed(2);
 
-const randomStars = (): number => (Math.random()  * 5);
+const randomStars = (): number => Math.random() * 5;
 
 const randomNumberOfReview = (): number => Math.floor(Math.random() * 10000);
 
@@ -92,7 +99,8 @@ const ProductData: ProductTypes[] = Array.from(
     const price = randomPrice();
     const priceBeforeDeal = randomPriceBeforeDeal();
     return {
-      image: randomImage(),
+      _id: `product-${Math.random().toString(36).substr(2, 9)}`,
+      image: [randomImage()],
       title: randomTitle(),
       description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
       price: price,
@@ -100,6 +108,10 @@ const ProductData: ProductTypes[] = Array.from(
       priceOff: randomPriceOff(price, priceBeforeDeal),
       stars: randomStars(),
       numberOfReview: randomNumberOfReview(),
+      tags: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      __v: 0,
     };
   },
 );
@@ -148,9 +160,319 @@ const TabBarData: TabBarTypes[] = [
   },
 ];
 
-export { 
+// Comprehensive dummy data based on UI designs
+const DetailedProductData: ProductTypes[] = [
+  {
+    _id: '1',
+    title: 'Pack of 12 Matte lipsticks',
+    description:
+      'Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur adipiscing elit. High-quality matte finish lipsticks in 12 stunning shades. Long-lasting formula that stays put all day.',
+    subtitle: 'Premium Matte Lipstick Collection - All Shades',
+    price: 80,
+    priceBeforeDeal: 90,
+    priceOff: '40%',
+    stars: 4.5,
+    numberOfReview: 56890,
+    image: [
+      'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=500',
+      'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=500',
+      'https://images.unsplash.com/photo-1626179450517-53c541fced0c?w=500',
+    ],
+    status: {
+      icon: '🔥',
+      name: 'Hot Deal',
+    },
+    ukSide: ['Set of 12', 'Set of 6', 'Set of 3'],
+    tags: ['beauty', 'makeup', 'lipstick', 'matte'],
+    variations: [
+      {
+        type: 'color',
+        label: 'Color',
+        options: [
+          {value: 'nude', label: 'Nude Collection', isSelected: false},
+          {value: 'pink', label: 'Pink Collection', isSelected: false},
+          {value: 'red', label: 'Red Collection', isSelected: true},
+        ],
+      },
+    ],
+    specifications: [
+      {label: 'Finish', value: 'Matte'},
+      {label: 'Weight', value: '12 x 3.5g'},
+      {label: 'Longevity', value: '8-10 hours'},
+    ],
+    deliveryOptions: [
+      {type: 'Standard', duration: '5-7 days', price: 10},
+      {type: 'Express', duration: '1-2 days', price: 25},
+    ],
+    colorOptions: [
+      {color: '#D4A574', name: 'Nude', isSelected: false},
+      {color: '#FF69B4', name: 'Pink', isSelected: false},
+      {color: '#DC143C', name: 'Red', isSelected: true},
+    ],
+    reviews: [
+      {
+        id: 'r1',
+        userName: 'Sarah M.',
+        rating: 5,
+        comment:
+          'Amazing quality! The colors are vibrant and long-lasting. Highly recommend!',
+        date: '2024-01-15',
+      },
+      {
+        id: 'r2',
+        userName: 'Emma L.',
+        rating: 4.5,
+        comment: 'Great value for money. The matte finish is perfect.',
+        date: '2024-01-10',
+      },
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    __v: 0,
+  },
+  {
+    _id: '2',
+    title: 'HRX by Hrithik Roshan',
+    description:
+      'Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur adipiscing elit. Premium lip gloss collection with hydrating formula and glossy finish.',
+    subtitle: 'HRX Premium Lip Gloss Collection - All Variants',
+    price: 80,
+    priceBeforeDeal: 90,
+    priceOff: '40%',
+    stars: 4.5,
+    numberOfReview: 344567,
+    image: [
+      'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=500',
+      'https://images.unsplash.com/photo-1626179450517-53c541fced0c?w=500',
+      'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=500',
+    ],
+    status: {
+      icon: '⭐',
+      name: 'Best Seller',
+    },
+    ukSide: ['Clear', 'Pink Nude', 'Rose', 'Coral'],
+    tags: ['beauty', 'makeup', 'lipgloss', 'hrx'],
+    variations: [
+      {
+        type: 'color',
+        label: 'Shade',
+        options: [
+          {value: 'clear', label: 'Clear', isSelected: false},
+          {value: 'pink-nude', label: 'Pink Nude', isSelected: true},
+          {value: 'rose', label: 'Rose', isSelected: false},
+        ],
+      },
+    ],
+    specifications: [
+      {label: 'Finish', value: 'Glossy'},
+      {label: 'Volume', value: '15ml'},
+      {label: 'Type', value: 'Liquid Lip Gloss'},
+    ],
+    deliveryOptions: [
+      {type: 'Standard', duration: '5-7 days', price: 10},
+      {type: 'Express', duration: '1-2 days', price: 25},
+    ],
+    colorOptions: [
+      {color: '#FFFFFF', name: 'Clear', isSelected: false},
+      {color: '#FFB6C1', name: 'Pink Nude', isSelected: true},
+      {color: '#FF69B4', name: 'Rose', isSelected: false},
+    ],
+    reviews: [
+      {
+        id: 'r3',
+        userName: 'Priya K.',
+        rating: 5,
+        comment: 'Love the glossy finish! Perfect for everyday wear.',
+        date: '2024-01-20',
+      },
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    __v: 0,
+  },
+  {
+    _id: '3',
+    title: 'Women Printed Kurta',
+    subtitle: "Vision Alta Women's Kurta Size (All Colours)",
+    description:
+      'Elegant printed kurta with beautiful floral patterns. Made from premium quality fabric that ensures comfort and style. Perfect for casual and semi-formal occasions. Available in multiple colors and sizes.',
+    price: 80,
+    priceBeforeDeal: 90,
+    priceOff: '50%',
+    stars: 4.5,
+    numberOfReview: 56890,
+    image: [
+      'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=500',
+      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=500',
+      'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500',
+      'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=500',
+    ],
+    status: {
+      icon: '🔥',
+      name: 'Hot Deal',
+    },
+    ukSide: ['S', 'M', 'L', 'XL', 'XXL'],
+    tags: ['fashion', 'women', 'kurta', 'ethnic', 'printed'],
+    variations: [
+      {
+        type: 'color',
+        label: 'Color',
+        options: [
+          {
+            value: 'pink',
+            label: 'Pink',
+            isSelected: true,
+            image:
+              'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=200',
+          },
+          {
+            value: 'yellow',
+            label: 'Yellow',
+            isSelected: false,
+            image:
+              'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=200',
+          },
+          {
+            value: 'red',
+            label: 'Red',
+            isSelected: false,
+            image:
+              'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=200',
+          },
+          {
+            value: 'blue',
+            label: 'Blue',
+            isSelected: false,
+            image:
+              'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=200',
+          },
+        ],
+      },
+      {
+        type: 'size',
+        label: 'Size',
+        options: [
+          {value: 's', label: 'S', isSelected: false},
+          {value: 'm', label: 'M', isSelected: true},
+          {value: 'l', label: 'L', isSelected: false},
+          {value: 'xl', label: 'XL', isSelected: false},
+        ],
+      },
+    ],
+    specifications: [
+      {label: 'Material', value: 'Cotton 95%'},
+      {label: 'Material', value: 'Nylon 5%'},
+      {label: 'Care Instructions', value: 'Machine Washable'},
+      {label: 'Fit Type', value: 'Regular Fit'},
+    ],
+    deliveryOptions: [
+      {type: 'Standard', duration: '5-7 days', price: 10},
+      {type: 'Express', duration: '1-2 days', price: 25},
+    ],
+    colorOptions: [
+      {color: '#FF69B4', name: 'Pink', isSelected: true},
+      {color: '#FFD700', name: 'Yellow', isSelected: false},
+      {color: '#00FF00', name: 'Green', isSelected: false},
+      {color: '#000000', name: 'Black', isSelected: false},
+      {color: '#800080', name: 'Purple', isSelected: false},
+    ],
+    reviews: [
+      {
+        id: 'r4',
+        userName: 'Veronika',
+        userAvatar:
+          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
+        rating: 4,
+        comment:
+          'Beautiful kurta with excellent quality fabric. The print is vibrant and the fit is perfect. Highly satisfied with my purchase!',
+        date: '2024-01-18',
+      },
+      {
+        id: 'r5',
+        userName: 'Aisha R.',
+        rating: 5,
+        comment: 'Love the design and comfort. Perfect for everyday wear.',
+        date: '2024-01-12',
+      },
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    __v: 0,
+  },
+  {
+    _id: '4',
+    title: 'Philips BHH880/10',
+    description:
+      'Professional hair straightener with advanced ceramic technology. Features adjustable temperature control and quick heat-up time. Perfect for all hair types.',
+    subtitle: 'Philips Hair Straightener - Professional Series',
+    price: 80,
+    priceBeforeDeal: 90,
+    priceOff: '40%',
+    stars: 4.5,
+    numberOfReview: 56890,
+    image: [
+      'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=500',
+      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=500',
+    ],
+    status: {
+      icon: '🆕',
+      name: 'New Arrival',
+    },
+    ukSide: ['One Size'],
+    tags: ['electronics', 'haircare', 'straightener', 'philips'],
+    specifications: [
+      {label: 'Power', value: '2200W'},
+      {label: 'Plate Material', value: 'Ceramic'},
+      {label: 'Temperature Range', value: '150-230°C'},
+    ],
+    deliveryOptions: [
+      {type: 'Standard', duration: '5-7 days', price: 10},
+      {type: 'Express', duration: '1-2 days', price: 25},
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    __v: 0,
+  },
+  {
+    _id: '5',
+    title: 'TITAN Men Watch-1806N',
+    description:
+      "Elegant men's watch with classic design. Features stainless steel case, leather strap, and water resistance. Perfect for formal and casual occasions.",
+    subtitle: "TITAN Classic Men's Watch Collection",
+    price: 80,
+    priceBeforeDeal: 90,
+    priceOff: '40%',
+    stars: 5,
+    numberOfReview: 344567,
+    image: [
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500',
+      'https://images.unsplash.com/photo-1524592094714-0f0654e20363?w=500',
+    ],
+    status: {
+      icon: '⭐',
+      name: 'Best Seller',
+    },
+    ukSide: ['42mm', '44mm'],
+    tags: ['watches', 'men', 'accessories', 'titan'],
+    specifications: [
+      {label: 'Case Material', value: 'Stainless Steel'},
+      {label: 'Strap Material', value: 'Leather'},
+      {label: 'Water Resistance', value: '50m'},
+    ],
+    deliveryOptions: [
+      {type: 'Standard', duration: '5-7 days', price: 10},
+      {type: 'Express', duration: '1-2 days', price: 25},
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    __v: 0,
+  },
+];
+
+export {
   TabBarData,
   ProductData,
+  DetailedProductData,
   CategoriesData,
-  SplashData
-}
+  SplashData,
+};

@@ -5,6 +5,9 @@ import CustomSearch from "./CustomSearch";
 import ProductItem from "./ProductItem";
 import DetailsItem from "./DetailsItem";
 import CustomWrapper from "./CustomWrapper";
+import DealBanner from "./DealBanner";
+import SummerSaleBanner from "./SummerSaleBanner";
+import SponsoredSection from "./SponsoredSection";
 // to import it from ./components directly...
 export {
     CustomButton,
@@ -12,5 +15,8 @@ export {
     CustomSearch,
     ProductItem,
     DetailsItem,
-    CustomWrapper
+    CustomWrapper,
+    DealBanner,
+    SummerSaleBanner,
+    SponsoredSection
 }

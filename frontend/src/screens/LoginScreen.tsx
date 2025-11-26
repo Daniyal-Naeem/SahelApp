@@ -2,13 +2,13 @@ import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import React, {useState} from 'react';
 import {
-  Image,
   ImageSourcePropType,
   Text,
   TouchableOpacity,
   View,
   StyleSheet,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import {CustomButton, FormField} from '../components';
 import {icons} from '../constants';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
@@ -102,7 +102,7 @@ const LoginScreen = (_props: Props) => {
                   key={item.id}
                   onPress={handleSignInWithProvider}
                   style={styles.socialButton}>
-                  <Image
+                  <FastImage
                     source={item.image}
                     style={styles.socialIcon}
                     resizeMode="contain"

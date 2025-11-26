@@ -1,49 +1,52 @@
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   FlatList,
   ScrollView,
   ImageSourcePropType,
   StyleSheet,
+  Dimensions,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useState} from 'react';
+import FastImage from 'react-native-fast-image';
+import Carousel from 'react-native-reanimated-carousel';
 import {icons, images} from '../constants';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
-import {CustomSearch, ProductItem} from '../components';
-import {CategoriesData, ProductData} from '../constants/data';
+import {ProductItem, DealBanner, SummerSaleBanner, SponsoredSection} from '../components';
+import {CategoriesData, DetailedProductData} from '../constants/data';
 import {removeItem} from '../utils/AsyncStorage';
 import {ProductTypes} from '../constants/types';
-import {Colors, Spacing, FontSizes, FontFamilies} from '../constants/styles';
+import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
+import {SvgXml} from 'react-native-svg';
+import {homeMenu} from '../assets/svgs/homeMenu';
 
 type Props = {};
 
-const HomeTab = (props: Props) => {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList> & DrawerNavigationProp<any>>();
+const HomeTab = (_props: Props) => {
+  const navigation = useNavigation<
+    StackNavigationProp<RootStackParamList> & DrawerNavigationProp<any>
+  >();
+  const width = Dimensions.get('window').width;
+  // Calculate carousel dimensions for dummy images
+  const carouselWidth = width - Spacing[5] * 2;
+  const carouselHeight = r(200);
+  // Use e-commerce dummy images with proper aspect ratio
+  const bannerImages = [
+    {uri: `https://images.unsplash.com/photo-1607082349566-187342175e2f?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // Shopping
+    {uri: `https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // E-commerce
+    {uri: `https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // Store shopping
+    {uri: `https://images.unsplash.com/photo-1556740758-90de374c12ad?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // Retail
+    {uri: `https://images.unsplash.com/photo-1607083206968-13611e3d76db?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // Fashion store
+  ];
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   type RootStackParamList = {
     Setting: undefined;
   };
-  // real data
-  const [products, setProducts] = useState<ProductTypes[]>([]);
-  useEffect(() => {
-    // fetch data
-    const fetchData = async () => {
-      const data = await fetch('http://10.0.2.2:4000/api/products/', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      });
-      const response = await data.json();
-      console.log(response);
-      setProducts(response);
-    };
-    fetchData();
-  }, [products]); // update when products items updated
+  // Use detailed product data matching UI designs
+  const [products] = useState<ProductTypes[]>(DetailedProductData);
 
   const NavigateToProfile = async () => {
     navigation.navigate('Setting');
@@ -54,102 +57,163 @@ const HomeTab = (props: Props) => {
   };
   const handleSelectCategory = () => {};
   return (
-    <ScrollView>
+    <ScrollView
+      style={styles.scrollView}
+      contentContainerStyle={styles.scrollViewContent}>
       {/* header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleOpenDrawer}>
-          <Image source={icons.menu} style={styles.headerIcon} resizeMode="contain" />
+          <SvgXml xml={homeMenu} />
         </TouchableOpacity>
 
-        <Image
+        <FastImage
           source={images.homeLogo}
           style={styles.logo}
-          resizeMode="contain"
+          resizeMode={FastImage.resizeMode.contain}
         />
         <TouchableOpacity onPress={NavigateToProfile}>
-          <Image
+          <FastImage
             source={icons.profile}
             style={styles.headerIcon}
-            resizeMode="contain"
+            resizeMode={FastImage.resizeMode.contain}
           />
         </TouchableOpacity>
       </View>
-      {/* search */}
-      <CustomSearch initialQuery="" />
-      {/* features */}
-      <View style={styles.featuresContainer}>
-        <Text style={styles.featuresTitle}>All Features </Text>
-        <View style={styles.featuresButtons}>
+      {/* greeting */}
+      <View style={styles.greetingContainer}>
+        <Text style={styles.greetingText}>Hello, Jhon!!</Text>
+      </View>
+      {/* categories section */}
+      <View style={styles.categoriesHeaderContainer}>
+        <Text style={styles.categoriesTitle}>Categories</Text>
+        <View style={styles.categoriesButtons}>
           {FeaturesData.map(item => (
-            <View
-              style={styles.featureButton}
-              key={item.id}>
-              <Text style={styles.featureButtonText}> {item.title} </Text>
-              <Image
-                source={item.image}
-                style={styles.featureIcon}
-                resizeMode="contain"
+            <TouchableOpacity
+              style={styles.categoryButton}
+              key={item.id}
+              onPress={() => {}}>
+              <Text style={styles.categoryButtonText}>{item.title}</Text>
+              <FastImage
+                source={item.image as any}
+                style={styles.categoryButtonIcon}
+                resizeMode={FastImage.resizeMode.contain}
               />
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       </View>
       {/* categories */}
-      <View>
+      <View style={styles.categoriesListContainer}>
         <FlatList
           data={CategoriesData}
           renderItem={({item}) => (
-            <TouchableOpacity onPress={handleSelectCategory}>
-              <Image
-                source={{uri: item.image}}
-                style={styles.categoryImage}
+            <View style={styles.categoryItemContainer}>
+              <TouchableOpacity
+                onPress={handleSelectCategory}
+                style={styles.categoryTouchable}>
+                <FastImage
+                  source={{uri: item.image}}
+                  style={styles.categoryImage}
+                />
+                <Text
+                  style={styles.categoryText}
+                  numberOfLines={2}
+                  ellipsizeMode="tail">
+                  {item.title}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          ItemSeparatorComponent={() => (
+            <View style={styles.categorySeparator} />
+          )}
+          ListFooterComponent={<View style={styles.categorySeparator} />}
+        />
+      </View>
+      {/* promotional banner */}
+      <View style={styles.bannerContainer}>
+        <Carousel
+          loop
+          width={width - Spacing[5] * 2} // Account for horizontal padding
+          height={r(200)} // Same height as before
+          autoPlay={true}
+          autoPlayInterval={3000} // 3 seconds
+          data={bannerImages}
+          scrollAnimationDuration={1000}
+          onSnapToItem={index => {
+            // Handle loop mode - ensure index is within valid range
+            const actualIndex = ((index % bannerImages.length) + bannerImages.length) % bannerImages.length;
+            setCurrentBannerIndex(actualIndex);
+          }}
+          renderItem={({item}) => (
+            <FastImage
+              source={item}
+              resizeMode={FastImage.resizeMode.cover}
+              style={styles.dealImage}
+            />
+          )}
+        />
+        {/* Pagination dots */}
+        <View style={styles.paginationContainer}>
+          {bannerImages.length <= 5 ? (
+            // Show all dots if 5 or fewer
+            bannerImages.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.paginationDot,
+                  index === currentBannerIndex && styles.paginationDotActive,
+                ]}
               />
-              <Text style={styles.categoryText}>
-                {item.title}
-              </Text>
-            </TouchableOpacity>
+            ))
+          ) : (
+            // Show limited dots (max 5) with sliding window for 5+ items
+            (() => {
+              const maxDots = 5;
+              const totalItems = bannerImages.length;
+              let startIndex = 0;
+              let endIndex = maxDots;
+
+              // Calculate which dots to show based on current position
+              if (currentBannerIndex <= 2) {
+                // Show first 5 dots
+                startIndex = 0;
+                endIndex = maxDots;
+              } else if (currentBannerIndex >= totalItems - 3) {
+                // Show last 5 dots
+                startIndex = totalItems - maxDots;
+                endIndex = totalItems;
+              } else {
+                // Show dots around current index
+                startIndex = currentBannerIndex - 2;
+                endIndex = currentBannerIndex + 3;
+              }
+
+              return Array.from({length: endIndex - startIndex}, (_, i) => {
+                const index = startIndex + i;
+                return (
+                  <View
+                    key={index}
+                    style={[
+                      styles.paginationDot,
+                      index === currentBannerIndex && styles.paginationDotActive,
+                    ]}
+                  />
+                );
+              });
+            })()
           )}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
-          ListFooterComponent={<View style={styles.separator} />}
-          ListHeaderComponent={<View style={styles.separator} />}
-        />
-      </View>
-      {/* offer */}
-      <View>
-        <Image
-          source={images.deal_off}
-          resizeMode="contain"
-          style={styles.dealImage}
-        />
-      </View>
-      {/* daily .. */}
-      <View style={styles.dailyContainer}>
-        <View>
-          <Text style={styles.dailyTitle}>
-            Daily of the Day
-          </Text>
-          <View style={styles.dailyTimeContainer}>
-            <Image
-              source={icons.calender}
-              resizeMode="contain"
-              style={styles.dailyIcon}
-            />
-            <Text style={styles.dailyTime}>
-              22h 55m 20s remaining
-            </Text>
-          </View>
-        </View>
-        <View style={styles.viewAllButton}>
-          <Text style={styles.viewAllText}>View all</Text>
-          <Image
-            source={icons.show_all}
-            resizeMode="contain"
-            style={styles.viewAllIcon}
-          />
         </View>
       </View>
+      {/* deal of the day */}
+      <DealBanner
+        title="Deal of the Day"
+        timeRemaining="22h 55m 20s remaining"
+        buttonText="View all"
+        onButtonPress={() => {}}
+      />
       {/* Products */}
       <View style={styles.productsContainer}>
         <FlatList
@@ -170,60 +234,14 @@ const HomeTab = (props: Props) => {
           horizontal
           showsHorizontalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
-          ListFooterComponent={<View style={styles.separator} />}
-          ListHeaderComponent={<View style={styles.separator} />}
         />
       </View>
-      {/* special Offer */}
-      <View style={styles.specialOfferContainer}>
-        <Image
-          source={icons.offer}
-          style={styles.offerIcon}
-          resizeMode="contain"
-        />
-        <View>
-          <Text style={styles.specialOfferTitle}>
-            Special Offers
-          </Text>
-          <Text style={styles.specialOfferText}>
-            We make sure you get the offer you need at best prices
-          </Text>
-        </View>
-      </View>
-      {/* Flat Shoes Offer */}
-      <View style={styles.flatContainer}>
-        <Image
-          source={images.flat}
-          style={styles.flatImage}
-          resizeMode="contain"
-        />
-      </View>
-      {/* Trending Products */}
-      <View style={styles.trendingContainer}>
-        <View>
-          <Text style={styles.trendingTitle}>
-            Daily of the Day
-          </Text>
-          <View style={styles.trendingTimeContainer}>
-            <Image
-              source={icons.calender}
-              resizeMode="contain"
-              style={styles.trendingIcon}
-            />
-            <Text style={styles.trendingTime}>
-              22h 55m 20s remaining
-            </Text>
-          </View>
-        </View>
-        <View style={styles.trendingViewAllButton}>
-          <Text style={styles.trendingViewAllText}>View all</Text>
-          <Image
-            source={icons.show_all}
-            resizeMode="contain"
-            style={styles.trendingViewAllIcon}
-          />
-        </View>
-      </View>
+      <DealBanner
+        title="Under SAR 20"
+        lastDate="29/02/22"
+        buttonText="View all"
+        onButtonPress={() => {}}
+      />
       {/* Products */}
       <View style={styles.productsContainer}>
         <FlatList
@@ -244,11 +262,12 @@ const HomeTab = (props: Props) => {
           horizontal
           showsHorizontalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
-          ListFooterComponent={<View style={styles.separator} />}
-          ListHeaderComponent={<View style={styles.separator} />}
         />
       </View>
-      {/* .... */}
+      {/* Hot Summer Sale Banner */}
+      <SummerSaleBanner onViewAllPress={() => {}} />
+      {/* Sponsored Section */}
+      <SponsoredSection onPress={() => {}} />
     </ScrollView>
   );
 };
@@ -258,195 +277,132 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginHorizontal: Spacing[5],
+    // No margin needed since ScrollView has paddingHorizontal
   },
   headerIcon: {
-    width: 32,
-    height: 32,
+    width: r(32),
+    height: r(32),
   },
   logo: {
-    width: 96,
-    height: 96,
+    width: r(96),
+    height: r(96),
   },
-  featuresContainer: {
-    flexDirection: 'row',
-    marginVertical: Spacing[5],
-    marginHorizontal: Spacing[5],
-    justifyContent: 'space-between',
+  greetingContainer: {
+    marginTop: Spacing[2],
+    marginBottom: Spacing[5],
   },
-  featuresTitle: {
-    fontSize: FontSizes['2xl'],
-    fontFamily: FontFamilies.mbold,
-  },
-  featuresButtons: {
-    flexDirection: 'row',
-    gap: Spacing[3],
-  },
-  featureButton: {
-    backgroundColor: Colors.white,
-    borderRadius: 8,
-    flexDirection: 'row',
-    flex: 1,
-    alignItems: 'center',
-    paddingHorizontal: Spacing[2],
-  },
-  featureButtonText: {
+  greetingText: {
+    fontSize: FontSizes['2xl'], // 24px as per Figma design
+    fontFamily: FontFamilies.msemibold,
     color: Colors.black[100],
   },
-  featureIcon: {
-    width: 16,
-    height: 16,
+  categoriesHeaderContainer: {
+    flexDirection: 'row',
+    marginTop: Spacing[1],
+    marginBottom: Spacing[4],
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  categoriesTitle: {
+    fontSize: FontSizes['xl'],
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.black[100],
+  },
+  categoriesButtons: {
+    flexDirection: 'row',
+    gap: Spacing[2],
+  },
+  categoryButton: {
+    backgroundColor: Colors.white,
+    borderRadius: r(8),
+    borderWidth: r(1),
+    borderColor: Colors.gray[200] || '#E5E5E5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing[3],
+    paddingVertical: Spacing[2],
+    gap: Spacing[1],
+  },
+  categoryButtonText: {
+    color: Colors.black[100],
+    fontSize: FontSizes.sm,
+    fontFamily: FontFamilies.mmedium,
+  },
+  categoryButtonIcon: {
+    width: r(16),
+    height: r(16),
+  },
+  categoriesListContainer: {
+    marginBottom: Spacing[5],
+  },
+  categoryItemContainer: {
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    width: r(62), // Fixed width to prevent layout shifts
+  },
+  categoryTouchable: {
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    width: r(62), // Fixed width matching image
   },
   categoryImage: {
-    width: 96,
-    height: 96,
-    borderRadius: 9999,
+    width: r(62),
+    height: r(62),
+    borderRadius: r(31), // Half of width/height for perfect circle
+    alignSelf: 'center',
   },
   categoryText: {
     color: 'rgba(0, 0, 0, 0.8)',
     textAlign: 'center',
-    fontSize: FontSizes.lg,
+    fontSize: FontSizes.xs,
     fontFamily: FontFamilies.pmedium,
+    marginTop: Spacing[2],
+    width: r(62), // Fixed width matching image
+  },
+  categorySeparator: {
+    width: Spacing[2], // Reduced spacing between category items
   },
   separator: {
-    width: Spacing[8],
+    width: Spacing[2], // Spacing between product cards
+  },
+  scrollView: {
+    backgroundColor: '#FDFDFD',
+  },
+  scrollViewContent: {
+    paddingHorizontal: Spacing[5], // Consistent horizontal padding
+    paddingBottom: Spacing[8], // Space at the bottom
+  },
+  bannerContainer: {
+    marginTop: Spacing[1],
+    marginBottom: Spacing[5],
   },
   dealImage: {
     width: '100%',
-    marginTop: Spacing[8],
+    height: '100%',
+    borderRadius: r(12),
   },
-  dailyContainer: {
-    backgroundColor: '#4392F9',
-    borderRadius: 12,
-    justifyContent: 'space-between',
+  paginationContainer: {
     flexDirection: 'row',
-    marginHorizontal: Spacing[5],
-    paddingLeft: Spacing[5],
-    paddingVertical: Spacing[5],
-  },
-  dailyTitle: {
-    color: Colors.white,
-    fontSize: FontSizes['2xl'],
-    fontFamily: FontFamilies.psemibold,
-  },
-  dailyTimeContainer: {
-    flexDirection: 'row',
-    marginTop: Spacing[3],
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 4,
+    gap: r(6),
+    marginTop: Spacing[6],
   },
-  dailyIcon: {
-    width: 24,
-    height: 24,
+  paginationDot: {
+    width: r(10),
+    height: r(10),
+    borderRadius: r(5),
+    backgroundColor: Colors.gray[300] || '#D3D3D3',
   },
-  dailyTime: {
-    color: Colors.white,
-    fontSize: FontSizes.base,
-    fontFamily: FontFamilies.pmedium,
-  },
-  viewAllButton: {
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: Colors.white,
-    marginRight: Spacing[3],
-    height: 48,
-    paddingHorizontal: Spacing[3],
-    flexDirection: 'row',
-    gap: 1,
-    alignItems: 'center',
-  },
-  viewAllText: {
-    color: Colors.white,
-    fontFamily: FontFamilies.pmedium,
-    fontSize: FontSizes.lg,
-  },
-  viewAllIcon: {
-    width: 24,
-    height: 24,
+  paginationDotActive: {
+    backgroundColor: Colors.gray[500] || '#808080',
+    width: r(10),
+    height: r(10),
+    borderRadius: r(5),
   },
   productsContainer: {
-    marginVertical: Spacing[8],
-  },
-  specialOfferContainer: {
-    flexDirection: 'row',
-    marginVertical: Spacing[5],
-    justifyContent: 'space-between',
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    paddingVertical: Spacing[3],
-    paddingHorizontal: Spacing[4],
-    marginHorizontal: Spacing[5],
-    borderRadius: 8,
-  },
-  offerIcon: {
-    width: 96,
-    height: 96,
-  },
-  specialOfferTitle: {
-    fontSize: FontSizes['2xl'],
-    marginBottom: Spacing[1],
-    color: Colors.black[100],
-    fontFamily: FontFamilies.mbold,
-  },
-  specialOfferText: {
-    color: Colors.neutral[500],
-    fontSize: FontSizes.base,
-    width: 208,
-  },
-  flatContainer: {
-    marginVertical: Spacing[5],
-  },
-  flatImage: {
-    alignSelf: 'center',
-  },
-  trendingContainer: {
-    backgroundColor: Colors.red[500],
-    borderRadius: 12,
-    justifyContent: 'space-between',
-    flexDirection: 'row',
-    marginHorizontal: Spacing[5],
-    paddingLeft: Spacing[5],
-    paddingVertical: Spacing[5],
-  },
-  trendingTitle: {
-    color: Colors.white,
-    fontSize: FontSizes['2xl'],
-    fontFamily: FontFamilies.psemibold,
-  },
-  trendingTimeContainer: {
-    flexDirection: 'row',
-    marginTop: Spacing[3],
-    alignItems: 'center',
-    gap: 4,
-  },
-  trendingIcon: {
-    width: 24,
-    height: 24,
-  },
-  trendingTime: {
-    color: Colors.white,
-    fontSize: FontSizes.base,
-    fontFamily: FontFamilies.pmedium,
-  },
-  trendingViewAllButton: {
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: Colors.white,
-    marginRight: Spacing[3],
-    height: 48,
-    paddingHorizontal: Spacing[3],
-    flexDirection: 'row',
-    gap: 1,
-    alignItems: 'center',
-  },
-  trendingViewAllText: {
-    color: Colors.white,
-    fontFamily: FontFamilies.pmedium,
-    fontSize: FontSizes.lg,
-  },
-  trendingViewAllIcon: {
-    width: 24,
-    height: 24,
+    marginTop: Spacing[1],
+    marginBottom: Spacing[5],
   },
 });
 

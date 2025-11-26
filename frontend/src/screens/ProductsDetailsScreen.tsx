@@ -1,25 +1,30 @@
 import {RouteProp, useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
-import React from 'react';
+import React, {useState} from 'react';
 import {
   FlatList,
-  Image,
-  ImageSourcePropType,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
   StyleSheet,
+  Dimensions,
 } from 'react-native';
-import {AirbnbRating} from 'react-native-ratings';
+import FastImage from 'react-native-fast-image';
+import Carousel from 'react-native-reanimated-carousel';
+import {SvgXml} from 'react-native-svg';
 import {RouteStackParamList} from '../../App';
-import {icons} from '../constants';
+import {icons, images} from '../constants';
 import {RouteTabsParamList} from './HomeScreen';
-import LinearGradient from 'react-native-linear-gradient';
-import {FeaturesData} from '../tabs/HomeTab';
 import {ProductItem} from '../components';
-import {ProductData} from '../constants/data';
-import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
+import {DetailedProductData} from '../constants/data';
+import {Colors, Spacing, FontFamilies, r, FontSizes} from '../constants/styles';
+import {activeStar} from '../assets/svgs/activeStar';
+import {inactiveStar} from '../assets/svgs/inactiveStar';
+import {halfStar} from '../assets/svgs/halfstar';
+import {rightArrow} from '../assets/svgs/rightArrow';
+import {sendGifts} from '../assets/svgs/sendGifts';
+import {FeaturesData} from '../tabs/HomeTab';
 
 type ScreenRouteProps = RouteProp<RouteStackParamList, 'ProductDetails'>;
 
@@ -31,200 +36,359 @@ const ProductsDetailsScreen: React.FC<ProductDetailsProps> = ({route}) => {
   const {itemDetails} = route.params || {};
   const navigation =
     useNavigation<StackNavigationProp<RouteTabsParamList, 'Cart'>>();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+  const productImages = itemDetails?.image || [];
+  const currency = (itemDetails as any)?.currency || 'SAR';
+  const screenWidth = Dimensions.get('window').width;
+  const carouselWidth = screenWidth - Spacing[5] * 2; // Subtract horizontal padding
 
   const GoBack = () => {
     navigation.goBack();
   };
+
   const NavigateToCart = () => {
     navigation.navigate('Cart', {itemDetails: itemDetails!});
   };
+
+  const formatNumber = (num: number): string => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
+  const renderStars = (rating: number) => {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    const starsArray = [];
+
+    for (let i = 0; i < 5; i++) {
+      if (i < fullStars) {
+        starsArray.push(
+          <SvgXml key={i} xml={activeStar} width={r(16)} height={r(16)} />
+        );
+      } else if (i === fullStars && hasHalfStar) {
+        starsArray.push(
+          <SvgXml key={i} xml={halfStar} width={r(16)} height={r(16)} />
+        );
+      } else {
+        starsArray.push(
+          <SvgXml key={i} xml={inactiveStar} width={r(16)} height={r(16)} />
+        );
+      }
+    }
+    return starsArray;
+  };
+
+  // Get selected variations
+  const selectedVariations = itemDetails?.variations
+    ?.map(variation => {
+      const selected = variation.options.find(opt => opt.isSelected);
+      return selected ? selected.label : null;
+    })
+    .filter(Boolean) || [];
+
+
   return (
-    <ScrollView style={styles.container}>
-      {/* header */}
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={GoBack}>
-          <Image
+        <TouchableOpacity onPress={GoBack} style={styles.backButton}>
+          <FastImage
             source={icons.next1}
             style={[styles.backIcon, {transform: [{rotate: '180deg'}]}]}
-            resizeMode="contain"
+            resizeMode={FastImage.resizeMode.contain}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={NavigateToCart}>
-          <Image source={icons.cart} style={styles.cartIcon} resizeMode="contain" />
-        </TouchableOpacity>
-      </View>
-      {/* image slider */}
-      <View style={styles.imageContainer}>
-        <Image
-          source={{uri: itemDetails?.image[0]}}
-          style={styles.productImage}
+        <FastImage
+          source={images.homeLogo}
+          style={styles.logo}
+          resizeMode={FastImage.resizeMode.contain}
         />
+        <TouchableOpacity onPress={NavigateToCart} style={styles.cartButton}>
+          <FastImage
+            source={icons.cart}
+            style={styles.cartIcon}
+            resizeMode={FastImage.resizeMode.contain}
+          />
+        </TouchableOpacity>
       </View>
-      {/* size uk */}
-      <View>
-        <Text style={styles.sizeTitle}>Size: 7UK</Text>
-        <View style={styles.sizeContainer}>
-          {sizeData.map(item => (
-            <View
-              key={item.id}
-              style={styles.sizeButton}>
-              <Text style={styles.sizeText}>
-                {item.size} uk
-              </Text>
-            </View>
-          ))}
-        </View>
-      </View>
-      {/* details */}
-      <View style={styles.detailsContainer}>
-        <Text style={styles.title}>
-          {itemDetails?.title}
-        </Text>
-        <Text style={styles.subtitle}>
-          Vision Alta Men's Shoes Size (All Colours)
-        </Text>
-        <View style={styles.ratingContainer}>
-          <View>
-            <AirbnbRating
-              count={itemDetails?.stars}
-              reviews={['Terrible', 'Bad', 'Okay', 'Good', 'Great']}
-              defaultRating={itemDetails?.stars}
-              size={20}
-              ratingContainerStyle={{flex: 1, flexDirection: 'row'}}
-            />
-          </View>
 
-          <Text style={styles.reviewCount}>
-            {itemDetails?.numberOfReview}
-          </Text>
-        </View>
-        <View style={styles.priceContainer}>
-          <Text style={styles.price}>
-            ${itemDetails?.price}
-          </Text>
-          <Text style={styles.priceBeforeDeal}>
-            {itemDetails?.priceBeforeDeal}
-          </Text>
-          <Text style={styles.priceOff}>
-            {itemDetails?.priceOff}
-          </Text>
-        </View>
-        <View style={styles.productDetailsContainer}>
-          <Text style={styles.productDetailsTitle}>
-            Product Details
-          </Text>
-          <Text style={styles.productDetailsText}>
-            {itemDetails?.description}
-          </Text>
-        </View>
-        {/* status */}
-        <View style={styles.statusContainer}>
-          <FlatList
-            data={StatusData}
-            renderItem={({item}) => (
-              <View style={styles.statusItem}>
-                <Image
-                  style={styles.statusIcon}
-                  resizeMode="contain"
-                  source={item.icon}
-                />
-                <Text style={styles.statusText}>
-                  {item.name}
-                </Text>
-              </View>
-            )}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={styles.statusSeparator} />}
-          />
-        </View>
-        {/* go to cart/ buy now */}
-        <View style={styles.actionButtonsContainer}>
-          <View style={styles.actionButtonWrapper}>
-            <View style={styles.actionIconContainer}>
-              <Image
-                source={icons.cart_circle}
-                style={styles.actionIcon}
-                resizeMode="contain"
-              />
-            </View>
-            <View style={styles.cartButton}>
-              <Text style={styles.actionButtonText}>
-                Go To Cart
-              </Text>
-            </View>
-          </View>
-          <View style={styles.actionButtonWrapper}>
-            <View style={styles.actionIconContainer}>
-              <Image
-                source={icons.buy}
-                style={styles.actionIcon}
-                resizeMode="contain"
-              />
-            </View>
-            <View style={styles.buyButton}>
-              <Text style={styles.actionButtonText}>
-                Buy Now
-              </Text>
-            </View>
-          </View>
-        </View>
-        {/* delivery in ... */}
-        <View style={styles.deliveryContainer}>
-          <Text style={styles.deliveryText}>Delivery in </Text>
-          <Text style={styles.deliveryTime}>
-            1 within Hour
-          </Text>
-        </View>
-        {/* View similar */}
-        <View style={styles.similarActionsContainer}>
-          <FlatList
-            data={similarData}
-            renderItem={({item}) => (
-              <View style={styles.similarActionItem}>
-                <Image
-                  source={item.icon}
-                  style={styles.similarActionIcon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.similarActionText}>
-                  {item.name}
-                </Text>
-              </View>
-            )}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={styles.similarSeparator} />}
-          />
-        </View>
-        {/* similar to */}
-        <View style={styles.similarSection}>
-          <Text style={styles.similarTitle}>
-            Similar To
-          </Text>
-          {/* features */}
-          <View style={styles.similarFeaturesContainer}>
-            <Text style={styles.similarItemsCount}>282+ Items </Text>
-            <View style={styles.similarFeaturesButtons}>
-              {FeaturesData.map(item => (
+      {/* Image Carousel */}
+      <View style={styles.carouselContainer}>
+        <Carousel
+          loop={false}
+          width={carouselWidth}
+          height={r(236)}
+          data={productImages}
+          scrollAnimationDuration={1000}
+          onSnapToItem={index => setCurrentImageIndex(index)}
+          renderItem={({item}) => (
+            <FastImage
+              source={{uri: item}}
+              style={styles.carouselImage}
+              resizeMode={FastImage.resizeMode.cover}
+            />
+          )}
+        />
+        {/* Pagination dots */}
+        <View style={styles.paginationContainer}>
+          {productImages.length <= 5
+            ? productImages.map((_, index) => (
                 <View
-                  style={styles.similarFeatureButton}
-                  key={item.id}>
-                  <Text style={styles.similarFeatureText}> {item.title} </Text>
-                  <Image
-                    source={item.image}
-                    style={styles.similarFeatureIcon}
-                    resizeMode="contain"
+                  key={index}
+                  style={[
+                    styles.paginationDot,
+                    index === currentImageIndex && styles.paginationDotActive,
+                  ]}
+                />
+              ))
+            : Array.from({length: 5}, (_, i) => {
+                const startIndex =
+                  currentImageIndex <= 2
+                    ? 0
+                    : currentImageIndex >= productImages.length - 3
+                    ? productImages.length - 5
+                    : currentImageIndex - 2;
+                const index = startIndex + i;
+                return (
+                  <View
+                    key={index}
+                    style={[
+                      styles.paginationDot,
+                      index === currentImageIndex && styles.paginationDotActive,
+                    ]}
                   />
+                );
+              })}
+        </View>
+      </View>
+
+      {/* Price Section */}
+      <View style={styles.priceSection}>
+        <View style={styles.priceRow}>
+          <View style={styles.priceContainer}>
+            <Text style={styles.price}>
+              {currency} {itemDetails?.price}
+            </Text>
+            <Text style={styles.priceBeforeDeal}>
+              {currency} {itemDetails?.priceBeforeDeal}
+            </Text>
+          </View>
+          <View style={styles.discountBadge}>
+            <Text style={styles.discountText}>{itemDetails?.priceOff} Off</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Product Name and Subtitle */}
+      <Text style={styles.productName}>{itemDetails?.title}</Text>
+      <Text style={styles.subtitle}>{itemDetails?.subtitle}</Text>
+
+      {/* Rating */}
+      <View style={styles.ratingRow}>
+        <View style={styles.starsContainer}>
+          {renderStars(itemDetails?.stars || 0)}
+        </View>
+        <Text style={styles.reviewCount}>
+          {formatNumber(itemDetails?.numberOfReview || 0)}
+        </Text>
+      </View>
+
+      {/* Description Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Description:</Text>
+        <Text
+          style={styles.descriptionText}
+          numberOfLines={isDescriptionExpanded ? undefined : 3}>
+          {itemDetails?.description}
+        </Text>
+        <TouchableOpacity
+          onPress={() => setIsDescriptionExpanded(!isDescriptionExpanded)}>
+          <Text style={styles.moreText}>
+            {isDescriptionExpanded ? 'Less' : 'More'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Three Buttons: Nearest Store, VIP, Return policy */}
+      <View style={styles.buttonsRow}>
+        <TouchableOpacity style={styles.infoButton}>
+          <FastImage
+            source={icons.offer}
+            style={styles.infoButtonIcon}
+            resizeMode={FastImage.resizeMode.contain}
+          />
+          <Text style={styles.infoButtonText}>Nearest Store</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.infoButton}>
+          <FastImage
+            source={icons.lock}
+            style={styles.infoButtonIcon}
+            resizeMode={FastImage.resizeMode.contain}
+          />
+          <Text style={styles.infoButtonText}>VIP</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.infoButton}>
+          <FastImage
+            source={icons.show_all}
+            style={styles.infoButtonIcon}
+            resizeMode={FastImage.resizeMode.contain}
+          />
+          <Text style={styles.infoButtonText}>Return policy</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Variations Section */}
+      {itemDetails?.variations && selectedVariations.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Variations</Text>
+          <TouchableOpacity style={styles.variationsRow}>
+            <View style={styles.variationsContainer}>
+              {selectedVariations.map((variation, index) => (
+                <View key={index} style={styles.variationChip}>
+                  <Text style={styles.variationText}>{variation}</Text>
                 </View>
               ))}
             </View>
+            <SvgXml xml={rightArrow} width={r(20)} height={r(20)} />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Specifications Section */}
+      {itemDetails?.specifications && itemDetails.specifications.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Specifications</Text>
+          <View style={styles.specificationsContainer}>
+            {itemDetails.specifications
+              .filter(spec => spec.label === 'Material')
+              .map((spec, index) => (
+                <View key={index} style={styles.specChip}>
+                  <Text style={styles.specText}>{spec.value}</Text>
+                </View>
+              ))}
           </View>
         </View>
-        {/* similar products */}
+      )}
+
+      {/* Delivery Section */}
+      {itemDetails?.deliveryOptions && itemDetails.deliveryOptions.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Delivery:</Text>
+          <View style={styles.deliveryOptionsContainer}>
+            {itemDetails.deliveryOptions.map((option, index) => (
+              <View key={index} style={styles.deliveryOption}>
+                <Text style={styles.deliveryType}>{option.type}</Text>
+                <Text style={styles.deliveryDuration}>{option.duration}</Text>
+                <Text style={styles.deliveryPrice}>
+                  {currency} {option.price}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Color Section */}
+      {itemDetails?.colorOptions && itemDetails.colorOptions.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Color:</Text>
+          <View style={styles.colorContainer}>
+            {itemDetails.colorOptions.map((colorOption, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.colorSwatch,
+                  colorOption.isSelected && styles.colorSwatchSelected,
+                  {backgroundColor: colorOption.color},
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Rating & Reviews Section */}
+      {itemDetails?.reviews && itemDetails.reviews.length > 0 && (
+        <View style={styles.section}>
+          <View style={styles.reviewsHeader}>
+            <Text style={styles.sectionTitle}>Rating & Reviews</Text>
+            <TouchableOpacity>
+              <Text style={styles.viewAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.ratingDisplay}>
+            <View style={styles.starsContainer}>
+              {renderStars(itemDetails.stars || 0)}
+            </View>
+            <Text style={styles.ratingNumber}>
+              {itemDetails.stars}/5
+            </Text>
+          </View>
+          <View style={styles.reviewItem}>
+            <FastImage
+              source={{uri: itemDetails.reviews[0].userAvatar}}
+              style={styles.reviewAvatar}
+              resizeMode={FastImage.resizeMode.cover}
+            />
+            <View style={styles.reviewContent}>
+              <Text style={styles.reviewerName}>
+                {itemDetails.reviews[0].userName}
+              </Text>
+              <View style={styles.reviewStars}>
+                {renderStars(itemDetails.reviews[0].rating)}
+              </View>
+              <Text style={styles.reviewText} numberOfLines={3}>
+                {itemDetails.reviews[0].comment}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Action Buttons */}
+      <View style={styles.actionButtonsContainer}>
+        <TouchableOpacity style={styles.sendGiftButton}>
+          <SvgXml xml={sendGifts} width={r(20)} height={r(20)} />
+          <Text style={styles.sendGiftText}>Send as Gift</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.addToCartButton}
+          onPress={NavigateToCart}>
+          <FastImage
+            source={icons.cart_circle}
+            style={styles.actionButtonIcon}
+            resizeMode={FastImage.resizeMode.contain}
+          />
+          <Text style={styles.addToCartText}>Add to Cart</Text>
+        </TouchableOpacity>
+      </View>
+      <TouchableOpacity style={styles.buyNowButton}>
+        <Text style={styles.buyNowText}>Buy Now</Text>
+      </TouchableOpacity>
+
+      {/* Similar Items Section */}
+      <View style={styles.similarSection}>
+        <View style={styles.similarHeader}>
+          <Text style={styles.similarTitle}>Similar Items</Text>
+          <View style={styles.similarActions}>
+            {FeaturesData.map(item => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.similarActionButton}>
+                <FastImage
+                  source={item.image as any}
+                  style={styles.similarActionIcon}
+                  resizeMode={FastImage.resizeMode.contain}
+                />
+                <Text style={styles.similarActionText}>{item.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
         <View style={styles.similarProductsContainer}>
           <FlatList
-            data={itemDetails ? [itemDetails] : []}
+            data={DetailedProductData.slice(0, 5)}
             renderItem={({item}) => (
               <ProductItem
                 image={item.image[0]}
@@ -236,6 +400,7 @@ const ProductsDetailsScreen: React.FC<ProductDetailsProps> = ({route}) => {
                 stars={item.stars}
                 numberOfReview={item.numberOfReview}
                 itemDetails={item}
+                currency={(item as any).currency}
               />
             )}
             horizontal
@@ -252,328 +417,418 @@ const ProductsDetailsScreen: React.FC<ProductDetailsProps> = ({route}) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: Spacing[5],
-    paddingHorizontal: Spacing[3],
+    flex: 1,
+    backgroundColor: Colors.white,
+    paddingHorizontal: Spacing[5],
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: Spacing[5],
+    paddingBottom: Spacing[3],
   },
-  backIcon: {
+  backButton: {
     width: r(32),
     height: r(32),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backIcon: {
+    width: r(24),
+    height: r(24),
+  },
+  logo: {
+    width: r(96),
+    height: r(32),
+  },
+  cartButton: {
+    width: r(32),
+    height: r(32),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cartIcon: {
     width: r(24),
     height: r(24),
   },
-  imageContainer: {
-    marginTop: Spacing[5],
+  carouselContainer: {
+    marginTop: Spacing[3],
+    marginBottom: Spacing[4],
   },
-  productImage: {
-    height: r(288),
-    borderRadius: r(16),
+  carouselImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: r(12),
   },
-  sizeTitle: {
-    color: Colors.black[100],
-    fontSize: FontSizes.lg,
-    fontFamily: FontFamilies.mbold,
-  },
-  sizeContainer: {
+  paginationContainer: {
     flexDirection: 'row',
-    gap: Spacing[5],
-    marginTop: Spacing[5],
+    justifyContent: 'center',
     alignItems: 'center',
+    gap: r(6),
+    marginTop: Spacing[4],
   },
-  sizeButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: Spacing[1],
-    paddingHorizontal: Spacing[2],
-    borderRadius: r(8),
-    borderWidth: 1,
-    borderColor: Colors.red[500],
+  paginationDot: {
+    width: r(12),
+    height: r(12),
+    borderRadius: r(6),
+    backgroundColor: Colors.gray[300] || '#D3D3D3',
   },
-  sizeText: {
-    color: Colors.action,
-    fontSize: FontSizes.xl,
-    fontFamily: FontFamilies.pmedium,
+  paginationDotActive: {
+    backgroundColor: '#FF69B4',
+    width: r(12),
+    height: r(12),
+    borderRadius: r(6),
   },
-  detailsContainer: {
-    marginTop: Spacing[5],
+  priceSection: {
+    marginBottom: Spacing[4],
   },
-  title: {
-    fontSize: FontSizes['2xl'],
-    fontFamily: FontFamilies.mbold,
-    color: Colors.black[100],
-  },
-  subtitle: {
-    color: Colors.neutral[400],
-    fontFamily: FontFamilies.pmedium,
-    fontSize: FontSizes.lg,
-  },
-  ratingContainer: {
+  priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing[3],
-  },
-  reviewCount: {
-    fontSize: FontSizes.xl,
-    fontFamily: FontFamilies.mthin,
-    color: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'space-between',
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[3],
+    gap: Spacing[2],
+    flex: 1,
   },
   price: {
-    color: Colors.black[100],
-    fontFamily: FontFamilies.mbold,
     fontSize: FontSizes['2xl'],
-    textAlign: 'left',
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.black[100],
+  },
+  discountBadge: {
+    backgroundColor: '#FFE6EB',
+    paddingHorizontal: r(12),
+    paddingVertical: r(6),
+    borderRadius: r(6),
+  },
+  discountText: {
+    color: '#FA7189',
+    fontSize: r(14),
+    fontFamily: FontFamilies.msemibold,
+    fontWeight: '600',
   },
   priceBeforeDeal: {
-    color: 'rgba(0, 0, 0, 0.5)',
-    fontFamily: FontFamilies.mthin,
-    fontSize: FontSizes.xl,
+    fontSize: r(18),
+    fontFamily: FontFamilies.mregular,
+    color: Colors.gray[500] || '#9CA3AF',
     textDecorationLine: 'line-through',
-    textAlign: 'left',
   },
-  priceOff: {
-    color: Colors.action,
-    fontFamily: FontFamilies.mthin,
-    fontSize: FontSizes.xl,
-  },
-  productDetailsContainer: {
-    marginTop: Spacing[3],
-  },
-  productDetailsTitle: {
-    fontSize: FontSizes.xl,
-    fontFamily: FontFamilies.psemibold,
+  productName: {
+    fontSize: r(22),
+    fontFamily: FontFamilies.mbold,
     color: Colors.black[100],
+    fontWeight: '700',
+    marginBottom: Spacing[1],
   },
-  productDetailsText: {
-    fontSize: r(16),
-    fontFamily: FontFamilies.pmedium,
-    color: Colors.neutral[400],
+  subtitle: {
+    fontSize: r(14),
+    fontFamily: FontFamilies.pregular,
+    color: Colors.black[100],
+    marginBottom: Spacing[3],
   },
-  statusContainer: {
+  ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[3],
-    marginTop: Spacing[5],
+    gap: Spacing[2],
+    marginBottom: Spacing[4],
   },
-  statusItem: {
-    backgroundColor: 'transparent',
-    paddingVertical: Spacing[1],
-    paddingHorizontal: Spacing[2],
-    borderWidth: 1,
+  starsContainer: {
     flexDirection: 'row',
-    gap: r(4),
-    borderRadius: r(8),
-    borderColor: Colors.neutral[500],
+    alignItems: 'center',
+    gap: r(2),
   },
-  statusIcon: {
-    width: r(24),
-    height: r(24),
+  reviewCount: {
+    fontSize: r(14),
+    fontFamily: FontFamilies.mregular,
+    color: Colors.gray[500] || '#9CA3AF',
   },
-  statusText: {
-    color: Colors.neutral[400],
+  section: {
+    marginBottom: Spacing[5],
+  },
+  sectionTitle: {
+    fontSize: r(18),
+    fontFamily: FontFamilies.mbold,
+    color: Colors.black[100],
+    fontWeight: '700',
+    marginBottom: Spacing[3],
+  },
+  descriptionText: {
+    fontSize: r(14),
+    fontFamily: FontFamilies.pregular,
+    color: Colors.black[100],
+    lineHeight: r(22),
+    marginBottom: Spacing[2],
+  },
+  moreText: {
+    fontSize: r(14),
     fontFamily: FontFamilies.pmedium,
-    fontSize: FontSizes.lg,
+    color: '#FF6B6B',
+    fontWeight: '500',
   },
-  statusSeparator: {
-    width: Spacing[3],
+  buttonsRow: {
+    flexDirection: 'row',
+    gap: Spacing[3],
+    marginBottom: Spacing[5],
+  },
+  infoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: r(8),
+    paddingVertical: r(10),
+    paddingHorizontal: r(14),
+    borderRadius: r(8),
+    borderWidth: r(1),
+    borderColor: Colors.gray[300] || '#E5E7EB',
+    backgroundColor: Colors.white,
+    flex: 1,
+  },
+  infoButtonIcon: {
+    width: r(18),
+    height: r(18),
+  },
+  infoButtonText: {
+    fontSize: r(13),
+    fontFamily: FontFamilies.pregular,
+    color: Colors.black[100],
+  },
+  variationsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  variationsContainer: {
+    flexDirection: 'row',
+    gap: Spacing[2],
+    flex: 1,
+  },
+  variationChip: {
+    backgroundColor: Colors.gray[200] || '#E5E7EB',
+    paddingHorizontal: r(12),
+    paddingVertical: r(6),
+    borderRadius: r(8),
+  },
+  variationText: {
+    fontSize: r(14),
+    fontFamily: FontFamilies.pmedium,
+    color: Colors.black[100],
+  },
+  specificationsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing[2],
+  },
+  specChip: {
+    backgroundColor: '#FFE5E5',
+    paddingHorizontal: r(12),
+    paddingVertical: r(6),
+    borderRadius: r(8),
+  },
+  specText: {
+    fontSize: r(14),
+    fontFamily: FontFamilies.pregular,
+    color: Colors.black[100],
+  },
+  deliveryOptionsContainer: {
+    gap: Spacing[3],
+  },
+  deliveryOption: {
+    borderWidth: r(1),
+    borderColor: '#FF69B4',
+    borderRadius: r(8),
+    padding: r(12),
+  },
+  deliveryType: {
+    fontSize: r(16),
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.black[100],
+    fontWeight: '600',
+    marginBottom: r(4),
+  },
+  deliveryDuration: {
+    fontSize: r(14),
+    fontFamily: FontFamilies.pregular,
+    color: Colors.gray[600] || '#4B5563',
+    marginBottom: r(4),
+  },
+  deliveryPrice: {
+    fontSize: r(16),
+    fontFamily: FontFamilies.mmedium,
+    color: Colors.black[100],
+    fontWeight: '500',
+  },
+  colorContainer: {
+    flexDirection: 'row',
+    gap: Spacing[3],
+  },
+  colorSwatch: {
+    width: r(40),
+    height: r(40),
+    borderRadius: r(20),
+    borderWidth: r(2),
+    borderColor: 'transparent',
+  },
+  colorSwatchSelected: {
+    borderColor: Colors.red[500],
+  },
+  reviewsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing[3],
+  },
+  viewAllText: {
+    fontSize: r(14),
+    fontFamily: FontFamilies.pmedium,
+    color: Colors.red[500],
+    fontWeight: '500',
+  },
+  ratingDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    marginBottom: Spacing[4],
+  },
+  ratingNumber: {
+    fontSize: r(18),
+    fontFamily: FontFamilies.mbold,
+    color: Colors.black[100],
+    fontWeight: '700',
+  },
+  reviewItem: {
+    flexDirection: 'row',
+    gap: Spacing[3],
+  },
+  reviewAvatar: {
+    width: r(40),
+    height: r(40),
+    borderRadius: r(20),
+  },
+  reviewContent: {
+    flex: 1,
+  },
+  reviewerName: {
+    fontSize: r(16),
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.black[100],
+    fontWeight: '600',
+    marginBottom: r(4),
+  },
+  reviewStars: {
+    flexDirection: 'row',
+    gap: r(2),
+    marginBottom: r(4),
+  },
+  reviewText: {
+    fontSize: r(14),
+    fontFamily: FontFamilies.pregular,
+    color: Colors.gray[600] || '#4B5563',
+    lineHeight: r(20),
   },
   actionButtonsContainer: {
     flexDirection: 'row',
-    gap: Spacing[5],
-    alignItems: 'center',
-    marginTop: Spacing[5],
+    gap: Spacing[3],
+    marginBottom: Spacing[3],
   },
-  actionButtonWrapper: {
+  sendGiftButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  actionIconContainer: {
-    zIndex: 20,
-  },
-  actionIcon: {
-    width: r(48),
-    height: r(48),
-    marginRight: r(-4),
-  },
-  cartButton: {
-    backgroundColor: '#2563EB',
-    paddingVertical: r(6),
-    paddingHorizontal: Spacing[4],
-    marginLeft: r(-16),
-    borderRadius: r(12),
-    zIndex: 10,
-  },
-  buyButton: {
+    justifyContent: 'center',
+    gap: r(8),
     backgroundColor: '#10B981',
-    paddingVertical: r(6),
-    paddingHorizontal: Spacing[4],
-    marginLeft: r(-16),
+    paddingVertical: r(14),
     borderRadius: r(12),
-    zIndex: 10,
   },
-  actionButtonText: {
+  sendGiftText: {
+    fontSize: r(16),
+    fontFamily: FontFamilies.msemibold,
     color: Colors.white,
-    fontFamily: FontFamilies.pmedium,
-    fontSize: FontSizes['2xl'],
+    fontWeight: '600',
   },
-  deliveryContainer: {
-    backgroundColor: '#FCA5A5',
-    paddingHorizontal: Spacing[3],
-    paddingVertical: Spacing[3],
-    marginVertical: Spacing[5],
-  },
-  deliveryText: {
-    color: Colors.black[100],
-    fontSize: FontSizes.lg,
-  },
-  deliveryTime: {
-    color: Colors.black[100],
-    fontSize: FontSizes['2xl'],
-    fontFamily: FontFamilies.mbold,
-  },
-  similarActionsContainer: {
+  addToCartButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    gap: r(8),
+    backgroundColor: Colors.red[500],
+    paddingVertical: r(14),
+    borderRadius: r(12),
+  },
+  actionButtonIcon: {
+    width: r(20),
+    height: r(20),
+  },
+  addToCartText: {
+    fontSize: r(16),
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.white,
+    fontWeight: '600',
+  },
+  buyNowButton: {
+    borderWidth: r(2),
+    borderColor: '#FF69B4',
+    backgroundColor: 'transparent',
+    paddingVertical: r(14),
+    borderRadius: r(12),
+    alignItems: 'center',
+    marginBottom: Spacing[5],
+  },
+  buyNowText: {
+    fontSize: r(16),
+    fontFamily: FontFamilies.msemibold,
+    color: '#FF69B4',
+    fontWeight: '600',
+  },
+  similarSection: {
     marginBottom: Spacing[8],
   },
-  similarActionItem: {
-    backgroundColor: Colors.white,
-    paddingVertical: Spacing[3],
-    paddingHorizontal: Spacing[3],
-    borderRadius: r(8),
-    borderWidth: 1,
-    borderColor: Colors.neutral[200],
+  similarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing[4],
+  },
+  similarTitle: {
+    fontSize: r(20),
+    fontFamily: FontFamilies.mbold,
+    color: Colors.black[100],
+    fontWeight: '700',
+  },
+  similarActions: {
     flexDirection: 'row',
     gap: Spacing[2],
   },
-  similarActionIcon: {
-    width: r(24),
-    height: r(24),
-  },
-  similarActionText: {
-    color: Colors.black[100],
-    fontSize: FontSizes.xl,
-    fontFamily: FontFamilies.pmedium,
-  },
-  similarSeparator: {
-    width: Spacing[3],
-  },
-  similarSection: {
-    marginBottom: Spacing[5],
-  },
-  similarTitle: {
-    fontSize: FontSizes['2xl'],
-    color: Colors.black[100],
-    fontFamily: FontFamilies.mbold,
-    textAlign: 'left',
-  },
-  similarFeaturesContainer: {
+  similarActionButton: {
     flexDirection: 'row',
-    marginVertical: Spacing[5],
-    marginHorizontal: Spacing[5],
-    justifyContent: 'space-between',
-  },
-  similarItemsCount: {
-    fontSize: FontSizes['2xl'],
-    fontFamily: FontFamilies.mbold,
-  },
-  similarFeaturesButtons: {
-    flexDirection: 'row',
-    gap: Spacing[3],
-  },
-  similarFeatureButton: {
-    backgroundColor: Colors.white,
-    borderRadius: r(8),
-    flexDirection: 'row',
-    flex: 1,
     alignItems: 'center',
-    paddingHorizontal: Spacing[2],
+    gap: r(4),
+    paddingVertical: r(6),
+    paddingHorizontal: r(10),
+    borderRadius: r(8),
+    borderWidth: r(1),
+    borderColor: Colors.gray[300] || '#D3D3D3',
+    backgroundColor: Colors.white,
   },
-  similarFeatureText: {
-    color: Colors.black[100],
-  },
-  similarFeatureIcon: {
+  similarActionIcon: {
     width: r(16),
     height: r(16),
   },
+  similarActionText: {
+    fontSize: r(12),
+    fontFamily: FontFamilies.pmedium,
+    color: Colors.black[100],
+  },
   similarProductsContainer: {
-    marginVertical: Spacing[8],
+    marginTop: Spacing[3],
   },
   separator: {
-    width: Spacing[8],
+    width: Spacing[2],
   },
 });
 
 export default ProductsDetailsScreen;
-
-interface similarDataType {
-  icon: ImageSourcePropType;
-  name: string;
-}
-
-const similarData: similarDataType[] = [
-  {
-    icon: icons.eye,
-    name: 'View Similar',
-  },
-  {
-    icon: icons.components,
-    name: 'Add to Compare',
-  },
-];
-
-const sizeData = [
-  {
-    id: 0,
-    size: 6,
-  },
-  {
-    id: 1,
-    size: 7,
-  },
-  {
-    id: 2,
-    size: 8,
-  },
-  {
-    id: 3,
-    size: 9,
-  },
-  {
-    id: 4,
-    size: 10,
-  },
-];
-interface StatusDataType {
-  id: number;
-  icon: ImageSourcePropType;
-  name: string;
-}
-
-const StatusData: StatusDataType[] = [
-  {
-    id: 0,
-    icon: icons.lock,
-    name: 'Nearest Store',
-  },
-  {
-    id: 1,
-    icon: icons.lock,
-    name: 'VIP',
-  },
-  {
-    id: 2,
-    icon: icons.lock,
-    name: 'Return policy',
-  },
-];

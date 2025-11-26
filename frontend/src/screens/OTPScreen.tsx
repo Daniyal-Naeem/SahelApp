@@ -119,9 +119,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+    paddingHorizontal: Spacing[5], // Consistent horizontal padding
   },
   content: {
-    paddingHorizontal: Spacing[5],
     paddingTop: Spacing[28],
   },
   title: {

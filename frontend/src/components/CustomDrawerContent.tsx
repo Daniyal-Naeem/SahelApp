@@ -2,10 +2,10 @@ import React from 'react';
 import {
   View,
   Text,
-  Image,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import {
   DrawerContentScrollView,
 } from '@react-navigation/drawer';
@@ -83,10 +83,10 @@ const CustomDrawerContent = (props: any) => {
 
         {/* User Profile Section */}
         <View style={styles.profileSection}>
-          <Image
+          <FastImage
             source={icons.profileIcon}
             style={styles.profileImage}
-            resizeMode="cover"
+            resizeMode={FastImage.resizeMode.cover}
           />
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>SAM KAMERON</Text>

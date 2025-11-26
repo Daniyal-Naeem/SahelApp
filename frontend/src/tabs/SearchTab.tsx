@@ -1,8 +1,8 @@
-import {View, Text} from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
 import React from 'react';
 import {RouteProp} from '@react-navigation/native';
+import {Spacing} from '../constants/styles';
 
-type Props = {};
 type RootStackParamList = {
   Search: {query: string} | undefined;
 };
@@ -15,11 +15,18 @@ interface SearchProps {
 const SearchTab: React.FC<SearchProps> = ({route}) => {
   const {query} = route.params || {}; // destructure the query from route
   return (
-    <View>
+    <View style={styles.container}>
       <Text>SearchTab</Text>
       <Text>Search For {query} </Text>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: Spacing[5], // Consistent horizontal padding
+  },
+});
 
 export default SearchTab;

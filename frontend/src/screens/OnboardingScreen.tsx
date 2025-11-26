@@ -1,12 +1,12 @@
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   TouchableOpacity,
   Dimensions,
   FlatList,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import React, {useState, useRef} from 'react';
 import {SplashData} from '../constants/data';
 import {useNavigation} from '@react-navigation/native';
@@ -75,7 +75,7 @@ const OnboardingScreen = (_props: Props) => {
     return (
       <View style={styles.slide}>
         <View style={styles.imageContainer}>
-          <Image source={item.image} style={styles.image} resizeMode="contain" />
+          <FastImage source={item.image} style={styles.image} resizeMode={FastImage.resizeMode.contain} />
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.title}>{item.title}</Text>

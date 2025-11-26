@@ -2,11 +2,11 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   TextInput,
   Alert,
   StyleSheet,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import React, {useState} from 'react';
 import {icons} from '../constants';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
@@ -44,10 +44,10 @@ const CustomSearch: React.FC<CustomSearchProps> = ({
     <View style={styles.container}>
       <View style={styles.searchContainer}>
         <TouchableOpacity onPress={handlePress}>
-          <Image
+          <FastImage
             source={icons.search}
             style={styles.searchIcon}
-            resizeMode="contain"
+            resizeMode={FastImage.resizeMode.contain}
           />
         </TouchableOpacity>
         <TextInput
@@ -58,7 +58,7 @@ const CustomSearch: React.FC<CustomSearchProps> = ({
           placeholderTextColor={'#BBBBBB'}
           onSubmitEditing={handlePress}
         />
-        <Image source={icons.mic} style={styles.micIcon} resizeMode="contain" />
+        <FastImage source={icons.mic} style={styles.micIcon} resizeMode={FastImage.resizeMode.contain} />
       </View>
     </View>
   );

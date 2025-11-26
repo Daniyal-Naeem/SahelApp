@@ -1,7 +1,6 @@
 import {
   View,
   Animated,
-  Image,
   TextInput,
   TouchableOpacity,
   Text,
@@ -9,6 +8,7 @@ import {
   StyleSheet,
   ViewStyle,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import React, {useEffect, useState} from 'react';
 import {icons, images} from '../constants';
 import {Colors, Spacing, FontSizes, FontFamilies} from '../constants/styles';
@@ -88,10 +88,10 @@ const FormField: React.FC<FormFieldProps> = ({
           error && styles.inputContainerError,
         ]}>
         {/* icon => user icon, or password, or email... */}
-        <Image
+        <FastImage
           source={getIconSource()}
           style={styles.icon}
-          resizeMode="contain"
+          resizeMode={FastImage.resizeMode.contain}
           tintColor="#424242"
         />
         {/* TextInput */}
@@ -109,10 +109,10 @@ const FormField: React.FC<FormFieldProps> = ({
 
         {title === 'Password' && (
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            <Image
+            <FastImage
               source={!showPassword ? icons.eye : icons.eyeHide}
               style={styles.eyeIcon}
-              resizeMode="contain"
+              resizeMode={FastImage.resizeMode.contain}
               tintColor="#424242"
             />
           </TouchableOpacity>
