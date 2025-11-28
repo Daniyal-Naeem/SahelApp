@@ -22,6 +22,8 @@ import {ProductTypes} from '../constants/types';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
 import {homeMenu} from '../assets/svgs/homeMenu';
+import {filterIcon} from '../assets/svgs/filter';
+import {sortIcon} from '../assets/svgs/sortIcon';
 
 type Props = {};
 
@@ -93,11 +95,15 @@ const HomeTab = (_props: Props) => {
               key={item.id}
               onPress={() => {}}>
               <Text style={styles.categoryButtonText}>{item.title}</Text>
-              <FastImage
-                source={item.image as any}
-                style={styles.categoryButtonIcon}
-                resizeMode={FastImage.resizeMode.contain}
-              />
+              {item.svg ? (
+                <SvgXml xml={item.svg} width={r(16)} height={r(16)} />
+              ) : (
+                <FastImage
+                  source={item.image as any}
+                  style={styles.categoryButtonIcon}
+                  resizeMode={FastImage.resizeMode.contain}
+                />
+              )}
             </TouchableOpacity>
           ))}
         </View>
@@ -411,18 +417,19 @@ export default HomeTab;
 type FeaturesDataProps = {
   id: number;
   title: string;
-  image: ImageSourcePropType;
+  image?: ImageSourcePropType;
+  svg?: string;
 };
 
 export const FeaturesData: FeaturesDataProps[] = [
   {
     id: 1,
     title: 'Sort',
-    image: icons.sort,
+    svg: sortIcon,
   },
   {
     id: 2,
     title: 'Filter',
-    image: icons.filter,
+    svg: filterIcon,
   },
 ];

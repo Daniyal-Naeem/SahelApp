@@ -11,13 +11,13 @@ type CustomButtonProps = {
   textStyle?: TextStyle;
 };
 
-const CustomButton: React.FC<CustomButtonProps> = ({
+const CustomButton = ({
   title,
   handlePress,
   containerStyle,
   isLoading,
   textStyle,
-}) => {
+}: CustomButtonProps) => {
   return (
     <TouchableOpacity
       onPress={handlePress}

@@ -10,9 +10,9 @@ type SummerSaleBannerProps = {
   onViewAllPress?: () => void;
 };
 
-const SummerSaleBanner: React.FC<SummerSaleBannerProps> = ({
+const SummerSaleBanner = ({
   onViewAllPress,
-}) => {
+}: SummerSaleBannerProps) => {
   return (
     <View style={styles.container}>
       {/* Banner Image */}

@@ -9,7 +9,7 @@ type SponsoredSectionProps = {
   onPress?: () => void;
 };
 
-const SponsoredSection: React.FC<SponsoredSectionProps> = ({onPress}) => {
+const SponsoredSection = ({onPress}: SponsoredSectionProps) => {
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
       <Text style={styles.sponsoredLabel}>Sponsored</Text>

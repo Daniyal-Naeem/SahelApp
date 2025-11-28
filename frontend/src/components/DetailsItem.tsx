@@ -11,11 +11,11 @@ type RootStackParamList = {
   ForgotPassword: undefined;
   Signup: undefined;
 };
-const DetailsItem: React.FC<DetailsItemProps> = ({title, placeholder}) => {
+const DetailsItem = ({title, placeholder}: DetailsItemProps) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const [changes, setChanges] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword] = useState(false);
   const handleForgotPassword = () => {
     navigation.navigate('ForgotPassword');
   };

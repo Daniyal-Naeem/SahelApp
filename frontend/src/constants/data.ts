@@ -174,9 +174,9 @@ const DetailedProductData: ProductTypes[] = [
     stars: 4.5,
     numberOfReview: 56890,
     image: [
-      'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=500',
-      'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=500',
-      'https://images.unsplash.com/photo-1626179450517-53c541fced0c?w=500',
+      'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=500&h=500&fit=crop',
+      'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=500&h=500&fit=crop',
+      'https://images.unsplash.com/photo-1626179450517-53c541fced0c?w=500&h=500&fit=crop',
     ],
     status: {
       icon: '🔥',
@@ -189,16 +189,15 @@ const DetailedProductData: ProductTypes[] = [
         type: 'color',
         label: 'Color',
         options: [
-          {value: 'nude', label: 'Nude Collection', isSelected: false},
+          {value: 'nude', label: 'White', isSelected: false},
           {value: 'pink', label: 'Pink Collection', isSelected: false},
           {value: 'red', label: 'Red Collection', isSelected: true},
         ],
       },
     ],
     specifications: [
-      {label: 'Finish', value: 'Matte'},
-      {label: 'Weight', value: '12 x 3.5g'},
-      {label: 'Longevity', value: '8-10 hours'},
+      {label: 'Material', value: 'Cotton 95%'},
+      {label: 'Material', value: 'Nylon 5%'},
     ],
     deliveryOptions: [
       {type: 'Standard', duration: '5-7 days', price: 10},
@@ -213,6 +212,7 @@ const DetailedProductData: ProductTypes[] = [
       {
         id: 'r1',
         userName: 'Sarah M.',
+        userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
         rating: 5,
         comment:
           'Amazing quality! The colors are vibrant and long-lasting. Highly recommend!',
@@ -221,6 +221,7 @@ const DetailedProductData: ProductTypes[] = [
       {
         id: 'r2',
         userName: 'Emma L.',
+        userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
         rating: 4.5,
         comment: 'Great value for money. The matte finish is perfect.',
         date: '2024-01-10',
@@ -242,9 +243,9 @@ const DetailedProductData: ProductTypes[] = [
     stars: 4.5,
     numberOfReview: 344567,
     image: [
-      'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=500',
-      'https://images.unsplash.com/photo-1626179450517-53c541fced0c?w=500',
-      'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=500',
+      'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=500&h=500&fit=crop',
+      'https://images.unsplash.com/photo-1626179450517-53c541fced0c?w=500&h=500&fit=crop',
+      'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=500&h=500&fit=crop',
     ],
     status: {
       icon: '⭐',
@@ -264,9 +265,8 @@ const DetailedProductData: ProductTypes[] = [
       },
     ],
     specifications: [
-      {label: 'Finish', value: 'Glossy'},
-      {label: 'Volume', value: '15ml'},
-      {label: 'Type', value: 'Liquid Lip Gloss'},
+      {label: 'Material', value: 'Cotton 95%'},
+      {label: 'Material', value: 'Nylon 5%'},
     ],
     deliveryOptions: [
       {type: 'Standard', duration: '5-7 days', price: 10},
@@ -281,6 +281,7 @@ const DetailedProductData: ProductTypes[] = [
       {
         id: 'r3',
         userName: 'Priya K.',
+        userAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop',
         rating: 5,
         comment: 'Love the glossy finish! Perfect for everyday wear.',
         date: '2024-01-20',
@@ -302,10 +303,10 @@ const DetailedProductData: ProductTypes[] = [
     stars: 4.5,
     numberOfReview: 56890,
     image: [
-      'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=500',
-      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=500',
-      'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500',
-      'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=500',
+      'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=500&h=500&fit=crop',
+      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=500&h=500&fit=crop',
+      'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500&h=500&fit=crop',
+      'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=500&h=500&fit=crop',
     ],
     status: {
       icon: '🔥',
@@ -323,28 +324,28 @@ const DetailedProductData: ProductTypes[] = [
             label: 'Pink',
             isSelected: true,
             image:
-              'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=200',
+              'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400',
           },
           {
             value: 'yellow',
             label: 'Yellow',
             isSelected: false,
             image:
-              'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=200',
+              'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400',
           },
           {
             value: 'red',
             label: 'Red',
             isSelected: false,
             image:
-              'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=200',
+              'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=400',
           },
           {
             value: 'blue',
             label: 'Blue',
             isSelected: false,
             image:
-              'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=200',
+              'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=400',
           },
         ],
       },
@@ -381,15 +382,16 @@ const DetailedProductData: ProductTypes[] = [
         id: 'r4',
         userName: 'Veronika',
         userAvatar:
-          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
+          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
         rating: 4,
         comment:
-          'Beautiful kurta with excellent quality fabric. The print is vibrant and the fit is perfect. Highly satisfied with my purchase!',
+          'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum.',
         date: '2024-01-18',
       },
       {
         id: 'r5',
         userName: 'Aisha R.',
+        userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
         rating: 5,
         comment: 'Love the design and comfort. Perfect for everyday wear.',
         date: '2024-01-12',
@@ -411,8 +413,9 @@ const DetailedProductData: ProductTypes[] = [
     stars: 4.5,
     numberOfReview: 56890,
     image: [
-      'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=500',
-      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=500',
+      'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=500&h=500&fit=crop',
+      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=500&h=500&fit=crop',
+      'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=500&h=500&fit=crop',
     ],
     status: {
       icon: '🆕',
@@ -421,9 +424,8 @@ const DetailedProductData: ProductTypes[] = [
     ukSide: ['One Size'],
     tags: ['electronics', 'haircare', 'straightener', 'philips'],
     specifications: [
-      {label: 'Power', value: '2200W'},
-      {label: 'Plate Material', value: 'Ceramic'},
-      {label: 'Temperature Range', value: '150-230°C'},
+      {label: 'Material', value: 'Cotton 95%'},
+      {label: 'Material', value: 'Nylon 5%'},
     ],
     deliveryOptions: [
       {type: 'Standard', duration: '5-7 days', price: 10},
@@ -445,8 +447,9 @@ const DetailedProductData: ProductTypes[] = [
     stars: 5,
     numberOfReview: 344567,
     image: [
-      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500',
-      'https://images.unsplash.com/photo-1524592094714-0f0654e20363?w=500',
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop',
+      'https://images.unsplash.com/photo-1524592094714-0f0654e20363?w=500&h=500&fit=crop',
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop',
     ],
     status: {
       icon: '⭐',
@@ -455,9 +458,8 @@ const DetailedProductData: ProductTypes[] = [
     ukSide: ['42mm', '44mm'],
     tags: ['watches', 'men', 'accessories', 'titan'],
     specifications: [
-      {label: 'Case Material', value: 'Stainless Steel'},
-      {label: 'Strap Material', value: 'Leather'},
-      {label: 'Water Resistance', value: '50m'},
+      {label: 'Material', value: 'Cotton 95%'},
+      {label: 'Material', value: 'Nylon 5%'},
     ],
     deliveryOptions: [
       {type: 'Standard', duration: '5-7 days', price: 10},

@@ -3,7 +3,7 @@ import React from 'react';
 interface CustomWrapperProps {
   children: React.ReactNode;
 }
-const CustomWrapper: React.FC<CustomWrapperProps> = ({children}) => {
+const CustomWrapper = ({children}: CustomWrapperProps) => {
   return (
     <FlatList
       data={[{key: '1'}]}

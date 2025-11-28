@@ -15,13 +15,13 @@ type DealBannerProps = {
   onButtonPress?: () => void;
 };
 
-const DealBanner: React.FC<DealBannerProps> = ({
+const DealBanner = ({
   title,
   timeRemaining,
   lastDate,
   buttonText = 'View all',
   onButtonPress,
-}) => {
+}: DealBannerProps) => {
   const showLastDate = !!lastDate;
   const showTimeRemaining = !!timeRemaining;
 
