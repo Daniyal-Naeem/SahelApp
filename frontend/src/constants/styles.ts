@@ -4,7 +4,7 @@
 import r from '../utils/responsive';
 
 export const Colors = {
-  primary: '#FFFFFF',
+  primary: '#F83758', // Primary app color
   action: '#F83758',
   black: {
     100: '#000',

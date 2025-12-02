@@ -3,6 +3,7 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createDrawerNavigator} from '@react-navigation/drawer';
+import {Provider} from 'react-redux';
 import {
   CheckoutScreen,
   ForgotPasswordScreen,
@@ -14,6 +15,7 @@ import {
   ProductsDetailsScreen,
   ProfileScreen,
   ResetPasswordScreen,
+  ReviewsScreen,
   SignupScreen,
   SplashScreen,
 } from './src/screens';
@@ -23,6 +25,7 @@ import {getItem} from './src/utils/AsyncStorage';
 import {ActivityIndicator, View, StyleSheet} from 'react-native';
 import {Colors} from './src/constants/styles';
 import {ProductsProvider} from './src/context/ProductsContext';
+import {store} from './src/store/store';
 import CustomDrawerContent from './src/components/CustomDrawerContent';
 
 export type RouteStackParamList = {
@@ -38,6 +41,8 @@ export type RouteStackParamList = {
   OTP: undefined;
   ResetPassword: undefined;
   ProductDetails: {itemDetails: ItemDetails} | undefined;
+  Reviews: {reviews: any[]; productTitle?: string} | undefined;
+  SendGift: {itemDetails: ItemDetails} | undefined;
 };
 
 const Drawer = createDrawerNavigator();
@@ -102,34 +107,40 @@ const App = () => {
   }
 
   return (
-    <ProductsProvider>
-      <GestureHandlerRootView style={{flex: 1}}>
-        <NavigationContainer>
-          <Stack.Navigator
-            screenOptions={{headerShown: false}}
-            initialRouteName={showOnboarded ? 'Onboarding' : 'HomeScreen'}>
-            <Stack.Screen name="HomeScreen" component={DrawerNavigator} />
-          <Stack.Screen name="GetStarted" component={GetStartedScreen} />
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-          <Stack.Screen name="OTP" component={OTPScreen} />
-          <Stack.Screen name="PlaceOrder" component={PlaceOrder} />
-          <Stack.Screen name="Profile" component={ProfileScreen} />
-          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-          <Stack.Screen name="Signup" component={SignupScreen} />
-          <Stack.Screen name="Checkout" component={CheckoutScreen} />
-          <Stack.Screen
-            name="ProductDetails"
-            component={ProductsDetailsScreen}
-          />
-          <Stack.Screen
-            name="ForgotPassword"
-            component={ForgotPasswordScreen}
-          />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </GestureHandlerRootView>
-    </ProductsProvider>
+    <Provider store={store}>
+      <ProductsProvider>
+        <GestureHandlerRootView style={{flex: 1}}>
+          <NavigationContainer>
+            <Stack.Navigator
+              screenOptions={{headerShown: false}}
+              initialRouteName={showOnboarded ? 'Onboarding' : 'HomeScreen'}>
+              <Stack.Screen name="HomeScreen" component={DrawerNavigator} />
+            <Stack.Screen name="GetStarted" component={GetStartedScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+            <Stack.Screen name="OTP" component={OTPScreen} />
+            <Stack.Screen name="PlaceOrder" component={PlaceOrder} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+            <Stack.Screen name="Signup" component={SignupScreen} />
+            <Stack.Screen name="Checkout" component={CheckoutScreen} />
+            <Stack.Screen
+              name="ProductDetails"
+              component={ProductsDetailsScreen}
+            />
+            <Stack.Screen
+              name="Reviews"
+              component={ReviewsScreen}
+            />
+            <Stack.Screen
+              name="ForgotPassword"
+              component={ForgotPasswordScreen}
+            />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </ProductsProvider>
+    </Provider>
   );
 };
 

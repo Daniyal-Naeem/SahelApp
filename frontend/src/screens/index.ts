@@ -9,6 +9,8 @@ import ProfileScreen from './ProfileScreen';
 import ResetPasswordScreen from './ResetPasswordScreen';
 import SignupScreen from './SignupScreen';
 import ProductsDetailsScreen from './ProductsDetailsScreen';
+import ReviewsScreen from './ReviewsScreen';
+import SendGiftScreen from './SendGiftScreen';
 import SplashScreen from './SplashScreen';
 export {
   CheckoutScreen,
@@ -22,5 +24,7 @@ export {
   ResetPasswordScreen,
   SignupScreen,
   ProductsDetailsScreen,
+  ReviewsScreen,
+  SendGiftScreen,
   SplashScreen,
 };

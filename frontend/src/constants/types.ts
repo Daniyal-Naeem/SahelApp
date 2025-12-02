@@ -1,4 +1,9 @@
 import {ImageSourcePropType} from 'react-native';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {RouteStackParamList} from '../../App';
+
+// Global type helper for screen props
+export type ScreenProps<T extends keyof RouteStackParamList> = NativeStackScreenProps<RouteStackParamList, T>;
 
 type SplashTypes = {
   image: ImageSourcePropType;

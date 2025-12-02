@@ -24,10 +24,10 @@ type ScreenRouteProps = RouteProp<RootStackParamList, 'Search'>;
 type RootStackParamList = {
   Search: {query: string} | undefined;
 };
-const CustomSearch: React.FC<CustomSearchProps> = ({
+const CustomSearch = ({
   placeholder,
   initialQuery,
-}) => {
+}: CustomSearchProps) => {
   const navigation = useNavigation<ScreenNavigationProps>();
   const route = useRoute<ScreenRouteProps>();
   const [query, setQuery] = useState('' || initialQuery);

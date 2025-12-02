@@ -24,7 +24,7 @@ type FormFieldProps = {
   [key: string]: any; // add more props ...props
 };
 // make reusable components to make our code clean
-const FormField: React.FC<FormFieldProps> = ({
+const FormField = ({
   title,
   value,
   placeholder,
@@ -33,7 +33,7 @@ const FormField: React.FC<FormFieldProps> = ({
   setError,
   error,
   ...props
-}) => {
+}: FormFieldProps) => {
   // states
   const [showPassword, setShowPassword] = useState(false);
   const [shakeAnimation] = useState(new Animated.Value(0));

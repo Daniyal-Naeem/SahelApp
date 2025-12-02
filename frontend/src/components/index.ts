@@ -2,6 +2,7 @@
 import CustomButton from "./CustomButton";
 import FormField from "./FormField";
 import CustomSearch from "./CustomSearch";
+import ProductCard from "./ProductCard";
 import ProductItem from "./ProductItem";
 import DetailsItem from "./DetailsItem";
 import CustomWrapper from "./CustomWrapper";
@@ -13,6 +14,7 @@ export {
     CustomButton,
     FormField,
     CustomSearch,
+    ProductCard,
     ProductItem,
     DetailsItem,
     CustomWrapper,

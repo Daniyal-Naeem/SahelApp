@@ -1,10 +1,8 @@
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import FastImage from 'react-native-fast-image';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {ItemDetails} from '../constants/types';
 import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteStackParamList} from '../../App';
 import {Colors, Spacing, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
 import {favoriteIcon} from '../assets/svgs/favoriteIcon';
@@ -12,6 +10,8 @@ import {favoriteActiveIcon} from '../assets/svgs/favoriteActiveIcon';
 import {activeStar} from '../assets/svgs/activeStar';
 import {halfStar} from '../assets/svgs/halfstar';
 import {inactiveStar} from '../assets/svgs/inactiveStar';
+import {useAppSelector, useAppDispatch} from '../store';
+import {toggleWishlist} from '../store/wishlistSlice';
 
 type ProductItemProps = {
   image: string;
@@ -25,9 +25,11 @@ type ProductItemProps = {
   ukSide?: number[];
   itemDetails: ItemDetails;
   currency?: string; // Dynamic currency, defaults to 'SAR'
+  width?: number; // Optional width for grid layouts
+  forceFavoriteActive?: boolean; // Force show active favorite icon (e.g., in wishlist tab)
 };
 
-const ProductItem: React.FC<ProductItemProps> = ({
+const ProductItem = ({
   image,
   title,
   description,
@@ -38,21 +40,42 @@ const ProductItem: React.FC<ProductItemProps> = ({
   numberOfReview,
   itemDetails,
   currency = 'SAR', // Default currency
-}) => {
-  const navigation = useNavigation<StackNavigationProp<RouteStackParamList, 'ProductDetails'>>();
-  const [isFavorite, setIsFavorite] = useState(false);
+  width,
+  forceFavoriteActive = false, // Default to false
+}: ProductItemProps) => {
+  const navigation = useNavigation<any>();
+  const dispatch = useAppDispatch();
+  // Check if item is in wishlist from Redux store
+  const isInWishlist = useAppSelector(state =>
+    state.wishlist.items.some(item => item._id === itemDetails._id),
+  );
+  const [isFavorite, setIsFavorite] = useState(isInWishlist || forceFavoriteActive);
+
+  // Sync local state with Redux state
+  useEffect(() => {
+    setIsFavorite(isInWishlist || forceFavoriteActive);
+  }, [isInWishlist, forceFavoriteActive]);
 
   const NavigateToProductsDetails = () => {
-    // Navigate with both itemDetails and productId for API fetching
-    navigation.navigate('ProductDetails', {
-      itemDetails,
-      productId: itemDetails._id,
-    });
+    // Navigate to ProductDetails within the Home stack (so bottom tabs remain visible)
+    try {
+      // Try nested navigation first (when called from Home tab)
+      navigation.getParent()?.navigate('Home', {
+        screen: 'ProductDetails',
+        params: {itemDetails},
+      });
+    } catch {
+      // Fallback to direct navigation (when called from main stack)
+      navigation.navigate('ProductDetails', {itemDetails});
+    }
   };
 
   const handleFavoritePress = (e: any) => {
     e.stopPropagation();
-    setIsFavorite(!isFavorite);
+    const newFavoriteState = !isFavorite;
+    setIsFavorite(newFavoriteState);
+    // Dispatch Redux action to toggle wishlist (synchronous, no API call)
+    dispatch(toggleWishlist(itemDetails));
   };
 
   // Format number with commas
@@ -102,7 +125,7 @@ const ProductItem: React.FC<ProductItemProps> = ({
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, width ? {width} : {}]}
       onPress={NavigateToProductsDetails}>
       <View style={styles.imageContainer}>
         <FastImage source={{uri: image}} style={styles.image} />
@@ -111,8 +134,9 @@ const ProductItem: React.FC<ProductItemProps> = ({
           onPress={handleFavoritePress}
           hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
           <SvgXml
-            xml={isFavorite ? favoriteActiveIcon : favoriteIcon}
-        
+            xml={forceFavoriteActive || isInWishlist || isFavorite ? favoriteActiveIcon : favoriteIcon}
+            width={r(24)}
+            height={r(24)}
           />
         </TouchableOpacity>
       </View>

@@ -7,9 +7,8 @@ import {
   ImageSourcePropType,
   StyleSheet,
   Dimensions,
-  ActivityIndicator,
 } from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import FastImage from 'react-native-fast-image';
 import Carousel from 'react-native-reanimated-carousel';
 import {icons, images} from '../constants';
@@ -23,7 +22,8 @@ import {ProductTypes} from '../constants/types';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
 import {homeMenu} from '../assets/svgs/homeMenu';
-import {api} from '../services/api';
+import {filterIcon} from '../assets/svgs/filter';
+import {sortIcon} from '../assets/svgs/sortIcon';
 
 type Props = {};
 
@@ -47,51 +47,8 @@ const HomeTab = (_props: Props) => {
   type RootStackParamList = {
     Setting: undefined;
   };
-  // State for products and categories from API
-  const [products, setProducts] = useState<ProductTypes[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch products and categories from API
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Fetch products and categories in parallel
-      const [productsData, categoriesData] = await Promise.all([
-        api.getProducts(),
-        api.getCategories(),
-      ]);
-
-      if (productsData.length > 0) {
-        setProducts(productsData);
-      } else {
-        // Fallback to dummy data if no products from API
-        setProducts(DetailedProductData);
-      }
-
-      if (categoriesData.length > 0) {
-        setCategories(categoriesData);
-      } else {
-        // Fallback to dummy data if no categories from API
-        setCategories(CategoriesData);
-      }
-    } catch (err: any) {
-      console.error('Error fetching data:', err);
-      setError(err.message || 'Failed to load data');
-      // Fallback to dummy data on error
-      setProducts(DetailedProductData);
-      setCategories(CategoriesData);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use detailed product data matching UI designs
+  const [products] = useState<ProductTypes[]>(DetailedProductData);
 
   const NavigateToProfile = async () => {
     navigation.navigate('Setting');
@@ -138,50 +95,48 @@ const HomeTab = (_props: Props) => {
               key={item.id}
               onPress={() => {}}>
               <Text style={styles.categoryButtonText}>{item.title}</Text>
-              <FastImage
-                source={item.image as any}
-                style={styles.categoryButtonIcon}
-                resizeMode={FastImage.resizeMode.contain}
-              />
+              {item.svg ? (
+                <SvgXml xml={item.svg} width={r(16)} height={r(16)} />
+              ) : (
+                <FastImage
+                  source={item.image as any}
+                  style={styles.categoryButtonIcon}
+                  resizeMode={FastImage.resizeMode.contain}
+                />
+              )}
             </TouchableOpacity>
           ))}
         </View>
       </View>
       {/* categories */}
       <View style={styles.categoriesListContainer}>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color={Colors.primary || '#007AFF'} />
-          </View>
-        ) : (
-          <FlatList
-            data={categories}
-            renderItem={({item}) => (
-              <View style={styles.categoryItemContainer}>
-                <TouchableOpacity
-                  onPress={handleSelectCategory}
-                  style={styles.categoryTouchable}>
-                  <FastImage
-                    source={{uri: item.image || 'https://via.placeholder.com/62'}}
-                    style={styles.categoryImage}
-                  />
-                  <Text
-                    style={styles.categoryText}
-                    numberOfLines={2}
-                    ellipsizeMode="tail">
-                    {item.title}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            ItemSeparatorComponent={() => (
-              <View style={styles.categorySeparator} />
-            )}
-            ListFooterComponent={<View style={styles.categorySeparator} />}
-          />
-        )}
+        <FlatList
+          data={CategoriesData}
+          renderItem={({item}) => (
+            <View style={styles.categoryItemContainer}>
+              <TouchableOpacity
+                onPress={handleSelectCategory}
+                style={styles.categoryTouchable}>
+                <FastImage
+                  source={{uri: item.image}}
+                  style={styles.categoryImage}
+                />
+                <Text
+                  style={styles.categoryText}
+                  numberOfLines={2}
+                  ellipsizeMode="tail">
+                  {item.title}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          ItemSeparatorComponent={() => (
+            <View style={styles.categorySeparator} />
+          )}
+          ListFooterComponent={<View style={styles.categorySeparator} />}
+        />
       </View>
       {/* promotional banner */}
       <View style={styles.bannerContainer}>
@@ -455,21 +410,6 @@ const styles = StyleSheet.create({
     marginTop: Spacing[1],
     marginBottom: Spacing[5],
   },
-  loadingContainer: {
-    padding: Spacing[4],
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyContainer: {
-    padding: Spacing[4],
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    fontSize: FontSizes.base,
-    color: Colors.gray[500] || '#999',
-    fontFamily: FontFamilies.pregular,
-  },
 });
 
 export default HomeTab;
@@ -477,18 +417,19 @@ export default HomeTab;
 type FeaturesDataProps = {
   id: number;
   title: string;
-  image: ImageSourcePropType;
+  image?: ImageSourcePropType;
+  svg?: string;
 };
 
 export const FeaturesData: FeaturesDataProps[] = [
   {
     id: 1,
     title: 'Sort',
-    image: icons.sort,
+    svg: sortIcon,
   },
   {
     id: 2,
     title: 'Filter',
-    image: icons.filter,
+    svg: filterIcon,
   },
 ];

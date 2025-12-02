@@ -1,6 +1,10 @@
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {HomeTab, WishlistTab, CartTab, SearchTab, SettingTab} from '../tabs';
+import ProductsDetailsScreen from './ProductsDetailsScreen';
+import ReviewsScreen from './ReviewsScreen';
+import SendGiftScreen from './SendGiftScreen';
 import {View, Text} from 'react-native';
 import {SvgXml} from 'react-native-svg';
 import {cartTabIcon} from '../assets/svgs/cartTabIcon';
@@ -9,7 +13,8 @@ import {homeTabIcon} from '../assets/svgs/homeTabIcon';
 import {searchTabIcon} from '../assets/svgs/searchTabIcon';
 import {profileTabIcon} from '../assets/svgs/profileTabIcon';
 import { ItemDetails } from '../constants/types';
-import {FontFamilies, r} from '../constants/styles';
+import {FontFamilies, r, Colors} from '../constants/styles';
+import {RouteStackParamList} from '../../App';
 
 type TabBarItemProps = {
   icon: string;
@@ -17,11 +22,11 @@ type TabBarItemProps = {
   isHome?: boolean;
 };
 
-const TabBarItem: React.FC<TabBarItemProps> = ({
+const TabBarItem = ({
   icon,
   focused: _focused,
   isHome,
-}) => {
+}: TabBarItemProps) => {
   // For home tab, the SVG already includes the red circle background
   if (isHome) {
     return (
@@ -53,12 +58,13 @@ type TabBarLabelProps = {
   children: string;
 };
 
-const TabBarLabel: React.FC<TabBarLabelProps> = ({focused, children}) => {
+const TabBarLabel = ({focused, children}: TabBarLabelProps) => {
   return (
     <Text
       style={{
         fontFamily: focused ? FontFamilies.msemibold : FontFamilies.mregular,
         fontSize: r(12),
+        color: focused ? Colors.primary : Colors.black[100],
       }}>
       {children}
     </Text>
@@ -72,6 +78,26 @@ export type RouteTabsParamList = {
   Search: {query: string} | undefined;
   Profile: undefined;
 };
+
+// Create a Stack Navigator for Home tab that includes ProductDetails and Reviews
+const HomeStack = createNativeStackNavigator<{
+  HomeTab: undefined;
+  ProductDetails: {itemDetails: ItemDetails} | undefined;
+  Reviews: {reviews: any[]; productTitle?: string} | undefined;
+  SendGift: {itemDetails: ItemDetails} | undefined;
+}>();
+
+const HomeStackNavigator = () => {
+  return (
+    <HomeStack.Navigator screenOptions={{headerShown: false}}>
+      <HomeStack.Screen name="HomeTab" component={HomeTab} />
+      <HomeStack.Screen name="ProductDetails" component={ProductsDetailsScreen} />
+      <HomeStack.Screen name="Reviews" component={ReviewsScreen} />
+      <HomeStack.Screen name="SendGift" component={SendGiftScreen} />
+    </HomeStack.Navigator>
+  );
+};
+
 const HomeScreen = (_props: Props) => {
   const Tab = createBottomTabNavigator<RouteTabsParamList>();
 
@@ -102,8 +128,8 @@ const HomeScreen = (_props: Props) => {
           fontSize: r(12),
           marginBottom: r(2),
         },
-        tabBarInactiveTintColor: 'black',
-        tabBarActiveTintColor: 'red',
+        tabBarInactiveTintColor: Colors.black[100],
+        tabBarActiveTintColor: Colors.primary,
       }}
     >
       <Tab.Screen
@@ -124,7 +150,7 @@ const HomeScreen = (_props: Props) => {
       />
       <Tab.Screen
         name="Home"
-        component={HomeTab}
+        component={HomeStackNavigator}
         options={{
           tabBarLabel: '',
           tabBarIcon: ({ focused }) => <TabBarItem icon={homeTabIcon} focused={focused} isHome />,

@@ -12,7 +12,7 @@ interface SearchProps {
   route: ScreenRouteProps;
 }
 
-const SearchTab: React.FC<SearchProps> = ({route}) => {
+const SearchTab = ({route}: SearchProps) => {
   const {query} = route.params || {}; // destructure the query from route
   return (
     <View style={styles.container}>
