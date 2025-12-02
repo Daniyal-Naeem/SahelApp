@@ -57,7 +57,29 @@ const HomeTab = (_props: Props) => {
   const handleOpenDrawer = () => {
     navigation.openDrawer();
   };
-  const handleSelectCategory = () => {};
+  const handleSelectCategory = (categoryTitle: string) => {
+    try {
+      // Navigate to Category within the Home stack
+      navigation.getParent()?.navigate('Home', {
+        screen: 'Category',
+        params: {categoryTitle},
+      });
+    } catch {
+      // Fallback to direct navigation
+      navigation.navigate('Category' as any, {categoryTitle});
+    }
+  };
+  const handleDealOfTheDayPress = () => {
+    try {
+      // Navigate to DealOfTheDay within the Home stack
+      navigation.getParent()?.navigate('Home', {
+        screen: 'DealOfTheDay',
+      });
+    } catch {
+      // Fallback to direct navigation
+      navigation.navigate('DealOfTheDay' as any);
+    }
+  };
   return (
     <ScrollView
       style={styles.scrollView}
@@ -115,7 +137,7 @@ const HomeTab = (_props: Props) => {
           renderItem={({item}) => (
             <View style={styles.categoryItemContainer}>
               <TouchableOpacity
-                onPress={handleSelectCategory}
+                onPress={() => handleSelectCategory(item.title)}
                 style={styles.categoryTouchable}>
                 <FastImage
                   source={{uri: item.image}}
@@ -218,7 +240,7 @@ const HomeTab = (_props: Props) => {
         title="Deal of the Day"
         timeRemaining="22h 55m 20s remaining"
         buttonText="View all"
-        onButtonPress={() => {}}
+        onButtonPress={handleDealOfTheDayPress}
       />
       {/* Products */}
       <View style={styles.productsContainer}>

@@ -25,7 +25,7 @@ const createAxiosInstance = (): AxiosInstance => {
           config.headers.Authorization = `Bearer ${token}`;
         }
       } catch (error: any) {
-        console.error('Error getting token:', error);
+        // Error handling - could be logged to error tracking service
       }
       return config;
     },
@@ -44,11 +44,8 @@ const createAxiosInstance = (): AxiosInstance => {
           await removeItem('user');
           
           // TODO: Navigate to login screen
-          // You can use navigation ref or event emitter here
-          // For now, just log the error
-          console.log('Unauthorized - please login again');
         } catch (err) {
-          console.error('Error handling 401:', err);
+          // Error handling - could be logged to error tracking service
         }
       }
       return Promise.reject(error);

@@ -57,17 +57,15 @@ const ProductItem = ({
   }, [isInWishlist, forceFavoriteActive]);
 
   const NavigateToProductsDetails = () => {
-    // Navigate to ProductDetails within the Home stack (so bottom tabs remain visible)
-    try {
-      // Try nested navigation first (when called from Home tab)
-      navigation.getParent()?.navigate('Home', {
-        screen: 'ProductDetails',
-        params: {itemDetails},
-      });
-    } catch {
-      // Fallback to direct navigation (when called from main stack)
-      navigation.navigate('ProductDetails', {itemDetails});
+    // Navigate to ProductDetails in the root Stack Navigator (accessible from all tabs)
+    // Get the root navigator by traversing up the navigation tree
+    let rootNavigator = navigation;
+    while (rootNavigator.getParent()) {
+      rootNavigator = rootNavigator.getParent() as any;
     }
+    
+    // Navigate to ProductDetails in the root stack
+    (rootNavigator as any).navigate('ProductDetails', {itemDetails});
   };
 
   const handleFavoritePress = (e: any) => {
@@ -126,11 +124,13 @@ const ProductItem = ({
   return (
     <TouchableOpacity
       style={[styles.container, width ? {width} : {}]}
+      activeOpacity={0.6}
       onPress={NavigateToProductsDetails}>
       <View style={styles.imageContainer}>
         <FastImage source={{uri: image}} style={styles.image} />
         <TouchableOpacity
           style={styles.heartButton}
+        
           onPress={handleFavoritePress}
           hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
           <SvgXml

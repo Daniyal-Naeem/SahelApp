@@ -7,9 +7,9 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import React from 'react';
+import React, {useMemo} from 'react';
 import FastImage from 'react-native-fast-image';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
 import {ProductItem, CustomSearch} from '../components';
 import {DetailedProductData} from '../constants/data';
@@ -20,21 +20,51 @@ import {homeMenu} from '../assets/svgs/homeMenu';
 import {filterIcon} from '../assets/svgs/filter';
 import {sortIcon} from '../assets/svgs/sortIcon';
 import {images, icons} from '../constants';
-import {useAppSelector} from '../store';
 
 type Props = {};
 
+type CategoryTabRouteParams = {
+  categoryTitle: string;
+  categoryId?: string;
+};
+
 const RowSeparator = () => <View style={styles.rowSeparator} />;
 
-const WishlistTab = (_props: Props) => {
+const CategoryTab = (_props: Props) => {
   const navigation = useNavigation<DrawerNavigationProp<any>>();
+  const route = useRoute<RouteProp<{Category: CategoryTabRouteParams}, 'Category'>>();
   const width = Dimensions.get('window').width;
-  const wishlistItems = useAppSelector(state => state.wishlist.items);
   
-  // Use wishlist items if available, otherwise use dummy data for display
-  const displayProducts: ProductTypes[] = wishlistItems.length > 0 
-    ? wishlistItems 
-    : DetailedProductData.slice(0, 4); // Show first 4 products as dummy data
+  const {categoryTitle, categoryId} = route.params || {categoryTitle: 'Category'};
+
+  // Filter products by category
+  const displayProducts: ProductTypes[] = useMemo(() => {
+    if (!categoryTitle) {
+      return DetailedProductData;
+    }
+    
+    const categoryTitleLower = categoryTitle.toLowerCase();
+    
+    // Filter products that match the category
+    return DetailedProductData.filter((product) => {
+      // Check if product has a category field
+      const productCategory = (product as any).category?.toLowerCase() || '';
+      
+      // Check if any tags match the category
+      const productTags = product.tags?.map(tag => tag.toLowerCase()) || [];
+      const hasMatchingTag = productTags.some(tag => 
+        tag.includes(categoryTitleLower) || categoryTitleLower.includes(tag)
+      );
+      
+      // Match by category name, ID, or tags
+      return (
+        productCategory.includes(categoryTitleLower) ||
+        productCategory === categoryTitleLower ||
+        hasMatchingTag ||
+        (categoryId && (product as any).categoryId === categoryId)
+      );
+    });
+  }, [categoryTitle, categoryId]);
 
   const NavigateToProfile = () => {
     navigation.navigate('Setting');
@@ -84,9 +114,9 @@ const WishlistTab = (_props: Props) => {
         <CustomSearch placeholder="Search any Product.." initialQuery="" />
       </View>
 
-      {/* WishList Title and Buttons */}
-      <View style={styles.wishlistHeader}>
-        <Text style={styles.wishlistTitle}>WishList</Text>
+      {/* Category Title and Buttons */}
+      <View style={styles.categoryHeader}>
+        <Text style={styles.categoryTitle}>{categoryTitle}</Text>
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
             style={styles.actionButton}
@@ -122,12 +152,16 @@ const WishlistTab = (_props: Props) => {
             itemDetails={item}
             currency={(item as any).currency || 'SAR'}
             width={itemWidth}
-            forceFavoriteActive={true}
           />
         )}
         columnWrapperStyle={styles.row}
         ItemSeparatorComponent={RowSeparator}
         contentContainerStyle={styles.productsGrid}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No products found in this category</Text>
+          </View>
+        }
       />
     </ScrollView>
   );
@@ -159,13 +193,13 @@ const styles = StyleSheet.create({
   searchContainer: {
     marginBottom: Spacing[4],
   },
-  wishlistHeader: {
+  categoryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing[4],
   },
-  wishlistTitle: {
+  categoryTitle: {
     fontSize: FontSizes['2xl'],
     fontFamily: FontFamilies.msemibold,
     color: Colors.black[100],
@@ -199,6 +233,18 @@ const styles = StyleSheet.create({
   rowSeparator: {
     width: Spacing[2],
   },
+  emptyContainer: {
+    paddingVertical: Spacing[8],
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  emptyText: {
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.mregular,
+    color: Colors.gray[600],
+  },
 });
 
-export default WishlistTab;
+export default CategoryTab;
+

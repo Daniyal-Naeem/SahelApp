@@ -5,6 +5,7 @@ import LoginScreen from './LoginScreen';
 import OnboardingScreen from './OnboardingScreen';
 import OTPScreen from './OTPScreen';
 import PlaceOrder from './PlaceOrder';
+import PaymentScreen from './PaymentScreen';
 import ProfileScreen from './ProfileScreen';
 import ResetPasswordScreen from './ResetPasswordScreen';
 import SignupScreen from './SignupScreen';
@@ -20,6 +21,7 @@ export {
   OnboardingScreen,
   OTPScreen,
   PlaceOrder,
+  PaymentScreen,
   ProfileScreen,
   ResetPasswordScreen,
   SignupScreen,

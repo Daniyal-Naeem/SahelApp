@@ -12,8 +12,8 @@ import {
   OnboardingScreen,
   OTPScreen,
   PlaceOrder,
+  PaymentScreen,
   ProductsDetailsScreen,
-  ProfileScreen,
   ResetPasswordScreen,
   ReviewsScreen,
   SignupScreen,
@@ -33,10 +33,10 @@ export type RouteStackParamList = {
   GetStarted: undefined;
   Login: undefined;
   Signup: undefined;
-  HomeScreen: undefined;
-  Profile: undefined;
-  Checkout: undefined;
+  HomeScreen: {screen?: string} | undefined;
+  Checkout: {itemDetails: ItemDetails} | undefined;
   PlaceOrder: {itemDetails: ItemDetails} | undefined;
+  Payment: {itemDetails: ItemDetails} | undefined;
   ForgotPassword: undefined;
   OTP: undefined;
   ResetPassword: undefined;
@@ -60,11 +60,6 @@ const DrawerNavigator = () => (
       component={HomeScreen}
       options={{title: 'Home'}}
     />
-    <Drawer.Screen
-      name="ProfileDrawer"
-      component={ProfileScreen}
-      options={{title: 'Profile'}}
-    />
   </Drawer.Navigator>
 );
 
@@ -80,13 +75,9 @@ const App = () => {
   const checkIfAlreadyOnboarded = async () => {
     const onboarded = await getItem('onboarded');
     if (onboarded === 200) {
-      // successfully onboarded, don't show onboarding screen once again
       setShowOnboarded(false);
-      console.log(`it's value should be 200:`, onboarded);
     } else {
-      // didn't onboard, show onboarding screen
       setShowOnboarded(true);
-      console.log(`it's value is:`, onboarded);
     }
   };
 
@@ -120,7 +111,7 @@ const App = () => {
             <Stack.Screen name="Onboarding" component={OnboardingScreen} />
             <Stack.Screen name="OTP" component={OTPScreen} />
             <Stack.Screen name="PlaceOrder" component={PlaceOrder} />
-            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="Payment" component={PaymentScreen} />
             <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
             <Stack.Screen name="Checkout" component={CheckoutScreen} />

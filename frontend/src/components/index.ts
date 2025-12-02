@@ -9,6 +9,8 @@ import CustomWrapper from "./CustomWrapper";
 import DealBanner from "./DealBanner";
 import SummerSaleBanner from "./SummerSaleBanner";
 import SponsoredSection from "./SponsoredSection";
+import ConfirmationModal from "./ConfirmationModal";
+import CustomHeader from "./CustomHeader";
 // to import it from ./components directly...
 export {
     CustomButton,
@@ -20,5 +22,7 @@ export {
     CustomWrapper,
     DealBanner,
     SummerSaleBanner,
-    SponsoredSection
+    SponsoredSection,
+    ConfirmationModal,
+    CustomHeader
 }

@@ -13,8 +13,7 @@ import FastImage from 'react-native-fast-image';
 import Carousel from 'react-native-reanimated-carousel';
 import {SvgXml} from 'react-native-svg';
 import {RouteStackParamList} from '../../App';
-import {icons, images} from '../constants';
-import {ProductItem} from '../components';
+import {ProductItem, CustomHeader} from '../components';
 import {DetailedProductData} from '../constants/data';
 import {Colors, Spacing, FontFamilies, r, FontSizes} from '../constants/styles';
 import {VariationType, SpecificationType, DeliveryOptionType} from '../constants/types';
@@ -30,7 +29,6 @@ import { VIPIconNew } from '../assets/svgs/VIPIconNew';
 import { sendGift } from '../assets/svgs/sendGift';
 import { addtoCard } from '../assets/svgs/addtoCard';
 import { buyNow } from '../assets/svgs/buyNow';
-import { filterIcon } from '../assets/svgs/filter';
 
 
 type ScreenRouteProps = RouteProp<RouteStackParamList, 'ProductDetails'> | any;
@@ -77,6 +75,10 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
 
   const NavigateToCart = () => {
     navigation.navigate('Cart', {itemDetails: itemDetails!});
+  };
+
+  const NavigateToCheckout = () => {
+    navigation.navigate('Checkout', {itemDetails: itemDetails!});
   };
 
   const NavigateToSendGift = () => {
@@ -272,8 +274,6 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   // Handle navigation to full variations screen
   const handleViewAllVariations = () => {
     // TODO: Navigate to full variations screen
-    // For now, we can show an alert or navigate to a modal
-    console.log('Navigate to full variations screen');
   };
 
 
@@ -281,32 +281,13 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={GoBack} style={styles.backButton}>
-          <FastImage
-            source={icons.next1}
-            style={[styles.backIcon, {transform: [{rotate: '180deg'}]}]}
-            resizeMode={FastImage.resizeMode.contain}
-          />
-        </TouchableOpacity>
-        <FastImage
-          source={images.homeLogo}
-          style={styles.logo}
-          resizeMode={FastImage.resizeMode.contain}
-        />
-        <View style={styles.headerRightButtons}>
-          <TouchableOpacity style={styles.filterButton}>
-            <SvgXml xml={filterIcon} width={r(20)} height={r(20)} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={NavigateToCart} style={styles.cartButton}>
-            <FastImage
-              source={icons.cart}
-              style={styles.cartIcon}
-              resizeMode={FastImage.resizeMode.contain}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <CustomHeader
+        showLogo={true}
+        onBackPress={GoBack}
+        showCart={true}
+        onCartPress={NavigateToCart}
+        showBorder={true}
+      />
 
       {/* Image Carousel */}
       <View style={styles.carouselContainer}>
@@ -641,7 +622,9 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
           <Text style={styles.addToCartText}>Add to Cart</Text>
         </TouchableOpacity>
         </View>
-      <TouchableOpacity style={styles.buyNowButton}>
+      <TouchableOpacity 
+        style={styles.buyNowButton}
+        onPress={NavigateToCheckout}>
         <SvgXml xml={buyNow}  />
         <Text style={styles.buyNowText}>Buy Now</Text>
       </TouchableOpacity>
@@ -703,48 +686,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
     paddingHorizontal: Spacing[5],
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: Spacing[5],
-    paddingBottom: Spacing[3],
-  },
-  backButton: {
-    width: r(32),
-    height: r(32),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backIcon: {
-    width: r(24),
-    height: r(24),
-  },
-  logo: {
-    width: r(96),
-    height: r(32),
-  },
-  headerRightButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing[3],
-  },
-  filterButton: {
-    width: r(32),
-    height: r(32),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cartButton: {
-    width: r(32),
-    height: r(32),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cartIcon: {
-    width: r(24),
-    height: r(24),
   },
   carouselContainer: {
     marginTop: Spacing[3],

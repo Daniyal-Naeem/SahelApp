@@ -20,21 +20,17 @@ import {homeMenu} from '../assets/svgs/homeMenu';
 import {filterIcon} from '../assets/svgs/filter';
 import {sortIcon} from '../assets/svgs/sortIcon';
 import {images, icons} from '../constants';
-import {useAppSelector} from '../store';
 
 type Props = {};
 
 const RowSeparator = () => <View style={styles.rowSeparator} />;
 
-const WishlistTab = (_props: Props) => {
+const DealOfTheDayTab = (_props: Props) => {
   const navigation = useNavigation<DrawerNavigationProp<any>>();
   const width = Dimensions.get('window').width;
-  const wishlistItems = useAppSelector(state => state.wishlist.items);
   
-  // Use wishlist items if available, otherwise use dummy data for display
-  const displayProducts: ProductTypes[] = wishlistItems.length > 0 
-    ? wishlistItems 
-    : DetailedProductData.slice(0, 4); // Show first 4 products as dummy data
+  // Use all products for Deal of the Day
+  const displayProducts: ProductTypes[] = DetailedProductData;
 
   const NavigateToProfile = () => {
     navigation.navigate('Setting');
@@ -84,9 +80,9 @@ const WishlistTab = (_props: Props) => {
         <CustomSearch placeholder="Search any Product.." initialQuery="" />
       </View>
 
-      {/* WishList Title and Buttons */}
-      <View style={styles.wishlistHeader}>
-        <Text style={styles.wishlistTitle}>WishList</Text>
+      {/* Deal Of The Day Title and Buttons */}
+      <View style={styles.dealHeader}>
+        <Text style={styles.dealTitle}>Deal Of The Day</Text>
         <View style={styles.buttonsContainer}>
           <TouchableOpacity
             style={styles.actionButton}
@@ -122,7 +118,6 @@ const WishlistTab = (_props: Props) => {
             itemDetails={item}
             currency={(item as any).currency || 'SAR'}
             width={itemWidth}
-            forceFavoriteActive={true}
           />
         )}
         columnWrapperStyle={styles.row}
@@ -159,13 +154,13 @@ const styles = StyleSheet.create({
   searchContainer: {
     marginBottom: Spacing[4],
   },
-  wishlistHeader: {
+  dealHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing[4],
   },
-  wishlistTitle: {
+  dealTitle: {
     fontSize: FontSizes['2xl'],
     fontFamily: FontFamilies.msemibold,
     color: Colors.black[100],
@@ -201,4 +196,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default WishlistTab;
+export default DealOfTheDayTab;
+

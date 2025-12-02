@@ -21,6 +21,8 @@ type FormFieldProps = {
   otherStyles?: ViewStyle;
   setError?: (error: string) => void;
   error: string;
+  backgroundColor?: string;
+  borderColor?: string;
   [key: string]: any; // add more props ...props
 };
 // make reusable components to make our code clean
@@ -32,10 +34,13 @@ const FormField = ({
   otherStyles,
   setError,
   error,
+  backgroundColor,
+  borderColor,
   ...props
 }: FormFieldProps) => {
   // states
   const [showPassword, setShowPassword] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [shakeAnimation] = useState(new Animated.Value(0));
   // let's handle the error
   const shake = () => {
@@ -84,6 +89,12 @@ const FormField = ({
                 }),
               },
             ],
+            backgroundColor: backgroundColor || '#F5F5F5',
+            borderColor: error 
+              ? Colors.red[600] 
+              : isFocused 
+                ? Colors.primary 
+                : (borderColor || '#E5E5E5'),
           },
           error && styles.inputContainerError,
         ]}>
@@ -102,7 +113,13 @@ const FormField = ({
           onChangeText={handleChangeText}
           placeholderTextColor={'#9E9E9E'}
           secureTextEntry={title === 'Password' && !showPassword}
-          onBlur={() => error && shake()}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => {
+            setIsFocused(false);
+            if (error) {
+              shake();
+            }
+          }}
           {...props}
         />
         {/* eye switch when it's a password */}
