@@ -32,3 +32,9 @@ router.delete('/coupons/:id', authenticate, authorize('admin'), deleteCoupon)
 
 module.exports = router
 
+
+
+
+
+
+

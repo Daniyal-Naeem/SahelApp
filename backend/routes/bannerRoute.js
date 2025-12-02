@@ -54,3 +54,9 @@ router.delete('/app-ads/:id', authenticate, authorize('admin'), deleteAppAd)
 
 module.exports = router
 
+
+
+
+
+
+

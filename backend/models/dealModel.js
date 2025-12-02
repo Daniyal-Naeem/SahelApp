@@ -92,3 +92,9 @@ dealSchema.index({ products: 1 })
 
 module.exports = mongoose.model("dealModel", dealSchema)
 
+
+
+
+
+
+

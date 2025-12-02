@@ -115,3 +115,9 @@ couponSchema.index({ applicableProducts: 1 })
 
 module.exports = mongoose.model("couponModel", couponSchema)
 
+
+
+
+
+
+

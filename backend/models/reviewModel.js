@@ -105,3 +105,9 @@ reviewSchema.index({ rating: 1 })
 
 module.exports = mongoose.model("reviewModel", reviewSchema)
 
+
+
+
+
+
+

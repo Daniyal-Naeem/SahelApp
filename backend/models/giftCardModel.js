@@ -133,3 +133,9 @@ giftCardSchema.pre('save', async function(next) {
 
 module.exports = mongoose.model("giftCardModel", giftCardSchema)
 
+
+
+
+
+
+

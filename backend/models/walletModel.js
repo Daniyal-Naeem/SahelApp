@@ -76,3 +76,9 @@ walletSchema.statics.getOrCreateWallet = async function(userId) {
 
 module.exports = mongoose.model("walletModel", walletSchema)
 
+
+
+
+
+
+

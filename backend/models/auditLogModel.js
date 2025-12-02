@@ -106,3 +106,9 @@ auditLogSchema.statics.log = async function(data) {
 
 module.exports = mongoose.model("auditLogModel", auditLogSchema)
 
+
+
+
+
+
+

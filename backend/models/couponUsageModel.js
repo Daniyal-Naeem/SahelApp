@@ -43,3 +43,9 @@ couponUsageSchema.index({ order: 1 })
 
 module.exports = mongoose.model("couponUsageModel", couponUsageSchema)
 
+
+
+
+
+
+

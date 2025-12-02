@@ -168,3 +168,9 @@ const DealsPage = () => {
 
 export default DealsPage
 
+
+
+
+
+
+

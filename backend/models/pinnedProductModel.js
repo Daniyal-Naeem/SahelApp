@@ -50,3 +50,9 @@ pinnedProductSchema.index({ product: 1 })
 
 module.exports = mongoose.model("pinnedProductModel", pinnedProductSchema)
 
+
+
+
+
+
+

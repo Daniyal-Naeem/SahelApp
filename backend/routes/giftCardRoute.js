@@ -32,3 +32,9 @@ router.delete('/gift-cards/:id', authenticate, authorize('admin'), deleteGiftCar
 
 module.exports = router
 
+
+
+
+
+
+
