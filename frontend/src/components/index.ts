@@ -11,7 +11,13 @@ import SummerSaleBanner from "./SummerSaleBanner";
 import SponsoredSection from "./SponsoredSection";
 import ConfirmationModal from "./ConfirmationModal";
 import CustomHeader from "./CustomHeader";
-// to import it from ./components directly...
+import NextButton from "./NextButton";
+import CloseButton from "./CloseButton";
+import ActionButtons from "./ActionButtons";
+import OrderCard from "./OrderCard";
+import UserMessageBubble from "./UserMessageBubble";
+import OrderCardMessage from "./OrderCardMessage";
+
 export {
     CustomButton,
     FormField,
@@ -24,5 +30,11 @@ export {
     SummerSaleBanner,
     SponsoredSection,
     ConfirmationModal,
-    CustomHeader
+    CustomHeader,
+    NextButton,
+    CloseButton,
+    ActionButtons,
+    OrderCard,
+    UserMessageBubble,
+    OrderCardMessage
 }

@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ViewStyle,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import {images} from '../constants';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
@@ -34,23 +35,30 @@ const CustomHeader = ({
   containerStyle,
   showBorder = true,
 }: CustomHeaderProps) => {
+  const insets = useSafeAreaInsets();
+  
   return (
     <View
       style={[
         styles.header,
+        {paddingTop: insets.top},
         showBorder && styles.headerWithBorder,
         containerStyle,
       ]}>
-      <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
-       <SvgXml xml={backIcon} />
-      </TouchableOpacity>
+      <View style={styles.backButtonContainer}>
+        <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
+          <SvgXml xml={backIcon} />
+        </TouchableOpacity>
+      </View>
 
       {showLogo ? (
-        <FastImage
-          source={images.homeLogo}
-          style={styles.logo}
-          resizeMode={FastImage.resizeMode.contain}
-        />
+        <View style={styles.logoContainer}>
+          <FastImage
+            source={images.homeLogo}
+            style={styles.logo}
+            resizeMode={FastImage.resizeMode.contain}
+          />
+        </View>
       ) : title ? (
         <View style={styles.titleContainer}>
           <Text style={styles.headerTitle}>{title}</Text>
@@ -59,15 +67,17 @@ const CustomHeader = ({
         <View style={styles.headerCenter} />
       )}
 
-      {rightComponent ? (
-        rightComponent
-      ) : showCart ? (
-        <TouchableOpacity onPress={onCartPress} style={styles.cartButton}>
-          <SvgXml xml={cartIcon}  />
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.headerRight} />
-      )}
+      <View style={styles.rightButtonContainer}>
+        {rightComponent ? (
+          rightComponent
+        ) : showCart ? (
+          <TouchableOpacity onPress={onCartPress} style={styles.cartButton}>
+            <SvgXml xml={cartIcon}  />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.headerRight} />
+        )}
+      </View>
     </View>
   );
 };
@@ -77,18 +87,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: Spacing[2],
+    paddingLeft: Spacing[2],
+    paddingRight: Spacing[5],
     paddingBottom: Spacing[3],
+    minHeight: r(40),
   },
   headerWithBorder: {
     borderBottomWidth: r(1),
     borderBottomColor: Colors.gray[200] || '#E5E7EB',
   },
+  backButtonContainer: {
+    width: r(40),
+    height: r(40),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   backButton: {
     width: r(40),
     height: r(40),
     justifyContent: 'center',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   backIcon: {
     width: r(24),
@@ -101,9 +119,18 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'absolute',
-    left: 0,
-    right: 0,
+    height: r(40),
+  },
+  logoContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rightButtonContainer: {
+    width: r(40),
+    height: r(40),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: FontSizes.lg,
@@ -112,8 +139,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   logo: {
-    width: r(96),
-    height: r(32),
+    width: r(130),
+    height: r(46),
   },
   headerRight: {
     width: r(40),

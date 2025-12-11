@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import React from 'react';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import {useNavigation} from '@react-navigation/native';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
@@ -28,6 +29,7 @@ const RowSeparator = () => <View style={styles.rowSeparator} />;
 
 const WishlistTab = (_props: Props) => {
   const navigation = useNavigation<DrawerNavigationProp<any>>();
+  const insets = useSafeAreaInsets();
   const width = Dimensions.get('window').width;
   const wishlistItems = useAppSelector(state => state.wishlist.items);
   
@@ -60,7 +62,7 @@ const WishlistTab = (_props: Props) => {
       style={styles.scrollView}
       contentContainerStyle={styles.scrollViewContent}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, {marginTop: insets.top}]}>
         <TouchableOpacity onPress={handleOpenDrawer}>
           <SvgXml xml={homeMenu} />
         </TouchableOpacity>

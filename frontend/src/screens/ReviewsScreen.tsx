@@ -79,13 +79,15 @@ const ReviewsScreen = ({route}: ScreenProps<'Reviews'>) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <CustomHeader
-        title="Reviews"
-        onBackPress={GoBack}
-        showCart={true}
-        onCartPress={() => {}}
-        showBorder={true}
-      />
+      <View style={styles.headerContainer}>
+        <CustomHeader
+          title="Reviews"
+          onBackPress={GoBack}
+          showCart={true}
+          onCartPress={() => {}}
+          showBorder={true}
+        />
+      </View>
 
       {/* Reviews List */}
       <FlatList
@@ -104,10 +106,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
   },
+  headerContainer: {
+    paddingHorizontal: Spacing[5],
+  },
   listContent: {
     paddingHorizontal: Spacing[5],
     paddingBottom: Spacing[5],
-    marginTop: Spacing[3],
+    paddingTop: Spacing[3],
   },
   reviewItem: {
     flexDirection: 'row',

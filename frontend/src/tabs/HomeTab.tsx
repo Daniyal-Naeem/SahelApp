@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import React, {useState} from 'react';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import Carousel from 'react-native-reanimated-carousel';
 import {icons, images} from '../constants';
@@ -31,6 +32,7 @@ const HomeTab = (_props: Props) => {
   const navigation = useNavigation<
     StackNavigationProp<RootStackParamList> & DrawerNavigationProp<any>
   >();
+  const insets = useSafeAreaInsets();
   const width = Dimensions.get('window').width;
   // Calculate carousel dimensions for dummy images
   const carouselWidth = width - Spacing[5] * 2;
@@ -85,7 +87,7 @@ const HomeTab = (_props: Props) => {
       style={styles.scrollView}
       contentContainerStyle={styles.scrollViewContent}>
       {/* header */}
-      <View style={styles.header}>
+      <View style={[styles.header, {paddingTop: insets.top}]}>
         <TouchableOpacity onPress={handleOpenDrawer}>
           <SvgXml xml={homeMenu} />
         </TouchableOpacity>
@@ -305,15 +307,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    // No margin needed since ScrollView has paddingHorizontal
+    paddingBottom: Spacing[3],
+    // paddingTop will be set dynamically with safe area insets
   },
   headerIcon: {
-    width: r(32),
-    height: r(32),
+    width: r(40),
+    height: r(40),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   logo: {
-    width: r(96),
-    height: r(96),
+    width: r(130),
+    height: r(46),
   },
   greetingContainer: {
     marginTop: Spacing[2],

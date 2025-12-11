@@ -16,7 +16,11 @@ import {RouteStackParamList} from '../../App';
 import {ProductItem, CustomHeader} from '../components';
 import {DetailedProductData} from '../constants/data';
 import {Colors, Spacing, FontFamilies, r, FontSizes} from '../constants/styles';
-import {VariationType, SpecificationType, DeliveryOptionType} from '../constants/types';
+import {
+  VariationType,
+  SpecificationType,
+  DeliveryOptionType,
+} from '../constants/types';
 import {activeStar} from '../assets/svgs/activeStar';
 import {inactiveStar} from '../assets/svgs/inactiveStar';
 import {halfStar} from '../assets/svgs/halfstar';
@@ -24,12 +28,11 @@ import {EmptyStar} from '../assets/svgs/emptyStar';
 import {rightArrowWhite} from '../assets/svgs/rightArrowWhite';
 import {returnPolicy} from '../assets/svgs/ReturnPolicy';
 import {FeaturesData} from '../tabs/HomeTab';
-import { nearestStore } from '../assets/svgs/nearestStore';
-import { VIPIconNew } from '../assets/svgs/VIPIconNew';
-import { sendGift } from '../assets/svgs/sendGift';
-import { addtoCard } from '../assets/svgs/addtoCard';
-import { buyNow } from '../assets/svgs/buyNow';
-
+import {nearestStore} from '../assets/svgs/nearestStore';
+import {VIPIconNew} from '../assets/svgs/VIPIconNew';
+import {sendGift} from '../assets/svgs/sendGift';
+import {addtoCard} from '../assets/svgs/addtoCard';
+import {buyNow} from '../assets/svgs/buyNow';
 
 type ScreenRouteProps = RouteProp<RouteStackParamList, 'ProductDetails'> | any;
 
@@ -42,7 +45,9 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   const navigation = useNavigation<any>();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  const [selectedVariationIndex, setSelectedVariationIndex] = useState<number | null>(() => {
+  const [selectedVariationIndex, setSelectedVariationIndex] = useState<
+    number | null
+  >(() => {
     // Default to first variation if available
     if (itemDetails?.variations && itemDetails.variations.length > 0) {
       const firstVariation = itemDetails.variations[0];
@@ -52,16 +57,27 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     }
     return null;
   });
-  
+
   // Initialize selected delivery and color from data
   const [selectedDeliveryIndex, setSelectedDeliveryIndex] = useState<number>(
-    itemDetails?.deliveryOptions && itemDetails.deliveryOptions.length > 0 ? 0 : -1
+    itemDetails?.deliveryOptions && itemDetails.deliveryOptions.length > 0
+      ? 0
+      : -1,
   );
-  const [selectedColorIndex, setSelectedColorIndex] = useState<number | null>(() => {
-    // Initialize from data if available, otherwise default to first color
-    const index = itemDetails?.colorOptions?.findIndex((opt: {isSelected?: boolean}) => opt.isSelected) ?? -1;
-    return index >= 0 ? index : (itemDetails?.colorOptions && itemDetails.colorOptions.length > 0 ? 0 : null);
-  });
+  const [selectedColorIndex, setSelectedColorIndex] = useState<number | null>(
+    () => {
+      // Initialize from data if available, otherwise default to first color
+      const index =
+        itemDetails?.colorOptions?.findIndex(
+          (opt: {isSelected?: boolean}) => opt.isSelected,
+        ) ?? -1;
+      return index >= 0
+        ? index
+        : itemDetails?.colorOptions && itemDetails.colorOptions.length > 0
+        ? 0
+        : null;
+    },
+  );
 
   const baseProductImages = itemDetails?.image || [];
   const currency = (itemDetails as any)?.currency || 'SAR';
@@ -100,15 +116,15 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     for (let i = 0; i < 5; i++) {
       if (i < fullStars) {
         starsArray.push(
-          <SvgXml key={i} xml={activeStar} width={r(16)} height={r(16)} />
+          <SvgXml key={i} xml={activeStar} width={r(16)} height={r(16)} />,
         );
       } else if (i === fullStars && hasHalfStar) {
         starsArray.push(
-          <SvgXml key={i} xml={halfStar} width={r(16)} height={r(16)} />
+          <SvgXml key={i} xml={halfStar} width={r(16)} height={r(16)} />,
         );
       } else {
         starsArray.push(
-          <SvgXml key={i} xml={inactiveStar} width={r(16)} height={r(16)} />
+          <SvgXml key={i} xml={inactiveStar} width={r(16)} height={r(16)} />,
         );
       }
     }
@@ -128,17 +144,17 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
       if (i < fullStars) {
         // Full star
         starsArray.push(
-          <SvgXml key={i} xml={activeStar} width={r(16)} height={r(16)} />
+          <SvgXml key={i} xml={activeStar} width={r(16)} height={r(16)} />,
         );
       } else if (i === fullStars && hasHalfStar) {
         // Half star
         starsArray.push(
-          <SvgXml key={i} xml={halfStar} width={r(16)} height={r(16)} />
+          <SvgXml key={i} xml={halfStar} width={r(16)} height={r(16)} />,
         );
       } else {
         // Empty star
         starsArray.push(
-          <SvgXml key={i} xml={EmptyStar} width={r(16)} height={r(16)} />
+          <SvgXml key={i} xml={EmptyStar} width={r(16)} height={r(16)} />,
         );
       }
     }
@@ -146,15 +162,22 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   };
 
   // Get all variations with their options for display (with images)
-  const allVariationOptions = itemDetails?.variations
-    ?.flatMap((variation: VariationType) => 
-      (variation?.options || []).map((opt: {label?: string; isSelected?: boolean; image?: string | null; value?: string}) => ({
-        label: opt?.label || '',
-        isSelected: opt?.isSelected || false,
-        variationType: variation?.type || '',
-        image: opt?.image || null,
-        value: opt?.value || '',
-      }))
+  const allVariationOptions =
+    itemDetails?.variations?.flatMap((variation: VariationType) =>
+      (variation?.options || []).map(
+        (opt: {
+          label?: string;
+          isSelected?: boolean;
+          image?: string | null;
+          value?: string;
+        }) => ({
+          label: opt?.label || '',
+          isSelected: opt?.isSelected || false,
+          variationType: variation?.type || '',
+          image: opt?.image || null,
+          value: opt?.value || '',
+        }),
+      ),
     ) || [];
 
   // Limit displayed variations to 2
@@ -164,24 +187,31 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   // Get product images for carousel - update if variation is selected
   // In e-commerce: when a variation is selected, show images for that variation
   const getProductImages = () => {
-    if (selectedVariationIndex !== null && displayedVariations[selectedVariationIndex]) {
+    if (
+      selectedVariationIndex !== null &&
+      displayedVariations[selectedVariationIndex]
+    ) {
       const selectedOption = displayedVariations[selectedVariationIndex];
-      
+
       // If selected variation has specific images, get all images for that variation
       if (selectedOption?.image) {
         // Get all images for this variation from the variations data
-        const variationImages = itemDetails?.variations
-          ?.flatMap((variation: VariationType) => 
+        const variationImages =
+          itemDetails?.variations?.flatMap((variation: VariationType) =>
             (variation?.options || [])
-              .filter((opt: {value?: string; label?: string}) => opt?.value === selectedOption.value || opt?.label === selectedOption.label)
+              .filter(
+                (opt: {value?: string; label?: string}) =>
+                  opt?.value === selectedOption.value ||
+                  opt?.label === selectedOption.label,
+              )
               .map((opt: {image?: string | null}) => opt?.image)
-              .filter(Boolean)
+              .filter(Boolean),
           ) || [];
-        
+
         if (variationImages.length > 0) {
           return variationImages as string[];
         }
-        
+
         // If no variation-specific images, use the selected image + base images
         return [selectedOption.image, ...baseProductImages].filter(Boolean);
       }
@@ -194,51 +224,64 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   // Get all variation images with their associated variation info
   // In e-commerce: show ALL variation images, highlight selected ones
   const getAllVariationImagesWithInfo = () => {
-    const imagesWithInfo: Array<{image: string; variationValue: string; variationLabel: string}> = [];
-    
+    const imagesWithInfo: Array<{
+      image: string;
+      variationValue: string;
+      variationLabel: string;
+    }> = [];
+
     itemDetails?.variations?.forEach((variation: VariationType) => {
-      variation?.options?.forEach((opt: {image?: string; value?: string; label?: string}) => {
-        if (opt?.image && typeof opt.image === 'string' && opt.image.trim() !== '') {
-          imagesWithInfo.push({
-            image: opt.image,
-            variationValue: opt?.value || '',
-            variationLabel: opt?.label || '',
-          });
-        }
-      });
+      variation?.options?.forEach(
+        (opt: {image?: string; value?: string; label?: string}) => {
+          if (
+            opt?.image &&
+            typeof opt.image === 'string' &&
+            opt.image.trim() !== ''
+          ) {
+            imagesWithInfo.push({
+              image: opt.image,
+              variationValue: opt?.value || '',
+              variationLabel: opt?.label || '',
+            });
+          }
+        },
+      );
     });
-    
+
     // Remove duplicates based on image URL
     const uniqueImages = Array.from(
-      new Map(imagesWithInfo.map(item => [item.image, item])).values()
+      new Map(imagesWithInfo.map(item => [item.image, item])).values(),
     );
-    
+
     return uniqueImages;
   };
 
   const variationImagesWithInfo = getAllVariationImagesWithInfo();
-  
+
   // Get images for display (just the URLs)
-  const displayVariationImages = variationImagesWithInfo.length > 0
-    ? variationImagesWithInfo.map(item => item.image)
-    : [
-        'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400',
-        'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400',
-        'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=400',
-        'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=400',
-      ];
+  const displayVariationImages =
+    variationImagesWithInfo.length > 0
+      ? variationImagesWithInfo.map(item => item.image)
+      : [
+          'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400',
+          'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400',
+          'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=400',
+          'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=400',
+        ];
 
   // Helper to check if an image belongs to the selected variation
   const isImageForSelectedVariation = (imageUrl: string) => {
     if (selectedVariationIndex === null) return false;
-    
+
     const selectedOption = displayedVariations[selectedVariationIndex];
     if (!selectedOption) return false;
-    
+
     // Check if this image belongs to the selected variation
     return variationImagesWithInfo.some(
-      item => item.image === imageUrl && 
-      (item.variationValue === selectedOption.value || item.variationLabel === selectedOption.label)
+      item =>
+        item.image === imageUrl &&
+        (item.variationValue === selectedOption.value ||
+          item.variationLabel === selectedOption.label),
     );
   };
 
@@ -248,7 +291,7 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     // Don't toggle - always select the clicked variation
     if (index >= 0 && index < displayedVariations.length) {
       setSelectedVariationIndex(index);
-      
+
       // Reset carousel to first image when variation changes
       setCurrentImageIndex(0);
     }
@@ -257,16 +300,16 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   // Helper function to get short variation name - just the essential part
   const getShortVariationName = (label: string) => {
     if (!label) return '';
-    
+
     // Trim and get first word (removes "Collection", "Color", etc.)
     const trimmed = label.trim();
     const firstWord = trimmed.split(/\s+/)[0];
-    
+
     // For single letter sizes (S, M, L, etc.), return uppercase
     if (firstWord.length === 1 && /[A-Za-z]/.test(firstWord)) {
       return firstWord.toUpperCase();
     }
-    
+
     // Return first word, capitalize first letter
     return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
   };
@@ -275,8 +318,6 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   const handleViewAllVariations = () => {
     // TODO: Navigate to full variations screen
   };
-
-
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -348,8 +389,8 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
             </Text>
             <Text style={styles.priceBeforeDeal}>
               {currency} {itemDetails?.priceBeforeDeal}
-              </Text>
-            </View>
+            </Text>
+          </View>
           <View style={styles.discountBadge}>
             <Text style={styles.discountText}>{itemDetails?.priceOff} Off</Text>
           </View>
@@ -384,28 +425,37 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
             {isDescriptionExpanded ? 'Less' : 'More'}
           </Text>
         </TouchableOpacity>
-        </View>
+      </View>
 
       {/* Three Buttons: Nearest Store, VIP, Return policy */}
       <View style={styles.buttonsRow}>
         <TouchableOpacity
           style={[styles.infoButton, {maxWidth: availableButtonWidth}]}>
-          <SvgXml xml={nearestStore}  />
-          <Text style={styles.infoButtonText} numberOfLines={1} ellipsizeMode="tail">
+          <SvgXml xml={nearestStore} />
+          <Text
+            style={styles.infoButtonText}
+            numberOfLines={1}
+            ellipsizeMode="tail">
             Nearest Store
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.infoButton, {maxWidth: availableButtonWidth}]}>
-          <SvgXml xml={VIPIconNew}  />
-          <Text style={styles.infoButtonText} numberOfLines={1} ellipsizeMode="tail">
+          <SvgXml xml={VIPIconNew} />
+          <Text
+            style={styles.infoButtonText}
+            numberOfLines={1}
+            ellipsizeMode="tail">
             VIP
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.infoButton, {maxWidth: availableButtonWidth}]}>
-          <SvgXml xml={returnPolicy}  />
-          <Text style={styles.infoButtonText} numberOfLines={1} ellipsizeMode="tail">
+          <SvgXml xml={returnPolicy} />
+          <Text
+            style={styles.infoButtonText}
+            numberOfLines={1}
+            ellipsizeMode="tail">
             Return policy
           </Text>
         </TouchableOpacity>
@@ -417,24 +467,29 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
           <View style={styles.variationsHeader}>
             <Text style={styles.variationsTitle}>Variations</Text>
             <View style={styles.variationsChipsRow}>
-              {displayedVariations.map((option: {label: string; isSelected: boolean; value: string}, index: number) => (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => handleVariationSelect(index)}
-                  style={[
-                    styles.variationChip,
-                    selectedVariationIndex === index || option.isSelected
-                      ? styles.variationChipSelected
-                      : styles.variationChipUnselected,
-                  ]}>
-                  <Text style={styles.variationText} numberOfLines={1}>
-                    {getShortVariationName(option.label)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {displayedVariations.map(
+                (
+                  option: {label: string; isSelected: boolean; value: string},
+                  index: number,
+                ) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => handleVariationSelect(index)}
+                    style={[
+                      styles.variationChip,
+                      selectedVariationIndex === index || option.isSelected
+                        ? styles.variationChipSelected
+                        : styles.variationChipUnselected,
+                    ]}>
+                    <Text style={styles.variationText} numberOfLines={1}>
+                      {getShortVariationName(option.label)}
+                    </Text>
+                  </TouchableOpacity>
+                ),
+              )}
             </View>
             {hasMoreVariations && (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.variationArrowButton}
                 onPress={handleViewAllVariations}>
                 <SvgXml xml={rightArrowWhite} width={r(16)} height={r(16)} />
@@ -449,14 +504,17 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
               renderItem={({item, index}) => {
                 // Check if this image belongs to the selected variation
                 const isSelectedImage = isImageForSelectedVariation(item);
-                
+
                 return (
                   <View style={styles.variationImageWrapper}>
-                    {index > 0 && <View style={styles.variationImageSeparator} />}
-                    <View style={[
-                      styles.variationImageContainer,
-                      isSelectedImage && styles.variationImageSelected
-                    ]}>
+                    {index > 0 && (
+                      <View style={styles.variationImageSeparator} />
+                    )}
+                    <View
+                      style={[
+                        styles.variationImageContainer,
+                        isSelectedImage && styles.variationImageSelected,
+                      ]}>
                       <FastImage
                         source={{uri: item}}
                         style={styles.variationImage}
@@ -493,54 +551,70 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
       )}
 
       {/* Delivery Section */}
-      {itemDetails?.deliveryOptions && itemDetails.deliveryOptions.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Delivery:</Text>
-          <View style={styles.deliveryOptionsContainer}>
-            {itemDetails.deliveryOptions.map((option: DeliveryOptionType, index: number) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => setSelectedDeliveryIndex(index)}
-                style={[
-                  styles.deliveryOption,
-                  selectedDeliveryIndex >= 0 && selectedDeliveryIndex === index && styles.deliveryOptionSelected,
-                ]}>
-                <View style={styles.deliveryContent}>
-                  <Text style={styles.deliveryType}>{option.type}</Text>
-                  <View style={styles.deliveryDurationBadge}>
-                    <Text style={styles.deliveryDuration}>{option.duration}</Text>
-                  </View>
-                </View>
-                <Text style={styles.deliveryPrice}>
-                  {currency} {option.price}
-                </Text>
-              </TouchableOpacity>
-            ))}
+      {itemDetails?.deliveryOptions &&
+        itemDetails.deliveryOptions.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Delivery:</Text>
+            <View style={styles.deliveryOptionsContainer}>
+              {itemDetails.deliveryOptions.map(
+                (option: DeliveryOptionType, index: number) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => setSelectedDeliveryIndex(index)}
+                    style={[
+                      styles.deliveryOption,
+                      selectedDeliveryIndex >= 0 &&
+                        selectedDeliveryIndex === index &&
+                        styles.deliveryOptionSelected,
+                    ]}>
+                    <View style={styles.deliveryContent}>
+                      <Text style={styles.deliveryType}>{option.type}</Text>
+                      <View style={styles.deliveryDurationBadge}>
+                        <Text style={styles.deliveryDuration}>
+                          {option.duration}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={styles.deliveryPrice}>
+                      {currency} {option.price}
+                    </Text>
+                  </TouchableOpacity>
+                ),
+              )}
+            </View>
           </View>
-        </View>
-      )}
+        )}
 
       {/* Color Section */}
       {itemDetails?.colorOptions && itemDetails.colorOptions.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Color:</Text>
           <View style={styles.colorContainer}>
-            {itemDetails.colorOptions.map((colorOption: {color: string; name: string; isSelected?: boolean}, index: number) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => setSelectedColorIndex(index)}
-                style={[
-                  styles.colorSwatch,
-                  selectedColorIndex === index && styles.colorSwatchSelected,
-                ]}>
-                <View
+            {itemDetails.colorOptions.map(
+              (
+                colorOption: {
+                  color: string;
+                  name: string;
+                  isSelected?: boolean;
+                },
+                index: number,
+              ) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => setSelectedColorIndex(index)}
                   style={[
-                    styles.colorSwatchInner,
-                    {backgroundColor: colorOption.color},
-                  ]}
-                />
-              </TouchableOpacity>
-            ))}
+                    styles.colorSwatch,
+                    selectedColorIndex === index && styles.colorSwatchSelected,
+                  ]}>
+                  <View
+                    style={[
+                      styles.colorSwatchInner,
+                      {backgroundColor: colorOption.color},
+                    ]}
+                  />
+                </TouchableOpacity>
+              ),
+            )}
           </View>
         </View>
       )}
@@ -550,43 +624,33 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
         <View style={styles.section}>
           <View style={styles.reviewsHeader}>
             <Text style={styles.sectionTitle}>Rating & Reviews</Text>
-            <TouchableOpacity
-              onPress={() => {
-                // Navigate to Reviews within the Home stack (so bottom tabs remain visible)
-                try {
-                  navigation.getParent()?.navigate('Home', {
-                    screen: 'Reviews',
-                    params: {
-                      reviews: itemDetails.reviews || [],
-                      productTitle: itemDetails?.title || '',
-                    },
-                  });
-                } catch {
-                  // Fallback to direct navigation
+            {itemDetails.reviews.length > 1 && (
+              <TouchableOpacity
+                onPress={() => {
+                  // Navigate to Reviews screen in root stack
                   navigation.navigate('Reviews', {
                     reviews: itemDetails.reviews || [],
                     productTitle: itemDetails?.title || '',
                   });
-                }
-              }}>
-              <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
+                }}>
+                <Text style={styles.viewAllText}>View All</Text>
+              </TouchableOpacity>
+            )}
           </View>
           <View style={styles.ratingDisplay}>
             <View style={styles.starsContainer}>
               {renderReviewStars(itemDetails.stars || 0)}
             </View>
             <View style={styles.ratingBadge}>
-              <Text style={styles.ratingNumber}>
-                {itemDetails.stars}/5
-              </Text>
+              <Text style={styles.ratingNumber}>{itemDetails.stars}/5</Text>
             </View>
           </View>
           <View style={styles.reviewItem}>
             <FastImage
               source={{
-                uri: itemDetails.reviews[0]?.userAvatar || 
-                'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop'
+                uri:
+                  itemDetails.reviews[0]?.userAvatar ||
+                  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
               }}
               style={styles.reviewAvatar}
               resizeMode={FastImage.resizeMode.cover}
@@ -597,35 +661,34 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
               </Text>
               <View style={styles.reviewStars}>
                 {renderReviewStars(itemDetails.reviews[0].rating)}
-            </View>
+              </View>
               <Text style={styles.reviewText} numberOfLines={3}>
                 {itemDetails.reviews[0].comment}
               </Text>
             </View>
           </View>
-              </View>
-            )}
+        </View>
+      )}
 
       {/* Action Buttons */}
       <View style={styles.actionButtonsContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.sendGiftButton}
-          onPress={NavigateToSendGift}
-        >
-          <SvgXml xml={sendGift}  />
+          onPress={NavigateToSendGift}>
+          <SvgXml xml={sendGift} />
           <Text style={styles.sendGiftText}>Send as Gift</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.addToCartButton}
           onPress={NavigateToCart}>
-          <SvgXml xml={addtoCard}  />
+          <SvgXml xml={addtoCard} />
           <Text style={styles.addToCartText}>Add to Cart</Text>
         </TouchableOpacity>
-        </View>
-      <TouchableOpacity 
+      </View>
+      <TouchableOpacity
         style={styles.buyNowButton}
         onPress={NavigateToCheckout}>
-        <SvgXml xml={buyNow}  />
+        <SvgXml xml={buyNow} />
         <Text style={styles.buyNowText}>Buy Now</Text>
       </TouchableOpacity>
 
@@ -634,7 +697,7 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
         <View style={styles.similarHeader}>
           <Text style={styles.similarTitle}>Similar Items</Text>
           <View style={styles.similarActions}>
-              {FeaturesData.map(item => (
+            {FeaturesData.map(item => (
               <TouchableOpacity
                 key={item.id}
                 style={styles.similarActionButton}>
@@ -654,7 +717,9 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
         </View>
         <View style={styles.similarProductsContainer}>
           <FlatList
-            data={DetailedProductData.filter(item => item._id !== itemDetails?._id).slice(0, 5)}
+            data={DetailedProductData.filter(
+              item => item._id !== itemDetails?._id,
+            ).slice(0, 5)}
             renderItem={({item}) => (
               <ProductItem
                 image={item.image[0]}
@@ -1117,7 +1182,6 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   buyNowButton: {
-
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

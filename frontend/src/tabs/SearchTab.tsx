@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import React, {useState, useEffect, useMemo} from 'react';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {RouteProp} from '@react-navigation/native';
 import {CustomSearch, ProductItem} from '../components';
 import {DetailedProductData} from '../constants/data';
@@ -30,6 +31,7 @@ const RowSeparator = () => <View style={styles.rowSeparator} />;
 
 const SearchTab = ({route}: SearchProps) => {
   const {query: routeQuery} = route.params || {};
+  const insets = useSafeAreaInsets();
   const width = Dimensions.get('window').width;
   
   // Search query state
@@ -130,7 +132,7 @@ const SearchTab = ({route}: SearchProps) => {
     return (
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.scrollViewContent}
+        contentContainerStyle={[styles.scrollViewContent, {paddingTop: insets.top}]}
         showsVerticalScrollIndicator={false}>
         {/* Search Heading */}
         <Text style={styles.heading}>Search</Text>
@@ -190,7 +192,7 @@ const SearchTab = ({route}: SearchProps) => {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.scrollViewContent}
+      contentContainerStyle={[styles.scrollViewContent, {paddingTop: insets.top}]}
       showsVerticalScrollIndicator={false}>
       {/* Search Heading */}
       <Text style={styles.heading}>Search</Text>
@@ -280,7 +282,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     paddingHorizontal: Spacing[5],
-    paddingTop: Spacing[2],
+    // paddingTop will be set dynamically with safe area insets
     paddingBottom: Spacing[8],
   },
   heading: {

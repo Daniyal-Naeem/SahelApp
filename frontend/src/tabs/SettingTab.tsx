@@ -5,10 +5,12 @@ import {
   ScrollView,
   StyleSheet,
   Modal,
+  StatusBar,
 } from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
 import FastImage from 'react-native-fast-image';
 import React, {useState, useRef} from 'react';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {icons} from '../constants';
 import {CustomButton, CustomWrapper, FormField, ConfirmationModal} from '../components';
 import {useNavigation, useRoute, useFocusEffect} from '@react-navigation/native';
@@ -21,6 +23,7 @@ type Props = {};
 const SettingTab = (_props: Props) => {
   const navigation = useNavigation<StackNavigationProp<RouteStackParamList>>();
   const route = useRoute();
+  const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollView>(null);
   const addressSectionRef = useRef<View>(null);
   const [addressSectionY, setAddressSectionY] = useState<number | null>(null);
@@ -150,7 +153,7 @@ const SettingTab = (_props: Props) => {
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollViewContent}>
         {/* Header with back arrow and title */}
-        <View style={styles.header}>
+        <View style={[styles.header, {marginTop: insets.top}]}>
           <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
             <FastImage
               source={icons.next1}

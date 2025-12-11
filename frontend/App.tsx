@@ -4,11 +4,14 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import {Provider} from 'react-redux';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {
   CheckoutScreen,
   ForgotPasswordScreen,
   HomeScreen,
+  LanguageScreen,
   LoginScreen,
+  NotificationsScreen,
   OnboardingScreen,
   OTPScreen,
   PlaceOrder,
@@ -18,11 +21,13 @@ import {
   ReviewsScreen,
   SignupScreen,
   SplashScreen,
+  SupportScreen,
+  VIPClubScreen,
 } from './src/screens';
 import GetStartedScreen from './src/screens/GetStartedScreen';
 import {ItemDetails} from './src/constants/types';
 import {getItem} from './src/utils/AsyncStorage';
-import {ActivityIndicator, View, StyleSheet} from 'react-native';
+import {ActivityIndicator, View, StyleSheet, Platform, StatusBar} from 'react-native';
 import {Colors} from './src/constants/styles';
 import {ProductsProvider} from './src/context/ProductsContext';
 import {store} from './src/store/store';
@@ -43,6 +48,10 @@ export type RouteStackParamList = {
   ProductDetails: {itemDetails: ItemDetails} | undefined;
   Reviews: {reviews: any[]; productTitle?: string} | undefined;
   SendGift: {itemDetails: ItemDetails} | undefined;
+  VIPClub: undefined;
+  Notifications: undefined;
+  Support: undefined;
+  Language: undefined;
 };
 
 const Drawer = createDrawerNavigator();
@@ -60,6 +69,26 @@ const DrawerNavigator = () => (
       component={HomeScreen}
       options={{title: 'Home'}}
     />
+    <Drawer.Screen
+      name="VIPClub"
+      component={VIPClubScreen}
+      options={{title: 'VIP Club'}}
+    />
+    <Drawer.Screen
+      name="Notifications"
+      component={NotificationsScreen}
+      options={{title: 'Notifications'}}
+    />
+    <Drawer.Screen
+      name="Support"
+      component={SupportScreen}
+      options={{title: 'Support'}}
+    />
+    <Drawer.Screen
+      name="Language"
+      component={LanguageScreen}
+      options={{title: 'Language'}}
+    />
   </Drawer.Navigator>
 );
 
@@ -71,7 +100,12 @@ const App = () => {
   useEffect(() => {
     checkIfAlreadyOnboarded();
   }, []);
-
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      StatusBar.setBackgroundColor('#ffffff', true);
+      StatusBar.setBarStyle('dark-content', true);
+    }
+  }, []);
   const checkIfAlreadyOnboarded = async () => {
     const onboarded = await getItem('onboarded');
     if (onboarded === 200) {
@@ -98,10 +132,11 @@ const App = () => {
   }
 
   return (
-    <Provider store={store}>
-      <ProductsProvider>
-        <GestureHandlerRootView style={{flex: 1}}>
-          <NavigationContainer>
+    <SafeAreaProvider>
+      <Provider store={store}>
+        <ProductsProvider>
+          <GestureHandlerRootView style={{flex: 1}}>
+            <NavigationContainer>
             <Stack.Navigator
               screenOptions={{headerShown: false}}
               initialRouteName={showOnboarded ? 'Onboarding' : 'HomeScreen'}>
@@ -127,11 +162,28 @@ const App = () => {
               name="ForgotPassword"
               component={ForgotPasswordScreen}
             />
+            <Stack.Screen
+              name="VIPClub"
+              component={VIPClubScreen}
+            />
+            <Stack.Screen
+              name="Notifications"
+              component={NotificationsScreen}
+            />
+            <Stack.Screen
+              name="Support"
+              component={SupportScreen}
+            />
+            <Stack.Screen
+              name="Language"
+              component={LanguageScreen}
+            />
             </Stack.Navigator>
           </NavigationContainer>
         </GestureHandlerRootView>
       </ProductsProvider>
     </Provider>
+    </SafeAreaProvider>
   );
 };
 
