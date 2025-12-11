@@ -166,10 +166,10 @@ const ProductCard = ({itemDetails, showTotalItem = false, totalItems = 1}: Produ
         </View>
       </View>
       
-      {/* Total Item - Full width below image */}
+      {/* Total Order - Full width below image */}
       {showTotalItem && (
         <View style={styles.totalItemContainer}>
-          <Text style={styles.totalItemLabel}>Total Item ({totalItems}) :</Text>
+          <Text style={styles.totalItemLabel}>Total Order ({totalItems}) :</Text>
           <Text style={styles.totalItemPrice}>
             {currency} {formatNumber(price)}
           </Text>
@@ -215,18 +215,23 @@ const styles = StyleSheet.create({
     marginBottom: r(4),
   },
   variationsContainer: {
+    flexDirection: 'column',
+    // alignItems: 'flex-start',
     marginBottom: r(4),
   },
   variationsLabel: {
     fontSize: FontSizes.sm,
     fontFamily: FontFamilies.mregular,
     color: Colors.black[100],
-    marginBottom: r(4),
+    marginRight: Spacing[2],
+    marginTop: r(2),
   },
   variationChips: {
+    flex: 1,
     flexDirection: 'row',
     gap: Spacing[2],
     flexWrap: 'wrap',
+    alignContent: 'flex-start',
   },
   variationChip: {
     paddingHorizontal: r(12),

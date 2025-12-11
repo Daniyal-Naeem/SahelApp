@@ -9,7 +9,15 @@ import CustomWrapper from "./CustomWrapper";
 import DealBanner from "./DealBanner";
 import SummerSaleBanner from "./SummerSaleBanner";
 import SponsoredSection from "./SponsoredSection";
-// to import it from ./components directly...
+import ConfirmationModal from "./ConfirmationModal";
+import CustomHeader from "./CustomHeader";
+import NextButton from "./NextButton";
+import CloseButton from "./CloseButton";
+import ActionButtons from "./ActionButtons";
+import OrderCard from "./OrderCard";
+import UserMessageBubble from "./UserMessageBubble";
+import OrderCardMessage from "./OrderCardMessage";
+
 export {
     CustomButton,
     FormField,
@@ -20,5 +28,13 @@ export {
     CustomWrapper,
     DealBanner,
     SummerSaleBanner,
-    SponsoredSection
+    SponsoredSection,
+    ConfirmationModal,
+    CustomHeader,
+    NextButton,
+    CloseButton,
+    ActionButtons,
+    OrderCard,
+    UserMessageBubble,
+    OrderCardMessage
 }

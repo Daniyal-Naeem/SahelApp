@@ -3,18 +3,17 @@ import React from 'react';
 import {
   FlatList,
   Text,
-  TouchableOpacity,
   View,
   StyleSheet,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import {SvgXml} from 'react-native-svg';
-import {icons} from '../constants';
 import {ReviewType, ScreenProps} from '../constants/types';
 import {Colors, Spacing, FontFamilies, r, FontSizes} from '../constants/styles';
 import {EmptyStar} from '../assets/svgs/emptyStar';
 import {activeStar} from '../assets/svgs/activeStar';
 import {halfStar} from '../assets/svgs/halfstar';
+import {CustomHeader} from '../components';
 
 const ReviewsScreen = ({route}: ScreenProps<'Reviews'>) => {
   const navigation = useNavigation<ScreenProps<'Reviews'>['navigation']>();
@@ -80,22 +79,14 @@ const ReviewsScreen = ({route}: ScreenProps<'Reviews'>) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={GoBack} style={styles.backButton}>
-          <FastImage
-            source={icons.next1}
-            style={[styles.backIcon, {transform: [{rotate: '180deg'}]}]}
-            resizeMode={FastImage.resizeMode.contain}
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Reviews</Text>
-        <TouchableOpacity style={styles.cartButton}>
-          <FastImage
-            source={icons.cart}
-            style={styles.cartIcon}
-            resizeMode={FastImage.resizeMode.contain}
-          />
-        </TouchableOpacity>
+      <View style={styles.headerContainer}>
+        <CustomHeader
+          title="Reviews"
+          onBackPress={GoBack}
+          showCart={true}
+          onCartPress={() => {}}
+          showBorder={true}
+        />
       </View>
 
       {/* Reviews List */}
@@ -115,43 +106,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: Spacing[5],
-    paddingBottom: Spacing[3],
+  headerContainer: {
     paddingHorizontal: Spacing[5],
-  },
-  backButton: {
-    width: r(32),
-    height: r(32),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backIcon: {
-    width: r(24),
-    height: r(24),
-  },
-  headerTitle: {
-    fontSize: FontSizes.xl,
-    fontFamily: FontFamilies.mbold,
-    color: Colors.black[100],
-  },
-  cartButton: {
-    width: r(32),
-    height: r(32),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cartIcon: {
-    width: r(24),
-    height: r(24),
   },
   listContent: {
     paddingHorizontal: Spacing[5],
     paddingBottom: Spacing[5],
-    marginTop: Spacing[3],
+    paddingTop: Spacing[3],
   },
   reviewItem: {
     flexDirection: 'row',

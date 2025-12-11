@@ -8,11 +8,9 @@ import {
   View,
   StyleSheet,
 } from 'react-native';
-import FastImage from 'react-native-fast-image';
-import {icons} from '../constants';
 import {ScreenProps} from '../constants/types';
 import {Colors, Spacing, FontFamilies, r, FontSizes} from '../constants/styles';
-import {ProductCard} from '../components';
+import {ProductCard, CustomHeader} from '../components';
 
 const SendGiftScreen = ({route}: ScreenProps<'SendGift'>) => {
   const navigation = useNavigation<ScreenProps<'SendGift'>['navigation']>();
@@ -35,23 +33,13 @@ const SendGiftScreen = ({route}: ScreenProps<'SendGift'>) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={GoBack} style={styles.backButton}>
-          <FastImage
-            source={icons.next1}
-            style={[styles.backIcon, {transform: [{rotate: '180deg'}]}]}
-            resizeMode={FastImage.resizeMode.contain}
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Send as a Gift</Text>
-        <TouchableOpacity onPress={NavigateToCart} style={styles.cartButton}>
-          <FastImage
-            source={icons.cart}
-            style={styles.cartIcon}
-            resizeMode={FastImage.resizeMode.contain}
-          />
-        </TouchableOpacity>
-      </View>
+      <CustomHeader
+        title="Send as a Gift"
+        onBackPress={GoBack}
+        showCart={true}
+        onCartPress={NavigateToCart}
+        showBorder={true}
+      />
 
       <ScrollView 
         style={styles.scrollView}
@@ -109,44 +97,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: Spacing[5],
-    paddingBottom: Spacing[3],
-    paddingHorizontal: Spacing[5],
-    position: 'relative',
-  },
-  backButton: {
-    width: r(32),
-    height: r(32),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backIcon: {
-    width: r(24),
-    height: r(24),
-  },
-  headerTitle: {
-    fontSize: FontSizes.xl,
-    fontFamily: FontFamilies.mbold,
-    color: Colors.black[100],
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-  },
-  cartButton: {
-    width: r(32),
-    height: r(32),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cartIcon: {
-    width: r(24),
-    height: r(24),
   },
   scrollView: {
     flex: 1,

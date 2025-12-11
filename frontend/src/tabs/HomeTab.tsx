@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import React, {useState} from 'react';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import Carousel from 'react-native-reanimated-carousel';
 import {icons, images} from '../constants';
@@ -22,6 +23,8 @@ import {ProductTypes} from '../constants/types';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
 import {homeMenu} from '../assets/svgs/homeMenu';
+import {filterIcon} from '../assets/svgs/filter';
+import {sortIcon} from '../assets/svgs/sortIcon';
 
 type Props = {};
 
@@ -29,6 +32,7 @@ const HomeTab = (_props: Props) => {
   const navigation = useNavigation<
     StackNavigationProp<RootStackParamList> & DrawerNavigationProp<any>
   >();
+  const insets = useSafeAreaInsets();
   const width = Dimensions.get('window').width;
   // Calculate carousel dimensions for dummy images
   const carouselWidth = width - Spacing[5] * 2;
@@ -55,13 +59,35 @@ const HomeTab = (_props: Props) => {
   const handleOpenDrawer = () => {
     navigation.openDrawer();
   };
-  const handleSelectCategory = () => {};
+  const handleSelectCategory = (categoryTitle: string) => {
+    try {
+      // Navigate to Category within the Home stack
+      navigation.getParent()?.navigate('Home', {
+        screen: 'Category',
+        params: {categoryTitle},
+      });
+    } catch {
+      // Fallback to direct navigation
+      navigation.navigate('Category' as any, {categoryTitle});
+    }
+  };
+  const handleDealOfTheDayPress = () => {
+    try {
+      // Navigate to DealOfTheDay within the Home stack
+      navigation.getParent()?.navigate('Home', {
+        screen: 'DealOfTheDay',
+      });
+    } catch {
+      // Fallback to direct navigation
+      navigation.navigate('DealOfTheDay' as any);
+    }
+  };
   return (
     <ScrollView
       style={styles.scrollView}
       contentContainerStyle={styles.scrollViewContent}>
       {/* header */}
-      <View style={styles.header}>
+      <View style={[styles.header, {paddingTop: insets.top}]}>
         <TouchableOpacity onPress={handleOpenDrawer}>
           <SvgXml xml={homeMenu} />
         </TouchableOpacity>
@@ -93,11 +119,15 @@ const HomeTab = (_props: Props) => {
               key={item.id}
               onPress={() => {}}>
               <Text style={styles.categoryButtonText}>{item.title}</Text>
-              <FastImage
-                source={item.image as any}
-                style={styles.categoryButtonIcon}
-                resizeMode={FastImage.resizeMode.contain}
-              />
+              {item.svg ? (
+                <SvgXml xml={item.svg} width={r(16)} height={r(16)} />
+              ) : (
+                <FastImage
+                  source={item.image as any}
+                  style={styles.categoryButtonIcon}
+                  resizeMode={FastImage.resizeMode.contain}
+                />
+              )}
             </TouchableOpacity>
           ))}
         </View>
@@ -109,7 +139,7 @@ const HomeTab = (_props: Props) => {
           renderItem={({item}) => (
             <View style={styles.categoryItemContainer}>
               <TouchableOpacity
-                onPress={handleSelectCategory}
+                onPress={() => handleSelectCategory(item.title)}
                 style={styles.categoryTouchable}>
                 <FastImage
                   source={{uri: item.image}}
@@ -212,7 +242,7 @@ const HomeTab = (_props: Props) => {
         title="Deal of the Day"
         timeRemaining="22h 55m 20s remaining"
         buttonText="View all"
-        onButtonPress={() => {}}
+        onButtonPress={handleDealOfTheDayPress}
       />
       {/* Products */}
       <View style={styles.productsContainer}>
@@ -277,15 +307,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    // No margin needed since ScrollView has paddingHorizontal
+    paddingBottom: Spacing[3],
+    // paddingTop will be set dynamically with safe area insets
   },
   headerIcon: {
-    width: r(32),
-    height: r(32),
+    width: r(40),
+    height: r(40),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   logo: {
-    width: r(96),
-    height: r(96),
+    width: r(130),
+    height: r(46),
   },
   greetingContainer: {
     marginTop: Spacing[2],
@@ -411,18 +444,19 @@ export default HomeTab;
 type FeaturesDataProps = {
   id: number;
   title: string;
-  image: ImageSourcePropType;
+  image?: ImageSourcePropType;
+  svg?: string;
 };
 
 export const FeaturesData: FeaturesDataProps[] = [
   {
     id: 1,
     title: 'Sort',
-    image: icons.sort,
+    svg: sortIcon,
   },
   {
     id: 2,
     title: 'Filter',
-    image: icons.filter,
+    svg: filterIcon,
   },
 ];

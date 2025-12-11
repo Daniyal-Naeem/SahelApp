@@ -21,9 +21,6 @@ const ResetPasswordScreen = (_props: Props) => {
       setEmailError('Please enter your email address');
       return;
     }
-    // Handle submit logic here
-    console.log('Reset password for:', email);
-    // Navigate to GetStarted screen
     navigation.navigate('GetStarted');
   };
 

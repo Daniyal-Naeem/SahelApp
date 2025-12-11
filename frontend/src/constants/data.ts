@@ -1,7 +1,8 @@
 import icons from './icons';
 import images from './images';
 import {FeaturesTypes, ProductTypes, SplashTypes, TabBarTypes} from './types';
-// set the random number to the URL
+import type {OrderData} from '../components/OrderCard';
+
 const randomImage = (): string =>
   `https://picsum.photos/${Math.floor(Math.random() * 1000) + 1}/${
     Math.floor(Math.random() * 1000) + 1
@@ -59,7 +60,6 @@ const CategoriesData: FeaturesTypes[] = [
   },
 ];
 
-// Random Title
 const titles = [
   'Women Printed Kurta',
   'HRX by Hrithik Roshan',
@@ -160,7 +160,6 @@ const TabBarData: TabBarTypes[] = [
   },
 ];
 
-// Comprehensive dummy data based on UI designs
 const DetailedProductData: ProductTypes[] = [
   {
     _id: '1',
@@ -225,6 +224,14 @@ const DetailedProductData: ProductTypes[] = [
         rating: 4.5,
         comment: 'Great value for money. The matte finish is perfect.',
         date: '2024-01-10',
+      },
+      {
+        id: 'r2a',
+        userName: 'Jessica K.',
+        userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
+        rating: 4.8,
+        comment: 'Love all the shades! Perfect for my collection. The packaging is also very nice.',
+        date: '2024-01-08',
       },
     ],
     createdAt: new Date().toISOString(),
@@ -396,6 +403,14 @@ const DetailedProductData: ProductTypes[] = [
         comment: 'Love the design and comfort. Perfect for everyday wear.',
         date: '2024-01-12',
       },
+      {
+        id: 'r6',
+        userName: 'Fatima A.',
+        userAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop',
+        rating: 4.5,
+        comment: 'Beautiful patterns and excellent fabric quality. Fits perfectly!',
+        date: '2024-01-05',
+      },
     ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -431,6 +446,32 @@ const DetailedProductData: ProductTypes[] = [
       {type: 'Standard', duration: '5-7 days', price: 10},
       {type: 'Express', duration: '1-2 days', price: 25},
     ],
+    reviews: [
+      {
+        id: 'r7',
+        userName: 'Maya S.',
+        userAvatar: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=100&h=100&fit=crop',
+        rating: 4.7,
+        comment: 'Excellent hair straightener! Heats up quickly and leaves hair smooth and shiny. Highly recommend!',
+        date: '2024-01-22',
+      },
+      {
+        id: 'r8',
+        userName: 'Sophia L.',
+        userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+        rating: 5,
+        comment: 'Best straightener I\'ve ever used. The temperature control is perfect and it doesn\'t damage my hair.',
+        date: '2024-01-19',
+      },
+      {
+        id: 'r9',
+        userName: 'Layla M.',
+        userAvatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
+        rating: 4.3,
+        comment: 'Good quality product. Works well on my thick hair. Delivery was fast too!',
+        date: '2024-01-15',
+      },
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     __v: 0,
@@ -465,9 +506,102 @@ const DetailedProductData: ProductTypes[] = [
       {type: 'Standard', duration: '5-7 days', price: 10},
       {type: 'Express', duration: '1-2 days', price: 25},
     ],
+    reviews: [
+      {
+        id: 'r10',
+        userName: 'Ahmed H.',
+        userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+        rating: 5,
+        comment: 'Stunning watch! The design is classic and elegant. Perfect for both formal and casual occasions. Great quality!',
+        date: '2024-01-25',
+      },
+      {
+        id: 'r11',
+        userName: 'Omar K.',
+        userAvatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
+        rating: 4.8,
+        comment: 'Excellent craftsmanship. The leather strap is comfortable and the watch keeps perfect time.',
+        date: '2024-01-20',
+      },
+      {
+        id: 'r12',
+        userName: 'Khalid A.',
+        userAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
+        rating: 4.5,
+        comment: 'Beautiful watch, very satisfied with the purchase. The water resistance is a great feature.',
+        date: '2024-01-18',
+      },
+      {
+        id: 'r13',
+        userName: 'Yusuf M.',
+        userAvatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop',
+        rating: 5,
+        comment: 'Top quality watch from TITAN. The stainless steel case looks premium and the design is timeless.',
+        date: '2024-01-14',
+      },
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     __v: 0,
+  },
+];
+
+export type IssueType =
+  | 'Order Issues'
+  | 'Item Quality'
+  | 'Payment Issues'
+  | 'Technical Assistance'
+  | 'Other';
+
+export type OrderIssueOption =
+  | "I didn't receive my parcel"
+  | 'I want to cancel my order'
+  | 'I want to return my order'
+  | 'Package was damaged'
+  | 'Other';
+
+export const issues: IssueType[] = [
+  'Order Issues',
+  'Item Quality',
+  'Payment Issues',
+  'Technical Assistance',
+  'Other',
+];
+
+export const orderIssueOptions: OrderIssueOption[] = [
+  "I didn't receive my parcel",
+  'I want to cancel my order',
+  'I want to return my order',
+  'Package was damaged',
+  'Other',
+];
+
+export const orders: OrderData[] = [
+  {
+    id: '1',
+    orderNumber: '92287157',
+    deliveryType: 'Standard Delivery',
+    itemCount: 3,
+    status: 'Shipped',
+    images: [
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&h=100&fit=crop',
+      'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&h=100&fit=crop',
+      'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=100&h=100&fit=crop',
+      'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=100&h=100&fit=crop',
+    ],
+  },
+  {
+    id: '2',
+    orderNumber: '92287158',
+    deliveryType: 'Standard Delivery',
+    itemCount: 2,
+    status: 'Delivered',
+    images: [
+      'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100&h=100&fit=crop',
+      'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=100&h=100&fit=crop',
+      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&h=100&fit=crop',
+      'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=100&h=100&fit=crop',
+    ],
   },
 ];
 

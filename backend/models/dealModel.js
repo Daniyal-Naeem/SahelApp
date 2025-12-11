@@ -98,3 +98,11 @@ module.exports = mongoose.model("dealModel", dealSchema)
 
 
 
+
+
+
+
+
+
+
+
