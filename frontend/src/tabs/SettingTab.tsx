@@ -5,7 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   Modal,
-  StatusBar,
 } from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
 import FastImage from 'react-native-fast-image';

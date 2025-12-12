@@ -8,6 +8,7 @@ import {
   View,
   StyleSheet,
   Dimensions,
+  Alert,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Carousel from 'react-native-reanimated-carousel';
@@ -21,6 +22,8 @@ import {
   SpecificationType,
   DeliveryOptionType,
 } from '../constants/types';
+import {useAppDispatch, useAppSelector} from '../store';
+import {addToCart} from '../store/cartSlice';
 import {activeStar} from '../assets/svgs/activeStar';
 import {inactiveStar} from '../assets/svgs/inactiveStar';
 import {halfStar} from '../assets/svgs/halfstar';
@@ -43,6 +46,8 @@ type ProductDetailsProps = {
 const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   const {itemDetails} = route.params || {};
   const navigation = useNavigation<any>();
+  const dispatch = useAppDispatch();
+  const cartItemCount = useAppSelector((state) => state.cart.itemCount);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [selectedVariationIndex, setSelectedVariationIndex] = useState<
@@ -89,8 +94,84 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     navigation.goBack();
   };
 
-  const NavigateToCart = () => {
-    navigation.navigate('Cart', {itemDetails: itemDetails!});
+  // Function to add item to cart (used by "Add to Cart" button)
+  const handleAddToCart = () => {
+    if (!itemDetails) return;
+
+    // Get all variation options
+    const allVariationOptions =
+      itemDetails?.variations?.flatMap((variation: VariationType) =>
+        (variation?.options || []).map(
+          (opt: {value?: string; label?: string; image?: string}) => ({
+            value: opt?.value || '',
+            label: opt?.label || '',
+            image: opt?.image,
+          }),
+        ),
+      ) || [];
+    const displayedVariations = allVariationOptions.slice(0, 2);
+
+    // Get selected variation value
+    let selectedVariation: string | undefined;
+    if (selectedVariationIndex !== null && displayedVariations[selectedVariationIndex]) {
+      const selectedOption = displayedVariations[selectedVariationIndex];
+      selectedVariation = selectedOption.value || selectedOption.label;
+    }
+
+    // Get selected color value
+    let selectedColor: string | undefined;
+    if (selectedColorIndex !== null && itemDetails.colorOptions?.[selectedColorIndex]) {
+      const selectedColorOption = itemDetails.colorOptions[selectedColorIndex];
+      selectedColor = selectedColorOption.color || selectedColorOption.name;
+    }
+
+    // Get selected delivery value
+    let selectedDelivery: string | undefined;
+    if (selectedDeliveryIndex >= 0 && itemDetails.deliveryOptions?.[selectedDeliveryIndex]) {
+      const selectedDeliveryOption = itemDetails.deliveryOptions[selectedDeliveryIndex];
+      selectedDelivery = selectedDeliveryOption.type || `${selectedDeliveryOption.duration} - ${selectedDeliveryOption.price}`;
+    }
+
+    // Create cart item with all product details and selected options
+    const cartItem = {
+      ...itemDetails,
+      quantity: 1,
+      selectedVariation,
+      selectedColor,
+      selectedDelivery,
+    };
+
+    // Add to cart using Redux
+    dispatch(addToCart(cartItem));
+
+    // Show success message
+    Alert.alert(
+      'Added to Cart',
+      `${itemDetails.title} has been added to your cart`,
+      [
+        {
+          text: 'Continue Shopping',
+          style: 'cancel',
+        },
+        {
+          text: 'View Cart',
+          onPress: () => {
+            // Navigate to Cart tab
+            navigateToCartTab();
+          },
+        },
+      ],
+    );
+  };
+
+  // Function to navigate to cart tab (used by cart icon in header)
+  const navigateToCartTab = () => {
+    (navigation as any).navigate('HomeScreen', {
+      screen: 'Dashboard',
+      params: {
+        screen: 'Cart',
+      },
+    });
   };
 
   const NavigateToCheckout = () => {
@@ -98,9 +179,9 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   };
 
   const NavigateToSendGift = () => {
-    navigation.getParent()?.navigate('Home', {
-      screen: 'SendGift',
-      params: {itemDetails: itemDetails!},
+    // Navigate to GiftScreen (main gifts management screen)
+    (navigation as any).navigate('HomeScreen', {
+      screen: 'Gifts',
     });
   };
 
@@ -326,7 +407,8 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
         showLogo={true}
         onBackPress={GoBack}
         showCart={true}
-        onCartPress={NavigateToCart}
+        onCartPress={navigateToCartTab}
+        cartCount={cartItemCount}
         showBorder={true}
       />
 
@@ -680,7 +762,7 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.addToCartButton}
-          onPress={NavigateToCart}>
+          onPress={handleAddToCart}>
           <SvgXml xml={addtoCard} />
           <Text style={styles.addToCartText}>Add to Cart</Text>
         </TouchableOpacity>

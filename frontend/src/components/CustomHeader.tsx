@@ -13,6 +13,7 @@ import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
 import { backIcon } from '../assets/svgs/backIcon';
 import { cartIcon } from '../assets/svgs/cartIcon';
+import {icons} from '../constants';
 
 type CustomHeaderProps = {
   title?: string;
@@ -21,6 +22,9 @@ type CustomHeaderProps = {
   rightComponent?: React.ReactNode;
   showCart?: boolean;
   onCartPress?: () => void;
+  cartCount?: number;
+  showProfile?: boolean;
+  onProfilePress?: () => void;
   containerStyle?: ViewStyle;
   showBorder?: boolean;
 };
@@ -32,6 +36,9 @@ const CustomHeader = ({
   rightComponent,
   showCart = false,
   onCartPress,
+  cartCount = 0,
+  showProfile = false,
+  onProfilePress,
   containerStyle,
   showBorder = true,
 }: CustomHeaderProps) => {
@@ -72,7 +79,24 @@ const CustomHeader = ({
           rightComponent
         ) : showCart ? (
           <TouchableOpacity onPress={onCartPress} style={styles.cartButton}>
-            <SvgXml xml={cartIcon}  />
+            <View style={styles.cartIconContainer}>
+              <SvgXml xml={cartIcon} />
+              {cartCount > 0 && (
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        ) : showProfile ? (
+          <TouchableOpacity onPress={onProfilePress} style={styles.profileButton}>
+            <FastImage
+              source={icons.profileIcon}
+              style={styles.profileIcon}
+              resizeMode={FastImage.resizeMode.cover}
+            />
           </TouchableOpacity>
         ) : (
           <View style={styles.headerRight} />
@@ -150,6 +174,44 @@ const styles = StyleSheet.create({
     height: r(40),
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  cartIconContainer: {
+    position: 'relative',
+    width: r(24),
+    height: r(24),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: r(-6),
+    right: r(-6),
+    backgroundColor: Colors.primary || '#F83758',
+    borderRadius: r(10),
+    minWidth: r(20),
+    height: r(20),
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: r(4),
+    borderWidth: r(2),
+    borderColor: Colors.white,
+  },
+  cartBadgeText: {
+    fontSize: FontSizes.xs,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.white,
+    textAlign: 'center',
+  },
+  profileButton: {
+    width: r(40),
+    height: r(40),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileIcon: {
+    width: r(32),
+    height: r(32),
+    borderRadius: r(16),
   },
 });
 

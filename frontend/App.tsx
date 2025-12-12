@@ -8,6 +8,7 @@ import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {
   CheckoutScreen,
   ForgotPasswordScreen,
+  GiftScreen,
   HomeScreen,
   LanguageScreen,
   LoginScreen,
@@ -38,7 +39,7 @@ export type RouteStackParamList = {
   GetStarted: undefined;
   Login: undefined;
   Signup: undefined;
-  HomeScreen: {screen?: string} | undefined;
+  HomeScreen: {screen?: string; initialTab?: string; scrollToAddress?: boolean} | undefined;
   Checkout: {itemDetails: ItemDetails} | undefined;
   PlaceOrder: {itemDetails: ItemDetails} | undefined;
   Payment: {itemDetails: ItemDetails} | undefined;
@@ -52,6 +53,7 @@ export type RouteStackParamList = {
   Notifications: undefined;
   Support: undefined;
   Language: undefined;
+  Gifts: undefined;
 };
 
 const Drawer = createDrawerNavigator();
@@ -88,6 +90,11 @@ const DrawerNavigator = () => (
       name="Language"
       component={LanguageScreen}
       options={{title: 'Language'}}
+    />
+    <Drawer.Screen
+      name="Gifts"
+      component={GiftScreen}
+      options={{title: 'Gifts'}}
     />
   </Drawer.Navigator>
 );
@@ -177,6 +184,10 @@ const App = () => {
             <Stack.Screen
               name="Language"
               component={LanguageScreen}
+            />
+            <Stack.Screen
+              name="Gifts"
+              component={GiftScreen}
             />
             </Stack.Navigator>
           </NavigationContainer>

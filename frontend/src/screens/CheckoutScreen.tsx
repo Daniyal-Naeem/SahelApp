@@ -41,12 +41,12 @@ const CheckoutScreen = () => {
   };
 
   const handleEditAddress = () => {
-    // Navigate directly to SettingTab (Profile tab in the bottom navigator)
-    // Navigate to HomeScreen with params to go to Profile tab
+    // Navigate to HomeScreen (which contains DrawerNavigator -> Dashboard -> Profile tab)
+    // Navigate to HomeScreen, then to Dashboard with Profile tab and scrollToAddress params
     (navigation as any).navigate('HomeScreen', {
       screen: 'Dashboard',
       params: {
-        initialTab: 'Profile',
+        screen: 'Profile',
         scrollToAddress: true,
       },
     });
@@ -89,7 +89,8 @@ const CheckoutScreen = () => {
                 <TouchableOpacity
                   onPress={handleEditAddress}
                   style={styles.editButton}
-                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                  >
                   <SvgXml xml={editIcon} />
                 </TouchableOpacity>
 
@@ -194,7 +195,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: Spacing[3],
     right: Spacing[3],
-    padding: Spacing[1],
+    padding: Spacing[2],
+    zIndex: 10,
+    minWidth: r(32),
+    minHeight: r(32),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   addressLabel: {
     fontSize: FontSizes.xs,
