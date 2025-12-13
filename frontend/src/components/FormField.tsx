@@ -11,7 +11,7 @@ import {
 import FastImage from 'react-native-fast-image';
 import React, {useEffect, useState} from 'react';
 import {icons, images} from '../constants';
-import {Colors, Spacing, FontSizes, FontFamilies} from '../constants/styles';
+import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 
 type FormFieldProps = {
   title: string;
@@ -23,9 +23,8 @@ type FormFieldProps = {
   error: string;
   backgroundColor?: string;
   borderColor?: string;
-  [key: string]: any; // add more props ...props
+  [key: string]: any;
 };
-// make reusable components to make our code clean
 const FormField = ({
   title,
   value,
@@ -38,11 +37,11 @@ const FormField = ({
   borderColor,
   ...props
 }: FormFieldProps) => {
-  // states
+  const isMultiline = props.multiline || false;
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [shakeAnimation] = useState(new Animated.Value(0));
-  // let's handle the error
+
   const shake = () => {
     shakeAnimation.setValue(0);
     Animated.timing(shakeAnimation, {
@@ -51,21 +50,18 @@ const FormField = ({
       useNativeDriver: true,
       easing: Easing.bounce,
     }).start(() => {
-      // clear the animation after a period of time
       setTimeout(() => {
-        setError?.(''); // hide the error
+        setError?.('');
       }, 3000);
     });
   };
-  // if error shake
+
   useEffect(() => {
     if (error) {
       shake();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [error]);
 
-  // get Icon source
   const getIconSource = () => {
     if (title === 'Password') return icons.lock;
     if (title === 'Email') return icons.mail;
@@ -77,7 +73,6 @@ const FormField = ({
   return (
     <View style={otherStyles}>
       <Animated.View
-        // handle shake here with interpolate ..
         style={[
           styles.inputContainer,
           {
@@ -105,14 +100,13 @@ const FormField = ({
           resizeMode={FastImage.resizeMode.contain}
           tintColor="#424242"
         />
-        {/* TextInput */}
         <TextInput
-          style={styles.input}
+          style={[styles.input, isMultiline && styles.inputMultiline]}
           value={value}
           placeholder={placeholder}
           onChangeText={handleChangeText}
           placeholderTextColor={'#9E9E9E'}
-          secureTextEntry={title === 'Password' && !showPassword}
+          secureTextEntry={(title === 'Password' || title === 'Confirm Password') && !showPassword}
           onFocus={() => setIsFocused(true)}
           onBlur={() => {
             setIsFocused(false);
@@ -124,10 +118,10 @@ const FormField = ({
         />
         {/* eye switch when it's a password */}
 
-        {title === 'Password' && (
+        {(title === 'Password' || title === 'Confirm Password') && (
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
             <FastImage
-              source={!showPassword ? icons.eye : icons.eyeHide}
+              source={showPassword ? icons.eye : icons.eyeHide}
               style={styles.eyeIcon}
               resizeMode={FastImage.resizeMode.contain}
               tintColor="#424242"
@@ -152,8 +146,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 8,
     width: '100%',
-    height: 48,
+    minHeight: 48,
     paddingHorizontal: Spacing[3],
+    paddingVertical: Spacing[2],
     backgroundColor: '#F5F5F5',
     borderWidth: 1,
     borderColor: '#E5E5E5',
@@ -172,6 +167,11 @@ const styles = StyleSheet.create({
     color: Colors.black[100],
     fontFamily: FontFamilies.mmedium,
     fontSize: FontSizes.sm,
+  },
+  inputMultiline: {
+    minHeight: r(80),
+    textAlignVertical: 'top',
+    paddingTop: Spacing[2],
   },
   eyeIcon: {
     width: 20,

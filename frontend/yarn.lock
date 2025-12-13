@@ -3111,6 +3111,7 @@ __metadata:
     react-native-screens: ^4.18.0
     react-native-svg: ^15.15.0
     react-native-svg-transformer: ^1.5.2
+    react-native-toast-notifications: ^3.4.0
     react-native-webview: ^13.16.0
     react-native-worklets: ^0.6.1
     react-redux: ^9.2.0
@@ -8428,6 +8429,16 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: dafc22741b0ee9a052b4e807b5a4a26505acd165f57f9678b940b0009422c1dcabefde8920f28c346bbd650bec32b320d0492f63c36c1848f4cbae8ed6ce34e5
+  languageName: node
+  linkType: hard
+
+"react-native-toast-notifications@npm:^3.4.0":
+  version: 3.4.0
+  resolution: "react-native-toast-notifications@npm:3.4.0"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 734a54111e3657859d3cca9505a197bc6eb486e473e655d8aa087157de8f5e8b819083963f28e5e9155110be9a17774296bbfd721749f670c5f4e093557bd88f
   languageName: node
   linkType: hard
 

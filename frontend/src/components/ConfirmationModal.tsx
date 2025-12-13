@@ -6,6 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  TextInput,
+  Keyboard,
 } from 'react-native';
 import {SvgXml} from 'react-native-svg';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
@@ -20,6 +22,13 @@ type ConfirmationModalProps = {
   onSecondaryPress?: () => void;
   onClose?: () => void;
   showIcon?: boolean;
+  showInput?: boolean;
+  inputValue?: string;
+  onInputChange?: (text: string) => void;
+  inputPlaceholder?: string;
+  inputMaxLength?: number;
+  primaryButtonText?: string;
+  onPrimaryPress?: () => void;
 };
 
 const ConfirmationModal = ({
@@ -30,10 +39,21 @@ const ConfirmationModal = ({
   onSecondaryPress,
   onClose,
   showIcon = true,
+  showInput = false,
+  inputValue = '',
+  onInputChange,
+  inputPlaceholder = '',
+  inputMaxLength = 150,
+  primaryButtonText,
+  onPrimaryPress,
 }: ConfirmationModalProps) => {
   const handleSecondaryPress = () => {
     onSecondaryPress?.();
     onClose?.();
+  };
+
+  const handlePrimaryPress = () => {
+    onPrimaryPress?.();
   };
 
   return (
@@ -42,9 +62,12 @@ const ConfirmationModal = ({
       transparent
       animationType="fade"
       onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
+      <TouchableWithoutFeedback onPress={() => {
+        Keyboard.dismiss();
+        onClose?.();
+      }}>
         <View style={styles.overlay}>
-          <TouchableWithoutFeedback>
+          <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
             <View style={styles.modalContainer}>
               {showIcon && (
                 <View style={styles.iconContainer}>
@@ -73,7 +96,34 @@ const ConfirmationModal = ({
                 <Text style={styles.message}>{message}</Text>
               )}
 
+              {showInput && (
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder={inputPlaceholder}
+                    value={inputValue}
+                    onChangeText={onInputChange}
+                    multiline
+                    numberOfLines={3}
+                    maxLength={inputMaxLength}
+                    placeholderTextColor={Colors.gray[400] || '#9CA3AF'}
+                  />
+                  <Text style={styles.characterCount}>
+                    {inputValue?.length || 0}/{inputMaxLength}
+                  </Text>
+                </View>
+              )}
+
               <View style={styles.buttonContainer}>
+                {primaryButtonText && (
+                  <TouchableOpacity
+                    onPress={handlePrimaryPress}
+                    style={styles.primaryButton}>
+                    <Text style={styles.primaryButtonText}>
+                      {primaryButtonText}
+                    </Text>
+                  </TouchableOpacity>
+                )}
                 {secondaryButtonText && (
                   <TouchableOpacity
                     onPress={handleSecondaryPress}
@@ -188,6 +238,43 @@ const styles = StyleSheet.create({
     gap: Spacing[3],
     marginTop: Spacing[0],
     marginBottom: 0,
+  },
+  inputContainer: {
+    width: '100%',
+    marginTop: Spacing[4],
+    marginBottom: Spacing[4],
+  },
+  input: {
+    borderWidth: r(1),
+    borderColor: Colors.gray[300] || '#D1D5DB',
+    borderRadius: r(8),
+    padding: Spacing[3],
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.mregular,
+    color: Colors.black[100],
+    minHeight: r(80),
+    textAlignVertical: 'top',
+    width: '100%',
+  },
+  characterCount: {
+    fontSize: FontSizes.xs,
+    fontFamily: FontFamilies.mregular,
+    color: Colors.gray[500] || '#6B7280',
+    textAlign: 'right',
+    marginTop: Spacing[1],
+  },
+  primaryButton: {
+    paddingVertical: Spacing[3],
+    paddingHorizontal: Spacing[5],
+    borderRadius: r(8),
+    backgroundColor: Colors.primary || '#F83758',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryButtonText: {
+    color: Colors.white,
+    fontFamily: FontFamilies.msemibold,
+    fontSize: FontSizes.base,
   },
   secondaryButton: {
     paddingVertical: Spacing[3],

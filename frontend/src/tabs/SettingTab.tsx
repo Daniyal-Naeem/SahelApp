@@ -28,13 +28,11 @@ const SettingTab = (_props: Props) => {
   const [addressSectionY, setAddressSectionY] = useState<number | null>(null);
   const [isSubmitting] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  
-  // Modal states
+
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Form state
   const [form, setForm] = useState({
     email: 'aashifa@gmail.com',
     password: '***********',
@@ -60,12 +58,10 @@ const SettingTab = (_props: Props) => {
   const [accountHolderError, setAccountHolderError] = useState('');
   const [ifscError, setIfscError] = useState('');
 
-  // Scroll to address section when navigated from CheckoutScreen
   useFocusEffect(
     React.useCallback(() => {
       const params = (route.params as any);
       if (params?.scrollToAddress && addressSectionY !== null) {
-        // Small delay to ensure the view is rendered
         setTimeout(() => {
           scrollViewRef.current?.scrollTo({y: addressSectionY - Spacing[4], animated: true});
         }, 300);
@@ -140,7 +136,8 @@ const SettingTab = (_props: Props) => {
   };
 
   const handleGoBack = () => {
-    navigation.goBack();
+    
+    (navigation as any).navigate('Home');
   };
   const handleChangePassword = () => {
     navigation.navigate('ForgotPassword' as any);

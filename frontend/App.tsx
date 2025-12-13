@@ -33,6 +33,7 @@ import {Colors} from './src/constants/styles';
 import {ProductsProvider} from './src/context/ProductsContext';
 import {store} from './src/store/store';
 import CustomDrawerContent from './src/components/CustomDrawerContent';
+import {ToastProvider} from 'react-native-toast-notifications';
 
 export type RouteStackParamList = {
   Onboarding: undefined;
@@ -133,7 +134,7 @@ const App = () => {
   if (showOnboarded === null) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size={'large'} color={Colors.black[300]} />
+        <ActivityIndicator size={'large'} color={Colors.primary} />
       </View>
     );
   }
@@ -142,56 +143,62 @@ const App = () => {
     <SafeAreaProvider>
       <Provider store={store}>
         <ProductsProvider>
-          <GestureHandlerRootView style={{flex: 1}}>
-            <NavigationContainer>
-            <Stack.Navigator
-              screenOptions={{headerShown: false}}
-              initialRouteName={showOnboarded ? 'Onboarding' : 'HomeScreen'}>
-              <Stack.Screen name="HomeScreen" component={DrawerNavigator} />
-            <Stack.Screen name="GetStarted" component={GetStartedScreen} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-            <Stack.Screen name="OTP" component={OTPScreen} />
-            <Stack.Screen name="PlaceOrder" component={PlaceOrder} />
-            <Stack.Screen name="Payment" component={PaymentScreen} />
-            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-            <Stack.Screen name="Signup" component={SignupScreen} />
-            <Stack.Screen name="Checkout" component={CheckoutScreen} />
-            <Stack.Screen
-              name="ProductDetails"
-              component={ProductsDetailsScreen}
-            />
-            <Stack.Screen
-              name="Reviews"
-              component={ReviewsScreen}
-            />
-            <Stack.Screen
-              name="ForgotPassword"
-              component={ForgotPasswordScreen}
-            />
-            <Stack.Screen
-              name="VIPClub"
-              component={VIPClubScreen}
-            />
-            <Stack.Screen
-              name="Notifications"
-              component={NotificationsScreen}
-            />
-            <Stack.Screen
-              name="Support"
-              component={SupportScreen}
-            />
-            <Stack.Screen
-              name="Language"
-              component={LanguageScreen}
-            />
-            <Stack.Screen
-              name="Gifts"
-              component={GiftScreen}
-            />
-            </Stack.Navigator>
-          </NavigationContainer>
-        </GestureHandlerRootView>
+          <ToastProvider
+            placement="bottom"
+            offsetBottom={50}
+            swipeEnabled={true}
+            normalColor="#333">
+            <GestureHandlerRootView style={{flex: 1}}>
+              <NavigationContainer>
+              <Stack.Navigator
+                screenOptions={{headerShown: false}}
+                initialRouteName={showOnboarded ? 'Onboarding' : 'HomeScreen'}>
+                <Stack.Screen name="HomeScreen" component={DrawerNavigator} />
+              <Stack.Screen name="GetStarted" component={GetStartedScreen} />
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+              <Stack.Screen name="OTP" component={OTPScreen} />
+              <Stack.Screen name="PlaceOrder" component={PlaceOrder} />
+              <Stack.Screen name="Payment" component={PaymentScreen} />
+              <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+              <Stack.Screen name="Signup" component={SignupScreen} />
+              <Stack.Screen name="Checkout" component={CheckoutScreen} />
+              <Stack.Screen
+                name="ProductDetails"
+                component={ProductsDetailsScreen}
+              />
+              <Stack.Screen
+                name="Reviews"
+                component={ReviewsScreen}
+              />
+              <Stack.Screen
+                name="ForgotPassword"
+                component={ForgotPasswordScreen}
+              />
+              <Stack.Screen
+                name="VIPClub"
+                component={VIPClubScreen}
+              />
+              <Stack.Screen
+                name="Notifications"
+                component={NotificationsScreen}
+              />
+              <Stack.Screen
+                name="Support"
+                component={SupportScreen}
+              />
+              <Stack.Screen
+                name="Language"
+                component={LanguageScreen}
+              />
+              <Stack.Screen
+                name="Gifts"
+                component={GiftScreen}
+              />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </GestureHandlerRootView>
+        </ToastProvider>
       </ProductsProvider>
     </Provider>
     </SafeAreaProvider>
@@ -203,6 +210,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.white,
   },
 });
 

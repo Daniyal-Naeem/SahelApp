@@ -8,8 +8,8 @@ import {
   View,
   StyleSheet,
   Dimensions,
-  Alert,
 } from 'react-native';
+import {useToast} from '../hooks/useToast';
 import FastImage from 'react-native-fast-image';
 import Carousel from 'react-native-reanimated-carousel';
 import {SvgXml} from 'react-native-svg';
@@ -48,22 +48,21 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
   const cartItemCount = useAppSelector((state) => state.cart.itemCount);
+  const toast = useToast();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [selectedVariationIndex, setSelectedVariationIndex] = useState<
     number | null
   >(() => {
-    // Default to first variation if available
     if (itemDetails?.variations && itemDetails.variations.length > 0) {
       const firstVariation = itemDetails.variations[0];
       if (firstVariation?.options && firstVariation.options.length > 0) {
-        return 0; // Default to first displayed variation
+        return 0;
       }
     }
     return null;
   });
 
-  // Initialize selected delivery and color from data
   const [selectedDeliveryIndex, setSelectedDeliveryIndex] = useState<number>(
     itemDetails?.deliveryOptions && itemDetails.deliveryOptions.length > 0
       ? 0
@@ -141,27 +140,9 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
       selectedDelivery,
     };
 
-    // Add to cart using Redux
     dispatch(addToCart(cartItem));
 
-    // Show success message
-    Alert.alert(
-      'Added to Cart',
-      `${itemDetails.title} has been added to your cart`,
-      [
-        {
-          text: 'Continue Shopping',
-          style: 'cancel',
-        },
-        {
-          text: 'View Cart',
-          onPress: () => {
-            // Navigate to Cart tab
-            navigateToCartTab();
-          },
-        },
-      ],
-    );
+    toast.showToast(`${itemDetails.title} has been added to your cart`);
   };
 
   // Function to navigate to cart tab (used by cart icon in header)

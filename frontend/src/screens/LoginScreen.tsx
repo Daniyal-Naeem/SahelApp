@@ -1,17 +1,13 @@
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import React, {useState} from 'react';
-import {
-  ImageSourcePropType,
-  Text,
-  TouchableOpacity,
-  View,
-  StyleSheet,
-} from 'react-native';
-import FastImage from 'react-native-fast-image';
+import {Text, TouchableOpacity, View, StyleSheet} from 'react-native';
+import {SvgXml} from 'react-native-svg';
 import {CustomButton, FormField} from '../components';
-import {icons} from '../constants';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
+import {googleIcon} from '../assets/svgs/googleIcon';
+import AppleIcon from '../assets/svgs/Apple.svg';
+import FacebookIcon from '../assets/svgs/Facebook.svg';
 
 type Props = {};
 
@@ -73,8 +69,14 @@ const LoginScreen = (_props: Props) => {
             placeholder="Password"
             otherStyles={styles.formFieldSmall}
           />
-          <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPassword}>
-            <Text style={[styles.forgotPasswordText, {fontFamily: FontFamilies.mmedium}]}>
+          <TouchableOpacity
+            onPress={handleForgotPassword}
+            style={styles.forgotPassword}>
+            <Text
+              style={[
+                styles.forgotPasswordText,
+                {fontFamily: FontFamilies.mmedium},
+              ]}>
               Forgot Password?
             </Text>
           </TouchableOpacity>
@@ -89,32 +91,26 @@ const LoginScreen = (_props: Props) => {
         {/* or continue with  */}
         <View style={styles.centerContainer}>
           <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>
-              - OR Continue with -
-            </Text>
-            <View style={styles.divider} />
+       
+            <Text style={styles.dividerText}>- OR Continue with -</Text>
+          
           </View>
           <View style={styles.socialContainer}>
-            {ContinueWithData.map((item) => {
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  onPress={handleSignInWithProvider}
-                  style={styles.socialButton}>
-                  <FastImage
-                    source={item.image}
-                    style={styles.socialIcon}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              );
-            })}
+            <TouchableOpacity onPress={handleSignInWithProvider} style={styles.socialButton}>
+              <SvgXml xml={googleIcon} width={r(24)} height={r(24)} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleSignInWithProvider} style={styles.socialButton}>
+              <AppleIcon width={r(24)} height={r(24)} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleSignInWithProvider} style={styles.socialButton}>
+              <FacebookIcon width={r(24)} height={r(24)} />
+            </TouchableOpacity>
           </View>
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>Create An Account</Text>
             <TouchableOpacity onPress={handleNavigateToSignUp}>
-              <Text style={[styles.signupLink, {fontFamily: FontFamilies.mbold}]}>
+              <Text
+                style={[styles.signupLink, {fontFamily: FontFamilies.mbold}]}>
                 Sign Up
               </Text>
             </TouchableOpacity>
@@ -181,18 +177,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   socialButton: {
-    borderRadius: 9999,
-    backgroundColor: Colors.white,
+    width: r(48),
+    height: r(48),
+    borderRadius: r(24),
+    backgroundColor: '#FCF3F6',
     borderWidth: 1,
-    borderColor: Colors.action,
-    width: r(40),
-    height: r(40),
+    borderColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  socialIcon: {
-    width: r(20),
-    height: r(20),
   },
   signupContainer: {
     flexDirection: 'row',
@@ -212,27 +204,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
-
-type ContinueWithType = {
-  image: ImageSourcePropType | undefined;
-  id: number;
-  name: string;
-};
-
-const ContinueWithData: ContinueWithType[] = [
-  {
-    id: 0,
-    name: 'google',
-    image: icons.google,
-  },
-  {
-    id: 1,
-    name: 'apple',
-    image: icons.apple,
-  },
-  {
-    id: 2,
-    name: 'facebook',
-    image: icons.facebook,
-  },
-];
