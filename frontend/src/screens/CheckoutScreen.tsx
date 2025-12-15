@@ -6,17 +6,19 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
+import {useToast} from '../hooks/useToast';
 import LinearGradient from 'react-native-linear-gradient';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteStackParamList} from '../../App';
 import {ItemDetails} from '../constants/types';
-import {ProductCard, CustomButton, CustomHeader} from '../components';
+import {ProductCard, CustomButton, CustomHeader, ConfirmationModal} from '../components';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
 import {deliveritIcon} from '../assets/svgs/deliveritIcon';
 import { plusIcon } from '../assets/svgs/plusIcon';
 import { editIcon } from '../assets/svgs/editIcon';
+import {trashIcon} from '../assets/svgs/trashIcon';
 
 type ScreenRouteProps = RouteProp<RouteStackParamList, 'Checkout'>;
 type ScreenNavigationProps = StackNavigationProp<
@@ -24,25 +26,35 @@ type ScreenNavigationProps = StackNavigationProp<
   'Checkout'
 >;
 
+interface Address {
+  id: string;
+  address: string;
+  isSelected: boolean;
+}
+
 const CheckoutScreen = () => {
   const navigation = useNavigation<ScreenNavigationProps>();
   const route = useRoute<ScreenRouteProps>();
+  const toast = useToast();
 
-  // Get itemDetails from route params
   const itemDetails: ItemDetails | undefined = route.params?.itemDetails;
 
-  // Default address data
-  const [deliveryAddress] = useState({
-    address: "216 St Paul's Rd, London N1 2LL, UK",
-  });
+  const [addresses, setAddresses] = useState<Address[]>([
+    {
+      id: '1',
+      address: "216 St Paul's Rd, London N1 2LL, UK",
+      isSelected: true,
+    },
+  ]);
+
+  const [showAddAddressModal, setShowAddAddressModal] = useState(false);
+  const [newAddress, setNewAddress] = useState('');
 
   const handleGoBack = () => {
     navigation.goBack();
   };
 
-  const handleEditAddress = () => {
-    // Navigate to HomeScreen (which contains DrawerNavigator -> Dashboard -> Profile tab)
-    // Navigate to HomeScreen, then to Dashboard with Profile tab and scrollToAddress params
+  const handleEditAddress = (_addressId: string) => {
     (navigation as any).navigate('HomeScreen', {
       screen: 'Dashboard',
       params: {
@@ -53,20 +65,68 @@ const CheckoutScreen = () => {
   };
 
   const handleAddAddress = () => {
-    // TODO: Navigate to add address screen
+    if (addresses.length >= 2) {
+      toast.showToast('Only 2 addresses can be added');
+      return;
+    }
+    setShowAddAddressModal(true);
+  };
+
+  const handleSaveNewAddress = () => {
+    if (!newAddress.trim()) {
+      toast.showToast('Please enter an address');
+      return;
+    }
+    if (newAddress.length > 150) {
+      toast.showToast('Address must be 150 characters or less');
+      return;
+    }
+
+    const newAddressItem: Address = {
+      id: Date.now().toString(),
+      address: newAddress.trim(),
+      isSelected: false,
+    };
+
+    setAddresses([...addresses, newAddressItem]);
+    setNewAddress('');
+    setShowAddAddressModal(false);
+    toast.showToast('Address added successfully');
+  };
+
+  const handleSelectAddress = (addressId: string) => {
+    setAddresses(addresses.map(addr => ({
+      ...addr,
+      isSelected: addr.id === addressId,
+    })));
+  };
+
+  const handleRemoveAddress = (addressId: string) => {
+    if (addresses.length <= 1) {
+      toast.showToast('You must have at least one address');
+      return;
+    }
+
+    const addressToRemove = addresses.find(addr => addr.id === addressId);
+    const isSelected = addressToRemove?.isSelected;
+
+    const updatedAddresses = addresses.filter(addr => addr.id !== addressId);
+
+    if (isSelected && updatedAddresses.length > 0) {
+      updatedAddresses[0].isSelected = true;
+    }
+
+    setAddresses(updatedAddresses);
   };
 
   const handleProceed = () => {
-    // TODO: Navigate to payment/place order screen
     navigation.navigate('PlaceOrder', {itemDetails: itemDetails!});
   };
 
-  // For now, single item checkout
   const totalItems = 1;
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <CustomHeader
         title="Checkout"
         onBackPress={handleGoBack}
@@ -77,29 +137,52 @@ const CheckoutScreen = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollViewContent}
         showsVerticalScrollIndicator={false}>
-        {/* Delivery Address Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <SvgXml xml={deliveritIcon} />
             <Text style={styles.sectionTitle}>Delivery Address</Text>
           </View>
 
-          <View style={styles.addressCardWrapper}>
-              <View style={styles.addressCard}>
-                <TouchableOpacity
-                  onPress={handleEditAddress}
-                  style={styles.editButton}
-                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
-                  >
-                  <SvgXml xml={editIcon} />
-                </TouchableOpacity>
+          <View style={[
+            styles.addressCardWrapper,
+            addresses.length === 2 && styles.addressCardWrapperColumn
+          ]}>
+            {addresses.map((address) => (
+              <TouchableOpacity
+                key={address.id}
+                style={[
+                  styles.addressCard,
+                  addresses.length > 1 && address.isSelected && styles.addressCardSelected,
+                ]}
+                onPress={() => {
+                  if (addresses.length > 1) {
+                    handleSelectAddress(address.id);
+                  }
+                }}
+                activeOpacity={addresses.length > 1 ? 0.7 : 1}>
+                <View style={styles.actionButtonsContainer}>
+                  <TouchableOpacity
+                    onPress={() => handleEditAddress(address.id)}
+                    style={styles.editButton}
+                    hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                    <SvgXml xml={editIcon} />
+                  </TouchableOpacity>
+                  {addresses.length === 2 && !address.isSelected && (
+                    <TouchableOpacity
+                      onPress={() => handleRemoveAddress(address.id)}
+                      style={styles.removeButton}
+                      hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                      <SvgXml xml={trashIcon} width={r(16)} height={r(16)} />
+                    </TouchableOpacity>
+                  )}
+                </View>
 
                 <Text style={styles.addressLabel}>Address:</Text>
-                <Text style={styles.addressText}>
-                  {deliveryAddress.address}
-                </Text>
-              </View>
+                <Text style={styles.addressText}>{address.address}</Text>
+              </TouchableOpacity>
+            ))}
 
+            {addresses.length < 2 && (
               <TouchableOpacity
                 onPress={handleAddAddress}
                 style={styles.addAddressButtonContainer}>
@@ -108,15 +191,13 @@ const CheckoutScreen = () => {
                   start={{x: 0, y: 0}}
                   end={{x: 1, y: 0}}
                   style={styles.addAddressButton}>
-                
-                    <SvgXml xml={plusIcon} />
-              
+                  <SvgXml xml={plusIcon} />
                 </LinearGradient>
               </TouchableOpacity>
-            </View>
+            )}
+          </View>
         </View>
 
-        {/* Shopping List Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Shopping List</Text>
 
@@ -130,7 +211,6 @@ const CheckoutScreen = () => {
         </View>
       </ScrollView>
 
-      {/* Proceed Button */}
       <View style={styles.bottomButtonContainer}>
         <CustomButton
           title="Proceed"
@@ -138,6 +218,27 @@ const CheckoutScreen = () => {
           containerStyle={styles.proceedButton}
         />
       </View>
+
+      <ConfirmationModal
+        visible={showAddAddressModal}
+        title="Add New Address"
+        showIcon={false}
+        showInput={true}
+        inputValue={newAddress}
+        onInputChange={setNewAddress}
+        inputPlaceholder="Enter address"
+        primaryButtonText="Save"
+        onPrimaryPress={handleSaveNewAddress}
+        secondaryButtonText="Cancel"
+        onSecondaryPress={() => {
+          setShowAddAddressModal(false);
+          setNewAddress('');
+        }}
+        onClose={() => {
+          setShowAddAddressModal(false);
+          setNewAddress('');
+        }}
+      />
     </View>
   );
 };
@@ -174,6 +275,9 @@ const styles = StyleSheet.create({
     gap: Spacing[3],
     alignItems: 'stretch',
   },
+  addressCardWrapperColumn: {
+    flexDirection: 'column',
+  },
   addressCard: {
     flex: 1,
     backgroundColor: Colors.white,
@@ -191,12 +295,28 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  editButton: {
+  addressCardSelected: {
+    borderColor: Colors.primary || '#F83758',
+    borderWidth: r(1.5),
+  },
+  actionButtonsContainer: {
     position: 'absolute',
     top: Spacing[3],
     right: Spacing[3],
-    padding: Spacing[2],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[0],
     zIndex: 10,
+  },
+  editButton: {
+    padding: Spacing[2],
+    minWidth: r(32),
+    minHeight: r(32),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeButton: {
+    padding: Spacing[2],
     minWidth: r(32),
     minHeight: r(32),
     justifyContent: 'center',
@@ -214,6 +334,17 @@ const styles = StyleSheet.create({
     color: Colors.black[100],
     marginBottom: Spacing[2],
     lineHeight: r(20),
+    paddingRight: Spacing[2],
+  },
+  addressCounter: {
+    position: 'absolute',
+    bottom: Spacing[2],
+    right: Spacing[3],
+  },
+  addressCounterText: {
+    fontSize: FontSizes.xs,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.gray[600] || '#4B5563',
   },
   addAddressButtonContainer: {
     width: r(100),
@@ -234,6 +365,70 @@ const styles = StyleSheet.create({
   },
   proceedButton: {
     marginTop: 0,
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    borderRadius: r(16),
+    padding: Spacing[5],
+    width: '90%',
+    maxWidth: r(400),
+  },
+  modalTitle: {
+    fontSize: FontSizes.xl,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.black[100],
+    marginBottom: Spacing[4],
+    textAlign: 'center',
+  },
+  addressInput: {
+    borderWidth: r(1),
+    borderColor: Colors.gray[300] || '#D1D5DB',
+    borderRadius: r(8),
+    padding: Spacing[3],
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.mregular,
+    color: Colors.black[100],
+    minHeight: r(80),
+    textAlignVertical: 'top',
+    marginBottom: Spacing[4],
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: Spacing[3],
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: Spacing[3],
+    borderRadius: r(8),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: Colors.gray[200] || '#E5E7EB',
+  },
+  cancelButtonText: {
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.black[100],
+  },
+  saveButton: {
+    backgroundColor: Colors.primary || '#F83758',
+  },
+  saveButtonText: {
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.white,
   },
 });
 

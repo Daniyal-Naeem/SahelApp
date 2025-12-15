@@ -12,7 +12,7 @@ import {CustomHeader} from '../components';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {icons} from '../constants';
 import PurchaseIcon from '../assets/svgs/purchase.svg';
-import GiftIcon from '../assets/svgs/gift.svg'; 
+import GiftIcon from '../assets/svgs/gift.svg';
 
 type GiftType = 'voucher' | 'gift';
 type GiftStatus = 'collected' | 'redeem';

@@ -10,8 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  Alert,
 } from 'react-native';
+import {useToast} from '../hooks/useToast';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import FastImage from 'react-native-fast-image';
@@ -61,6 +61,7 @@ interface SupportSessionData {
 const SupportScreen = () => {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
+  const toast = useToast();
   const [selectedIssue, setSelectedIssue] = useState<IssueType>('Order Issues');
   const [message, setMessage] = useState('');
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
@@ -75,6 +76,7 @@ const SupportScreen = () => {
       selectedOrderId: null,
       messages: [],
     });
+  const MAX_MESSAGE_LENGTH = 1000;
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -101,7 +103,6 @@ const SupportScreen = () => {
   };
 
   const navigateToProfile = () => {
-    // Navigate to Profile tab
     (navigation as any).navigate('HomeScreen', {
       screen: 'Dashboard',
       params: {
@@ -110,7 +111,6 @@ const SupportScreen = () => {
     });
   };
 
-  // Step navigation handlers
   const handleNext = () => {
     switch (currentStep) {
       case 'issue-selection':
@@ -234,7 +234,6 @@ const SupportScreen = () => {
       mediaType: 'photo',
     })
       .then((image) => {
-        // Add image message to chat
         const newMessage = {
           type: 'user' as const,
           image: image.path,
@@ -249,23 +248,19 @@ const SupportScreen = () => {
       .catch((error) => {
         if (error.code !== 'E_PICKER_CANCELLED') {
           if (error.code === 'E_PERMISSION_MISSING' || error.message?.includes('permission')) {
-            Alert.alert(
-              'Permission Required',
-              'Photo library permission is required. Please enable it in your device settings.',
-            );
+            toast.showToast('Photo library permission is required. Please enable it in your device settings.');
           } else {
-            Alert.alert('Error', error.message || 'Failed to open gallery');
+            toast.showToast(error.message || 'Failed to open gallery');
           }
         }
       });
   };
 
   const handleMenuPress = () => {
-    // TODO: Show menu options
   };
 
   const sendMessageToChat = () => {
-    if (message.trim()) {
+    if (message.trim() && message.length <= MAX_MESSAGE_LENGTH) {
       const newMessage = {
         type: 'user' as const,
         text: message.trim(),
@@ -278,6 +273,12 @@ const SupportScreen = () => {
       }));
 
       setMessage('');
+    }
+  };
+
+  const handleMessageChange = (text: string) => {
+    if (text.length <= MAX_MESSAGE_LENGTH) {
+      setMessage(text);
     }
   };
 
@@ -343,7 +344,6 @@ const SupportScreen = () => {
           {supportSessionData.messages.map((msg, index) => {
             if (msg.type === 'user') {
               if (msg.image) {
-                // Render image message
                 return (
                   <View key={index} style={styles.imageMessageContainer}>
                     <View style={styles.imageMessageBubble}>
@@ -582,9 +582,10 @@ const SupportScreen = () => {
             placeholder="Message"
             placeholderTextColor={Colors.gray[400] || '#9CA3AF'}
             value={message}
-            onChangeText={setMessage}
+            onChangeText={handleMessageChange}
             onSubmitEditing={sendMessageToChat}
             multiline
+            maxLength={MAX_MESSAGE_LENGTH}
           />
           <View style={styles.inputIcons}>
             <TouchableOpacity
@@ -757,12 +758,12 @@ const styles = StyleSheet.create({
   },
   inputBar: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     backgroundColor: Colors.gray[100] || '#F3F4F6',
     borderRadius: r(10),
     paddingHorizontal: Spacing[3],
-    paddingTop: Spacing[3],
-    paddingBottom: Spacing[3],
+    paddingTop: Spacing[2],
+    paddingBottom: Spacing[2],
     marginHorizontal: Spacing[5],
     minHeight: r(60),
     marginBottom: Spacing[6],
@@ -772,14 +773,18 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     fontFamily: FontFamilies.mregular,
     color: Colors.black[100],
-    paddingVertical: Spacing[2],
+    paddingTop: Spacing[1],
+    paddingBottom: Spacing[2],
     paddingHorizontal: Spacing[2],
     maxHeight: r(120),
-    minHeight: r(40),
+    minHeight: r(36),
+    textAlignVertical: 'top',
+    includeFontPadding: false,
   },
   inputIcons: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing[2],
   },
   inputIconButton: {
