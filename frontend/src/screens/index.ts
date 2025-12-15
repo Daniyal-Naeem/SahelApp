@@ -1,5 +1,6 @@
 import CheckoutScreen from './CheckoutScreen';
 import ForgotPasswordScreen from './ForgotPasswordScreen';
+import GiftScreen from './GiftScreen';
 import HomeScreen from './HomeScreen';
 import LanguageScreen from './LanguageScreen';
 import LoginScreen from './LoginScreen';
@@ -20,6 +21,7 @@ import VIPClubScreen from './VIPClubScreen';
 export {
   CheckoutScreen,
   ForgotPasswordScreen,
+  GiftScreen,
   HomeScreen,
   LanguageScreen,
   LoginScreen,

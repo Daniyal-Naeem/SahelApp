@@ -10,11 +10,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  Alert,
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import FastImage from 'react-native-fast-image';
 import {SvgXml} from 'react-native-svg';
+import ImagePicker from 'react-native-image-crop-picker';
 import {
   CustomHeader,
   ActionButtons,
@@ -49,6 +51,7 @@ interface SupportSessionData {
   messages: Array<{
     type: 'user' | 'support' | 'order-card';
     text?: string;
+    image?: string;
     order?: OrderData;
     isIssue?: boolean;
     timestamp: Date;
@@ -95,6 +98,16 @@ const SupportScreen = () => {
 
   const GoBack = () => {
     navigation.goBack();
+  };
+
+  const navigateToProfile = () => {
+    // Navigate to Profile tab
+    (navigation as any).navigate('HomeScreen', {
+      screen: 'Dashboard',
+      params: {
+        screen: 'Profile',
+      },
+    });
   };
 
   // Step navigation handlers
@@ -212,7 +225,39 @@ const SupportScreen = () => {
   };
 
   const handleGalleryPress = () => {
-    // TODO: Open gallery to attach images
+    ImagePicker.openPicker({
+      width: 800,
+      height: 800,
+      cropping: false,
+      compressImageQuality: 0.8,
+      includeBase64: false,
+      mediaType: 'photo',
+    })
+      .then((image) => {
+        // Add image message to chat
+        const newMessage = {
+          type: 'user' as const,
+          image: image.path,
+          timestamp: new Date(),
+        };
+
+        setSupportSessionData(prev => ({
+          ...prev,
+          messages: [...prev.messages, newMessage],
+        }));
+      })
+      .catch((error) => {
+        if (error.code !== 'E_PICKER_CANCELLED') {
+          if (error.code === 'E_PERMISSION_MISSING' || error.message?.includes('permission')) {
+            Alert.alert(
+              'Permission Required',
+              'Photo library permission is required. Please enable it in your device settings.',
+            );
+          } else {
+            Alert.alert('Error', error.message || 'Failed to open gallery');
+          }
+        }
+      });
   };
 
   const handleMenuPress = () => {
@@ -271,7 +316,7 @@ const SupportScreen = () => {
           title="Support"
           onBackPress={GoBack}
           rightComponent={
-            <TouchableOpacity style={styles.profileButton}>
+            <TouchableOpacity style={styles.profileButton} onPress={navigateToProfile}>
               <FastImage
                 source={icons.profileIcon}
                 style={styles.profileIcon}
@@ -296,14 +341,29 @@ const SupportScreen = () => {
           </View>
 
           {supportSessionData.messages.map((msg, index) => {
-            if (msg.type === 'user' && msg.text) {
-              return (
-                <UserMessageBubble
-                  key={index}
-                  text={msg.text}
-                  isIssue={msg.isIssue || false}
-                />
-              );
+            if (msg.type === 'user') {
+              if (msg.image) {
+                // Render image message
+                return (
+                  <View key={index} style={styles.imageMessageContainer}>
+                    <View style={styles.imageMessageBubble}>
+                      <FastImage
+                        source={{uri: msg.image}}
+                        style={styles.messageImage}
+                        resizeMode={FastImage.resizeMode.cover}
+                      />
+                    </View>
+                  </View>
+                );
+              } else if (msg.text) {
+                return (
+                  <UserMessageBubble
+                    key={index}
+                    text={msg.text}
+                    isIssue={msg.isIssue || false}
+                  />
+                );
+              }
             }
             if (msg.type === 'order-card' && msg.order) {
               return <OrderCardMessage key={index} order={msg.order} />;
@@ -515,7 +575,7 @@ const SupportScreen = () => {
         <View
           style={[
             styles.inputBar,
-            {paddingBottom: (insets.bottom || 0) + Spacing[3]},
+            {paddingBottom: (insets.bottom || 0) + Spacing[0]},
           ]}>
           <TextInput
             style={styles.messageInput}
@@ -763,6 +823,23 @@ const styles = StyleSheet.create({
   },
   ordersScrollContent: {
     paddingBottom: Spacing[2],
+  },
+  imageMessageContainer: {
+    alignItems: 'flex-end',
+    marginBottom: Spacing[2],
+    paddingRight: Spacing[5],
+  },
+  imageMessageBubble: {
+    borderRadius: r(10),
+    overflow: 'hidden',
+    maxWidth: '80%',
+    backgroundColor: '#FFEEF1',
+    padding: r(2),
+  },
+  messageImage: {
+    width: r(200),
+    height: r(200),
+    borderRadius: r(8),
   },
 });
 

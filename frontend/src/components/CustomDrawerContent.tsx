@@ -38,7 +38,7 @@ const CustomDrawerContent = (props: any) => {
     {id: '1', label: 'Join VIP Club', icon: VIPIcon, route: 'VIPClub'},
     {id: '2', label: 'Wishlist', icon: wishlist, route: 'Wishlist'},
     {id: '3', label: 'Notifications', icon: notification, route: 'Notifications'},
-    {id: '4', label: 'Send/Redeem Gifts', icon: sendGifts, route: 'SendGift'},
+    {id: '4', label: 'Send/Redeem Gifts', icon: sendGifts, route: 'Gifts'},
     {id: '5', label: 'Support', icon: support, route: 'Support'},
     {id: '6', label: 'Language', icon: language, route: 'Language'},
     {id: '7', label: 'Settings', icon: settings, route: 'Profile'},
@@ -55,36 +55,32 @@ const CustomDrawerContent = (props: any) => {
       // Use setTimeout to ensure drawer is closed before navigation
       setTimeout(() => {
         try {
-          // For Wishlist and Profile, navigate to Dashboard (HomeScreen) with initialTab param
+          // For tabs that are in the bottom tab navigator (Wishlist, Profile)
           if (item.route === 'Wishlist' || item.route === 'Profile') {
-            // Navigate within drawer to Dashboard with params
+            // Navigate to Dashboard with screen param to open the specific tab
             props.navigation.navigate('Dashboard', {
-              initialTab: item.route === 'Wishlist' ? 'Wishlist' : 'Profile',
-            });
-          } else if (item.route === 'SendGift') {
-            // SendGift requires itemDetails, navigate to Home tab first
-            // User can then select a product to send as gift
-            props.navigation.navigate('Dashboard', {
-              initialTab: 'Home',
+              screen: item.route,
             });
           } else {
-            // For other screens (VIPClub, Notifications, Support, Language), navigate within drawer
-            // These routes are registered in DrawerNavigator, so navigate directly
+            // For other screens (VIPClub, Notifications, Support, Language, Gifts), navigate directly
             props.navigation.navigate(item.route as any);
           }
         } catch (error) {
           console.warn('Navigation error:', error);
-          // Final fallback: try parent navigator
-          const parentNavigator = props.navigation.getParent();
-          if (parentNavigator) {
-            try {
-              parentNavigator.navigate(item.route as any);
-            } catch (parentError) {
-              console.error('Parent navigation also failed:', parentError);
+          // Fallback: try with initialTab param for tabs
+          try {
+            if (item.route === 'Wishlist' || item.route === 'Profile') {
+              props.navigation.navigate('Dashboard', {
+                initialTab: item.route,
+              });
+            } else {
+              props.navigation.navigate(item.route as any);
             }
+          } catch (fallbackError) {
+            console.error('Fallback navigation also failed:', fallbackError);
           }
         }
-      }, 100);
+      }, 200);
     }
   };
 

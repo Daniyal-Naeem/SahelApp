@@ -18,7 +18,6 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
 import {ProductItem, DealBanner, SummerSaleBanner, SponsoredSection} from '../components';
 import {CategoriesData, DetailedProductData} from '../constants/data';
-import {removeItem} from '../utils/AsyncStorage';
 import {ProductTypes} from '../constants/types';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
@@ -52,9 +51,14 @@ const HomeTab = (_props: Props) => {
   // Use detailed product data matching UI designs
   const [products] = useState<ProductTypes[]>(DetailedProductData);
 
-  const NavigateToProfile = async () => {
-    navigation.navigate('Setting');
-    await removeItem('onboarded'); // will reset to onboarding
+  const NavigateToProfile = () => {
+    // Navigate to Profile tab
+    (navigation as any).navigate('HomeScreen', {
+      screen: 'Dashboard',
+      params: {
+        screen: 'Profile',
+      },
+    });
   };
   const handleOpenDrawer = () => {
     navigation.openDrawer();

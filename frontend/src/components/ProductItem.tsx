@@ -1,6 +1,6 @@
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import FastImage from 'react-native-fast-image';
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import {ItemDetails} from '../constants/types';
 import {useNavigation} from '@react-navigation/native';
 import {Colors, Spacing, FontFamilies, r} from '../constants/styles';
@@ -49,13 +49,6 @@ const ProductItem = ({
   const isInWishlist = useAppSelector(state =>
     state.wishlist.items.some(item => item._id === itemDetails._id),
   );
-  const [isFavorite, setIsFavorite] = useState(isInWishlist || forceFavoriteActive);
-
-  // Sync local state with Redux state
-  useEffect(() => {
-    setIsFavorite(isInWishlist || forceFavoriteActive);
-  }, [isInWishlist, forceFavoriteActive]);
-
   const NavigateToProductsDetails = () => {
     // Navigate to ProductDetails in the root Stack Navigator (accessible from all tabs)
     // Get the root navigator by traversing up the navigation tree
@@ -70,9 +63,7 @@ const ProductItem = ({
 
   const handleFavoritePress = (e: any) => {
     e.stopPropagation();
-    const newFavoriteState = !isFavorite;
-    setIsFavorite(newFavoriteState);
-    // Dispatch Redux action to toggle wishlist (synchronous, no API call)
+    // Dispatch Redux action to toggle wishlist - Redux state will update and trigger re-render
     dispatch(toggleWishlist(itemDetails));
   };
 
@@ -134,7 +125,7 @@ const ProductItem = ({
           onPress={handleFavoritePress}
           hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
           <SvgXml
-            xml={forceFavoriteActive || isInWishlist || isFavorite ? favoriteActiveIcon : favoriteIcon}
+            xml={forceFavoriteActive || isInWishlist ? favoriteActiveIcon : favoriteIcon}
             width={r(24)}
             height={r(24)}
           />

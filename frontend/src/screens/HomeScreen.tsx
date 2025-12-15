@@ -1,10 +1,11 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {useRoute, useNavigation, useFocusEffect} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {HomeTab, WishlistTab, CartTab, SearchTab, SettingTab, DealOfTheDayTab, CategoryTab} from '../tabs';
 import ReviewsScreen from './ReviewsScreen';
 import SendGiftScreen from './SendGiftScreen';
+
 import {View, Text} from 'react-native';
 import {SvgXml} from 'react-native-svg';
 import {cartTabIcon} from '../assets/svgs/cartTabIcon';
@@ -15,7 +16,6 @@ import {searchTabIcon} from '../assets/svgs/searchTabIcon';
 import {profileTabIcon} from '../assets/svgs/profileTabIcon';
 import { ItemDetails } from '../constants/types';
 import {FontFamilies, r, Colors} from '../constants/styles';
-import {RouteStackParamList} from '../../App';
 
 type TabBarItemProps = {
   icon: string;
@@ -89,7 +89,73 @@ const HomeStack = createNativeStackNavigator<{
   Category: {categoryTitle: string; categoryId?: string} | undefined;
 }>();
 
-const HomeStackNavigator = () => {
+// Wrapper component that has access to Tab navigator's navigation
+const HomeStackNavigatorWithNavigation = () => {
+  const tabNavigation = useNavigation<any>();
+  const parentNavigation = tabNavigation.getParent();
+  
+  // Handle navigation to specific tab when route params are passed
+  useEffect(() => {
+    // Get route params from parent (DrawerNavigator -> Dashboard)
+    const parentState = parentNavigation?.getState();
+    const dashboardRoute = parentState?.routes?.find((r: any) => r.name === 'Dashboard');
+    const routeParams = dashboardRoute?.params as any;
+    const screen = routeParams?.screen;
+    const initialTab = routeParams?.initialTab;
+    const scrollToAddress = routeParams?.scrollToAddress;
+    
+    const targetTab = screen || initialTab;
+    
+    if (targetTab && targetTab !== 'Home') {
+      const timer = setTimeout(() => {
+        try {
+          // Use the Tab navigator's navigation object (tabNavigation is from Tab.Navigator context)
+          if (scrollToAddress) {
+            tabNavigation.navigate(targetTab as any, {scrollToAddress: true});
+          } else {
+            tabNavigation.navigate(targetTab as any);
+          }
+          // Clear params after navigation
+          parentNavigation.setParams({screen: undefined, initialTab: undefined, scrollToAddress: undefined});
+        } catch (error) {
+          console.warn('Tab navigation error:', error);
+        }
+      }, 300);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [parentNavigation, tabNavigation]);
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      const parentState = parentNavigation?.getState();
+      const dashboardRoute = parentState?.routes?.find((r: any) => r.name === 'Dashboard');
+      const routeParams = dashboardRoute?.params as any;
+      const screen = routeParams?.screen;
+      const initialTab = routeParams?.initialTab;
+      const scrollToAddress = routeParams?.scrollToAddress;
+      
+      const targetTab = screen || initialTab;
+      
+      if (targetTab && targetTab !== 'Home') {
+        const timer = setTimeout(() => {
+          try {
+            if (scrollToAddress) {
+              tabNavigation.navigate(targetTab as any, {scrollToAddress: true});
+            } else {
+              tabNavigation.navigate(targetTab as any);
+            }
+            parentNavigation.setParams({screen: undefined, initialTab: undefined, scrollToAddress: undefined});
+          } catch (error) {
+            console.warn('Tab navigation error in useFocusEffect:', error);
+          }
+        }, 400);
+        
+        return () => clearTimeout(timer);
+      }
+    }, [parentNavigation, tabNavigation])
+  );
+  
   return (
     <HomeStack.Navigator screenOptions={{headerShown: false}}>
       <HomeStack.Screen name="HomeTab" component={HomeTab} />
@@ -101,33 +167,9 @@ const HomeStackNavigator = () => {
   );
 };
 
+
 const HomeScreen = (_props: Props) => {
   const Tab = createBottomTabNavigator<RouteTabsParamList>();
-  const route = useRoute();
-  const navigation = useNavigation<any>();
-
-  // Handle navigation to specific tab when route params are passed
-  useFocusEffect(
-    React.useCallback(() => {
-      // Check for params from DrawerNavigator - params structure: { params: { initialTab, scrollToAddress } }
-      const routeParams = route.params as any;
-      const initialTab = routeParams?.initialTab;
-      const scrollToAddress = routeParams?.scrollToAddress;
-      
-      if (initialTab && initialTab !== 'Home') {
-        // Small delay to ensure tab navigator is ready
-        const timer = setTimeout(() => {
-          // Navigate directly to the tab (navigation is the tab navigator)
-          if (scrollToAddress) {
-            navigation.navigate(initialTab, {scrollToAddress: true});
-          } else {
-            navigation.navigate(initialTab);
-          }
-        }, 400);
-        return () => clearTimeout(timer);
-      }
-    }, [route.params, navigation])
-  );
 
   return (
     <Tab.Navigator
@@ -178,7 +220,7 @@ const HomeScreen = (_props: Props) => {
       />
       <Tab.Screen
         name="Home"
-        component={HomeStackNavigator}
+        component={HomeStackNavigatorWithNavigation}
         options={{
           tabBarLabel: '',
           tabBarIcon: ({ focused }) => <TabBarItem icon={homeTabIcon} focused={focused} isHome />,
@@ -200,11 +242,9 @@ const HomeScreen = (_props: Props) => {
           tabBarIcon: ({ focused }) => <TabBarItem icon={profileTabIcon} focused={focused} />,
         }}
       />
+ 
     </Tab.Navigator>
   );
-  
-  
-  
 };
 
 export default HomeScreen;

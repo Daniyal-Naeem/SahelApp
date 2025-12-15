@@ -13,7 +13,6 @@ import FastImage from 'react-native-fast-image';
 import {useNavigation} from '@react-navigation/native';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
 import {ProductItem, CustomSearch} from '../components';
-import {DetailedProductData} from '../constants/data';
 import {ProductTypes} from '../constants/types';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
@@ -33,13 +32,17 @@ const WishlistTab = (_props: Props) => {
   const width = Dimensions.get('window').width;
   const wishlistItems = useAppSelector(state => state.wishlist.items);
   
-  // Use wishlist items if available, otherwise use dummy data for display
-  const displayProducts: ProductTypes[] = wishlistItems.length > 0 
-    ? wishlistItems 
-    : DetailedProductData.slice(0, 4); // Show first 4 products as dummy data
+  // Use wishlist items from Redux store
+  const displayProducts: ProductTypes[] = wishlistItems;
 
   const NavigateToProfile = () => {
-    navigation.navigate('Setting');
+    // Navigate to Profile tab
+    (navigation as any).navigate('HomeScreen', {
+      screen: 'Dashboard',
+      params: {
+        screen: 'Profile',
+      },
+    });
   };
 
   const handleOpenDrawer = () => {
@@ -105,32 +108,41 @@ const WishlistTab = (_props: Props) => {
         </View>
       </View>
 
-      {/* Products Grid */}
-      <FlatList
-        data={displayProducts}
-        numColumns={2}
-        scrollEnabled={false}
-        keyExtractor={(item, index) => item._id || index.toString()}
-        renderItem={({item}) => (
-          <ProductItem
-            image={item.image[0]}
-            title={item.title}
-            description={item.description}
-            price={item.price}
-            priceBeforeDeal={item.priceBeforeDeal}
-            priceOff={item.priceOff}
-            stars={item.stars}
-            numberOfReview={item.numberOfReview}
-            itemDetails={item}
-            currency={(item as any).currency || 'SAR'}
-            width={itemWidth}
-            forceFavoriteActive={true}
-          />
-        )}
-        columnWrapperStyle={styles.row}
-        ItemSeparatorComponent={RowSeparator}
-        contentContainerStyle={styles.productsGrid}
-      />
+      {/* Products Grid or Empty State */}
+      {displayProducts.length > 0 ? (
+        <FlatList
+          data={displayProducts}
+          numColumns={2}
+          scrollEnabled={false}
+          keyExtractor={(item, index) => item._id || index.toString()}
+          renderItem={({item}) => (
+            <ProductItem
+              image={item.image[0]}
+              title={item.title}
+              description={item.description}
+              price={item.price}
+              priceBeforeDeal={item.priceBeforeDeal}
+              priceOff={item.priceOff}
+              stars={item.stars}
+              numberOfReview={item.numberOfReview}
+              itemDetails={item}
+              currency={(item as any).currency || 'SAR'}
+              width={itemWidth}
+              forceFavoriteActive={true}
+            />
+          )}
+          columnWrapperStyle={styles.row}
+          ItemSeparatorComponent={RowSeparator}
+          contentContainerStyle={styles.productsGrid}
+        />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Your wishlist is empty</Text>
+          <Text style={styles.emptySubtext}>
+            Add items to your wishlist by tapping the heart icon on products
+          </Text>
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -200,6 +212,25 @@ const styles = StyleSheet.create({
   },
   rowSeparator: {
     width: Spacing[2],
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Spacing[10],
+  },
+  emptyText: {
+    fontSize: FontSizes.xl,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.black[100],
+    marginBottom: Spacing[2],
+  },
+  emptySubtext: {
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.mregular,
+    color: Colors.gray[600] || '#4B5563',
+    textAlign: 'center',
+    paddingHorizontal: Spacing[5],
   },
 });
 
