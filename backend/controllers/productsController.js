@@ -113,13 +113,17 @@ const deleteProduct = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: "No Such ID" })
         }
-        const deleteProductByItsID = await productsModel.findByIdAndUpdate(id)
+        const deleteProductByItsID = await productsModel.findByIdAndDelete(id)
+
+        if (!deleteProductByItsID) {
+            return res.status(404).json({ error: "Product not found" })
+        }
 
         // successful
-        return res.status(200).json(deleteProductByItsID)
+        return res.status(200).json({ message: "Product deleted successfully", deletedProduct: deleteProductByItsID })
     } catch (error) {
         res.status(500).json({ error: error.message })
-    } 
+    }
 }    
  
 

@@ -1,6 +1,7 @@
 const express = require('express')
 const {
     getGiftCards,
+    getGiftCardById,
     getGiftCardByCode,
     createGiftCard,
     createBulkGiftCards,
@@ -25,6 +26,7 @@ router.get('/gift-cards', authenticate, getGiftCards)
 router.post('/gift-cards/:code/redeem', authenticate, redeemGiftCard)
 
 // Admin routes
+router.get('/gift-cards/admin/:id', authenticate, authorize('admin'), getGiftCardById)
 router.post('/gift-cards', authenticate, authorize('admin'), createGiftCard)
 router.post('/gift-cards/bulk', authenticate, authorize('admin'), createBulkGiftCards)
 router.put('/gift-cards/:id', authenticate, authorize('admin'), updateGiftCard)

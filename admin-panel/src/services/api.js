@@ -137,6 +137,7 @@ export const appAdAPI = {
 // Gift Card APIs
 export const giftCardAPI = {
   getAllGiftCards: (params) => api.get('/gift-cards', { params }),
+  getGiftCardById: (id) => api.get(`/gift-cards/admin/${id}`),
   getGiftCardByCode: (code) => api.get(`/gift-cards/${code}`),
   createGiftCard: (giftCardData) => api.post('/gift-cards', giftCardData),
   createBulkGiftCards: (data) => api.post('/gift-cards/bulk', data),

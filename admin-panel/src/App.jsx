@@ -11,6 +11,14 @@ import CreateUserPage from './pages/CreateUserPage'
 import CreateVendorPage from './pages/CreateVendorPage'
 import CreateProductPage from './pages/CreateProductPage'
 import CreateCategoryPage from './pages/CreateCategoryPage'
+import ProductDetailPage from './pages/ProductDetailPage'
+import ProductEditPage from './pages/ProductEditPage'
+import DealEditPage from './pages/DealEditPage'
+import CouponEditPage from './pages/CouponEditPage'
+import GiftCardEditPage from './pages/GiftCardEditPage'
+import CreateDealPage from './pages/CreateDealPage'
+import CreateCouponPage from './pages/CreateCouponPage'
+import CreateGiftCardPage from './pages/CreateGiftCardPage'
 import CreditBalancesPage from './pages/CreditBalancesPage'
 import CreditTransactionsPage from './pages/CreditTransactionsPage'
 import CreditAdjustPage from './pages/CreditAdjustPage'
@@ -89,6 +97,86 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <CreateProductPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/products/:id"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ProductDetailPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/products/:id/edit"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ProductEditPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/deals/create"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CreateDealPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/deals/:id/edit"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <DealEditPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coupons/create"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CreateCouponPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coupons/:id/edit"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CouponEditPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gift-cards/create"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <CreateGiftCardPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gift-cards/:id/edit"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <GiftCardEditPage />
               </Layout>
             </ProtectedRoute>
           }
@@ -223,7 +311,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   )

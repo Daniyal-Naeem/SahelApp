@@ -34,6 +34,35 @@ const getGiftCards = async (req, res) => {
 }
 
 /**
+ * GET /api/gift-cards/:id
+ * Get gift card by ID (admin only)
+ */
+const getGiftCardById = async (req, res) => {
+    try {
+        const { id } = req.params
+        const giftCard = await giftCardModel.findById(id)
+            .populate('assignedTo', 'name email')
+            .populate('purchasedBy', 'name email')
+            .populate('redeemedBy', 'name email')
+            .populate('createdBy', 'name email')
+
+        if (!giftCard) {
+            return res.status(404).json({ error: 'Gift card not found' })
+        }
+
+        // Check if expired
+        if (giftCard.expiresAt && new Date() > giftCard.expiresAt && giftCard.status === 'active') {
+            giftCard.status = 'expired'
+            await giftCard.save()
+        }
+
+        return res.status(200).json(giftCard)
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+}
+
+/**
  * GET /api/gift-cards/:code
  * Get gift card by code
  */
@@ -248,6 +277,7 @@ const deleteGiftCard = async (req, res) => {
 
 module.exports = {
     getGiftCards,
+    getGiftCardById,
     getGiftCardByCode,
     createGiftCard,
     createBulkGiftCards,

@@ -20,6 +20,8 @@ const CreateProductPage = () => {
   })
   const [imageUploadType, setImageUploadType] = useState('url') // 'url' or 'file'
   const [uploadedImagePreview, setUploadedImagePreview] = useState(null)
+  const [productImageUploadType, setProductImageUploadType] = useState('url') // 'url' or 'file'
+  const [uploadedProductImages, setUploadedProductImages] = useState([])
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -140,6 +142,78 @@ const CreateProductPage = () => {
       image: ''
     }))
     setUploadedImagePreview(null)
+  }
+
+  const handleProductImageFileChange = async (e) => {
+    const files = Array.from(e.target.files)
+    if (files.length === 0) return
+
+    const validFiles = []
+    const base64Images = []
+
+    for (const file of files) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert(`File "${file.name}" is not an image. Please select image files only.`)
+        continue
+      }
+
+      // Validate file size (max 5MB per image)
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`Image "${file.name}" is too large. Maximum size is 5MB per image.`)
+        continue
+      }
+
+      validFiles.push(file)
+    }
+
+    if (validFiles.length === 0) return
+
+    try {
+      // Convert valid files to base64
+      const promises = validFiles.map(file => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve(reader.result)
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+      })
+
+      const base64Results = await Promise.all(promises)
+      base64Images.push(...base64Results)
+
+      setUploadedProductImages(prev => [...prev, ...base64Images])
+      // Don't modify formData.image when uploading files - keep them separate
+    } catch (error) {
+      console.error('Error reading files:', error)
+      alert('Failed to read image files')
+    }
+  }
+
+  const handleProductImageUrlChange = (e) => {
+    const value = e.target.value
+    setFormData(prev => ({
+      ...prev,
+      image: value
+    }))
+  }
+
+  const clearProductImages = () => {
+    setFormData(prev => ({
+      ...prev,
+      image: ''
+    }))
+    setUploadedProductImages([])
+  }
+
+  const removeProductImage = (index) => {
+    const newImages = uploadedProductImages.filter((_, i) => i !== index)
+    setUploadedProductImages(newImages)
+    setFormData(prev => ({
+      ...prev,
+      image: newImages.join(',')
+    }))
   }
 
   const handleCategorySubmit = async (e) => {
@@ -266,11 +340,22 @@ const CreateProductPage = () => {
     setLoading(true)
 
     try {
-      // Parse images (comma-separated)
-      const images = formData.image
-        .split(',')
-        .map(img => img.trim())
-        .filter(img => img)
+      // Handle images - combine uploaded files and URLs
+      let images = []
+
+      // Add uploaded images (base64)
+      if (uploadedProductImages.length > 0) {
+        images.push(...uploadedProductImages)
+      }
+
+      // Add URL images (comma-separated)
+      if (formData.image.trim()) {
+        const urlImages = formData.image
+          .split(',')
+          .map(img => img.trim())
+          .filter(img => img)
+        images.push(...urlImages)
+      }
 
       // Parse UK sizes (comma-separated)
       const ukSides = formData.ukSide
@@ -393,17 +478,108 @@ const CreateProductPage = () => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="image">Images (comma-separated URLs) *</label>
-            <input
-              type="text"
-              id="image"
-              name="image"
-              value={formData.image}
-              onChange={handleChange}
-              required
-              placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-            />
+          <div className="form-group full-width">
+            <label htmlFor="image">Product Images *</label>
+            <div className="image-upload-tabs">
+              <button
+                type="button"
+                className={`upload-tab ${productImageUploadType === 'url' ? 'active' : ''}`}
+                onClick={() => {
+                  setProductImageUploadType('url')
+                  setUploadedProductImages([]) // Clear uploaded images when switching to URL mode
+                }}
+              >
+                URLs
+              </button>
+              <button
+                type="button"
+                className={`upload-tab ${productImageUploadType === 'file' ? 'active' : ''}`}
+                onClick={() => {
+                  setProductImageUploadType('file')
+                  setFormData(prev => ({ ...prev, image: '' })) // Clear URL input when switching to file mode
+                }}
+              >
+                Upload Files
+              </button>
+            </div>
+
+            {productImageUploadType === 'url' ? (
+              <div className="image-url-input">
+                <input
+                  type="text"
+                  id="image"
+                  name="image"
+                  value={formData.image}
+                  onChange={handleProductImageUrlChange}
+                  required
+                  placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                />
+                {formData.image && (
+                  <button
+                    type="button"
+                    onClick={clearProductImages}
+                    className="btn-clear-image"
+                    title="Clear images"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="image-file-input">
+                <input
+                  type="file"
+                  id="productImages"
+                  accept="image/*"
+                  multiple
+                  onChange={handleProductImageFileChange}
+                  className="file-input"
+                />
+                <label htmlFor="productImages" className="file-input-label">
+                  <span className="file-input-text">
+                    {uploadedProductImages.length > 0
+                      ? `${uploadedProductImages.length} image(s) selected`
+                      : 'Choose Image Files'}
+                  </span>
+                  <span className="file-input-button">Browse</span>
+                </label>
+                {uploadedProductImages.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearProductImages}
+                    className="btn-clear-image"
+                    title="Clear all images"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            )}
+
+            {uploadedProductImages.length > 0 && (
+              <div className="uploaded-images-preview">
+                <h4>Uploaded Images Preview:</h4>
+                <div className="images-grid">
+                  {uploadedProductImages.map((image, index) => (
+                    <div key={index} className="image-preview-item">
+                      <img
+                        src={image}
+                        alt={`Product image ${index + 1}`}
+                        className="image-preview"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeProductImage(index)}
+                        className="btn-remove-image"
+                        title="Remove image"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
