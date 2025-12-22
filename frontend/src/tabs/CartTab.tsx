@@ -49,9 +49,7 @@ const CartTab = () => {
 
   const handleProceedToCheckout = () => {
     if (cartItems.length === 0) return;
-    
-    // For now, navigate to Checkout with the first item
-    // TODO: Update CheckoutScreen to handle multiple items
+
     const firstItem = cartItems[0];
     const itemDetails: ItemDetails = {
       _id: firstItem._id,
@@ -77,7 +75,7 @@ const CartTab = () => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
-  const shippingFee = cartTotal > 0 ? 15 : 0; // Example shipping fee
+  const shippingFee = cartTotal > 0 ? 15 : 0;
   const finalTotal = cartTotal + shippingFee;
 
   return (

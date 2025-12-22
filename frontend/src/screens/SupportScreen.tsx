@@ -103,6 +103,7 @@ const SupportScreen = () => {
   };
 
   const navigateToProfile = () => {
+    // Navigate to Profile tab
     (navigation as any).navigate('HomeScreen', {
       screen: 'Dashboard',
       params: {
@@ -111,6 +112,7 @@ const SupportScreen = () => {
     });
   };
 
+  // Step navigation handlers
   const handleNext = () => {
     switch (currentStep) {
       case 'issue-selection':
@@ -234,6 +236,7 @@ const SupportScreen = () => {
       mediaType: 'photo',
     })
       .then((image) => {
+        // Add image message to chat
         const newMessage = {
           type: 'user' as const,
           image: image.path,
@@ -344,6 +347,7 @@ const SupportScreen = () => {
           {supportSessionData.messages.map((msg, index) => {
             if (msg.type === 'user') {
               if (msg.image) {
+                // Render image message
                 return (
                   <View key={index} style={styles.imageMessageContainer}>
                     <View style={styles.imageMessageBubble}>

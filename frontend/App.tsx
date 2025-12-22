@@ -14,6 +14,8 @@ import {
   LoginScreen,
   NotificationsScreen,
   OnboardingScreen,
+  OrdersScreen,
+  OrderDetailsScreen,
   OTPScreen,
   PlaceOrder,
   PaymentScreen,
@@ -55,6 +57,8 @@ export type RouteStackParamList = {
   Support: undefined;
   Language: undefined;
   Gifts: undefined;
+  Orders: undefined;
+  OrderDetails: {order: any} | undefined;
 };
 
 const Drawer = createDrawerNavigator();
@@ -97,6 +101,11 @@ const DrawerNavigator = () => (
       component={GiftScreen}
       options={{title: 'Gifts'}}
     />
+    <Drawer.Screen
+      name="Orders"
+      component={OrdersScreen}
+      options={{title: 'My Orders'}}
+    />
   </Drawer.Navigator>
 );
 
@@ -134,7 +143,7 @@ const App = () => {
   if (showOnboarded === null) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size={'large'} color={Colors.primary} />
+        <ActivityIndicator size={'large'} color={Colors.black[300]} />
       </View>
     );
   }
@@ -195,6 +204,14 @@ const App = () => {
                 name="Gifts"
                 component={GiftScreen}
               />
+              <Stack.Screen
+                name="Orders"
+                component={OrdersScreen}
+              />
+              <Stack.Screen
+                name="OrderDetails"
+                component={OrderDetailsScreen}
+              />
               </Stack.Navigator>
             </NavigationContainer>
           </GestureHandlerRootView>
@@ -210,7 +227,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.white,
   },
 });
 

@@ -43,7 +43,6 @@ const PaymentScreen = () => {
 
   const handleModalClose = () => {
     setShowSuccessModal(false);
-    // TODO: Navigate to next screen or home
   };
 
   const formatNumber = (num: number): string => {

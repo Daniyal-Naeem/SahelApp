@@ -23,8 +23,9 @@ type FormFieldProps = {
   error: string;
   backgroundColor?: string;
   borderColor?: string;
-  [key: string]: any;
+  [key: string]: any; // add more props ...props
 };
+// make reusable components to make our code clean
 const FormField = ({
   title,
   value,
@@ -41,7 +42,7 @@ const FormField = ({
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [shakeAnimation] = useState(new Animated.Value(0));
-
+  // let's handle the error
   const shake = () => {
     shakeAnimation.setValue(0);
     Animated.timing(shakeAnimation, {
@@ -50,18 +51,21 @@ const FormField = ({
       useNativeDriver: true,
       easing: Easing.bounce,
     }).start(() => {
+      // clear the animation after a period of time
       setTimeout(() => {
-        setError?.('');
+        setError?.(''); // hide the error
       }, 3000);
     });
   };
-
+  // if error shake
   useEffect(() => {
     if (error) {
       shake();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [error]);
 
+  // get Icon source
   const getIconSource = () => {
     if (title === 'Password') return icons.lock;
     if (title === 'Email') return icons.mail;
@@ -73,6 +77,7 @@ const FormField = ({
   return (
     <View style={otherStyles}>
       <Animated.View
+        // handle shake here with interpolate ..
         style={[
           styles.inputContainer,
           {

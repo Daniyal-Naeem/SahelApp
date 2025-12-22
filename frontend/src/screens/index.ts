@@ -18,6 +18,8 @@ import SendGiftScreen from './SendGiftScreen';
 import SplashScreen from './SplashScreen';
 import SupportScreen from './SupportScreen';
 import VIPClubScreen from './VIPClubScreen';
+import OrdersScreen from './OrdersScreen';
+import OrderDetailsScreen from './OrderDetailsScreen';
 export {
   CheckoutScreen,
   ForgotPasswordScreen,
@@ -27,6 +29,8 @@ export {
   LoginScreen,
   NotificationsScreen,
   OnboardingScreen,
+  OrdersScreen,
+  OrderDetailsScreen,
   OTPScreen,
   PlaceOrder,
   PaymentScreen,

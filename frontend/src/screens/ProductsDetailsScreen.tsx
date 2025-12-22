@@ -54,15 +54,17 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   const [selectedVariationIndex, setSelectedVariationIndex] = useState<
     number | null
   >(() => {
+    // Default to first variation if available
     if (itemDetails?.variations && itemDetails.variations.length > 0) {
       const firstVariation = itemDetails.variations[0];
       if (firstVariation?.options && firstVariation.options.length > 0) {
-        return 0;
+        return 0; // Default to first displayed variation
       }
     }
     return null;
   });
 
+  // Initialize selected delivery and color from data
   const [selectedDeliveryIndex, setSelectedDeliveryIndex] = useState<number>(
     itemDetails?.deliveryOptions && itemDetails.deliveryOptions.length > 0
       ? 0
@@ -376,9 +378,7 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
   };
 
-  // Handle navigation to full variations screen
   const handleViewAllVariations = () => {
-    // TODO: Navigate to full variations screen
   };
 
   return (

@@ -47,19 +47,15 @@ const PlaceOrder = () => {
   };
 
   const handleViewDetails = () => {
-    // TODO: Show order details modal
   };
 
   const handleApplyCoupon = () => {
-    // TODO: Show coupon selection
   };
 
   const handleKnowMore = () => {
-    // TODO: Show convenience info
   };
 
   const handleEMIDetails = () => {
-    // TODO: Show EMI details
   };
 
   const formatNumber = (num: number): string => {
