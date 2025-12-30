@@ -15,7 +15,7 @@ import AppleIcon from '../assets/svgs/Apple.svg';
 import FacebookIcon from '../assets/svgs/Facebook.svg';
 
 type Props = {};
-
+// let's go with get started first
 const SignupScreen = (_props: Props) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [emailError, setEmailError] = useState('');
@@ -185,7 +185,6 @@ const styles = StyleSheet.create({
     width: r(48),
     height: r(48),
     borderRadius: r(24),
-    backgroundColor: '#FCF3F6',
     borderWidth: 1,
     borderColor: Colors.primary,
     alignItems: 'center',

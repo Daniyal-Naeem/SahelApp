@@ -22,6 +22,7 @@ import { support } from '../assets/svgs/support';
 import { language } from '../assets/svgs/languauge';
 import { settings } from '../assets/svgs/settings';
 import { logout } from '../assets/svgs/logout';
+import { orderIcon } from '../assets/svgs/orderIcon';
 
 interface MenuItem {
   id: string;
@@ -36,18 +37,18 @@ const CustomDrawerContent = (props: any) => {
 
   const menuItems: MenuItem[] = [
     {id: '1', label: 'Join VIP Club', icon: VIPIcon, route: 'VIPClub'},
-    {id: '2', label: 'Wishlist', icon: wishlist, route: 'Wishlist'},
-    {id: '3', label: 'Notifications', icon: notification, route: 'Notifications'},
-    {id: '4', label: 'Send/Redeem Gifts', icon: sendGifts, route: 'Gifts'},
-    {id: '5', label: 'Support', icon: support, route: 'Support'},
-    {id: '6', label: 'Language', icon: language, route: 'Language'},
-    {id: '7', label: 'Settings', icon: settings, route: 'Profile'},
+    {id: '2', label: 'My Orders', icon: orderIcon, route: 'Orders'},
+    {id: '3', label: 'Wishlist', icon: wishlist, route: 'Wishlist'},
+    {id: '4', label: 'Notifications', icon: notification, route: 'Notifications'},
+    {id: '5', label: 'Send/Redeem Gifts', icon: sendGifts, route: 'Gifts'},
+    {id: '6', label: 'Support', icon: support, route: 'Support'},
+    {id: '7', label: 'Language', icon: language, route: 'Language'},
+    {id: '8', label: 'Settings', icon: settings, route: 'Profile'},
   ];
 
   const handleMenuItemPress = (item: MenuItem) => {
-    // Set the active menu item
     setActiveMenuItemId(item.id);
-    
+
     // Close drawer first
     props.navigation.closeDrawer();
     
@@ -62,12 +63,10 @@ const CustomDrawerContent = (props: any) => {
               screen: item.route,
             });
           } else {
-            // For other screens (VIPClub, Notifications, Support, Language, Gifts), navigate directly
+            // For other screens (VIPClub, Orders, Notifications, Support, Language, Gifts), navigate directly
             props.navigation.navigate(item.route as any);
           }
-        } catch (error) {
-          console.warn('Navigation error:', error);
-          // Fallback: try with initialTab param for tabs
+        } catch  {
           try {
             if (item.route === 'Wishlist' || item.route === 'Profile') {
               props.navigation.navigate('Dashboard', {
@@ -76,8 +75,8 @@ const CustomDrawerContent = (props: any) => {
             } else {
               props.navigation.navigate(item.route as any);
             }
-          } catch (fallbackError) {
-            console.error('Fallback navigation also failed:', fallbackError);
+          } catch  {
+            // Navigation failed
           }
         }
       }, 200);

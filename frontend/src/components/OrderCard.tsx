@@ -9,8 +9,12 @@ export interface OrderData {
   orderNumber: string;
   deliveryType: string;
   itemCount: number;
-  status: 'Shipped' | 'Delivered' | 'Processing';
+  status: 'Pending' | 'Processing' | 'Shipped' | 'In Transit' | 'Out for Delivery' | 'Delivered' | 'Cancelled';
   images: string[];
+  orderDate?: string;
+  estimatedDelivery?: string;
+  trackingNumber?: string;
+  totalAmount?: number;
 }
 
 interface OrderCardProps {

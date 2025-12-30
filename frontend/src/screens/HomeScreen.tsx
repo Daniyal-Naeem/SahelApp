@@ -93,17 +93,15 @@ const HomeStack = createNativeStackNavigator<{
 const HomeStackNavigatorWithNavigation = () => {
   const tabNavigation = useNavigation<any>();
   const parentNavigation = tabNavigation.getParent();
-  
-  // Handle navigation to specific tab when route params are passed
+
   useEffect(() => {
-    // Get route params from parent (DrawerNavigator -> Dashboard)
     const parentState = parentNavigation?.getState();
     const dashboardRoute = parentState?.routes?.find((r: any) => r.name === 'Dashboard');
     const routeParams = dashboardRoute?.params as any;
     const screen = routeParams?.screen;
     const initialTab = routeParams?.initialTab;
     const scrollToAddress = routeParams?.scrollToAddress;
-    
+
     const targetTab = screen || initialTab;
     
     if (targetTab && targetTab !== 'Home') {
@@ -117,15 +115,15 @@ const HomeStackNavigatorWithNavigation = () => {
           }
           // Clear params after navigation
           parentNavigation.setParams({screen: undefined, initialTab: undefined, scrollToAddress: undefined});
-        } catch (error) {
-          console.warn('Tab navigation error:', error);
+        } catch {
+          // Navigation failed
         }
       }, 300);
-      
+
       return () => clearTimeout(timer);
     }
   }, [parentNavigation, tabNavigation]);
-  
+
   useFocusEffect(
     React.useCallback(() => {
       const parentState = parentNavigation?.getState();
@@ -146,11 +144,11 @@ const HomeStackNavigatorWithNavigation = () => {
               tabNavigation.navigate(targetTab as any);
             }
             parentNavigation.setParams({screen: undefined, initialTab: undefined, scrollToAddress: undefined});
-          } catch (error) {
-            console.warn('Tab navigation error in useFocusEffect:', error);
+          } catch {
+            // Navigation failed
           }
         }, 400);
-        
+
         return () => clearTimeout(timer);
       }
     }, [parentNavigation, tabNavigation])

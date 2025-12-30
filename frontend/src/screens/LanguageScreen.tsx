@@ -28,14 +28,10 @@ const LanguageScreen = () => {
   const languages: Language[] = [
     {id: 'en', name: 'English', code: 'en', nativeName: 'English'},
     {id: 'ar', name: 'Arabic', code: 'ar', nativeName: 'العربية'},
-    {id: 'fr', name: 'French', code: 'fr', nativeName: 'Français'},
-    {id: 'es', name: 'Spanish', code: 'es', nativeName: 'Español'},
-    {id: 'de', name: 'German', code: 'de', nativeName: 'Deutsch'},
   ];
 
   const handleLanguageSelect = (code: string) => {
     setSelectedLanguage(code);
-    // TODO: Implement language change functionality
   };
 
   return (

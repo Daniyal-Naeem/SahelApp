@@ -43,11 +43,9 @@ const DealOfTheDayTab = (_props: Props) => {
   };
 
   const handleSort = () => {
-    // TODO: Implement sort functionality
   };
 
   const handleFilter = () => {
-    // TODO: Implement filter functionality
   };
 
   // Calculate item width for 2-column grid
