@@ -185,12 +185,15 @@ const CheckoutScreen = () => {
             {addresses.length < 2 && (
               <TouchableOpacity
                 onPress={handleAddAddress}
-                style={styles.addAddressButtonContainer}>
+                style={styles.addAddressButtonContainer}
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                activeOpacity={0.8}>
                 <LinearGradient
                   colors={['#FFCA28', '#F1D534']}
                   start={{x: 0, y: 0}}
                   end={{x: 1, y: 0}}
-                  style={styles.addAddressButton}>
+                  style={styles.addAddressButton}
+                  pointerEvents="none">
                   <SvgXml xml={plusIcon} />
                 </LinearGradient>
               </TouchableOpacity>
