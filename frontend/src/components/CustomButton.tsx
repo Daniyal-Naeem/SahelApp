@@ -8,6 +8,7 @@ type CustomButtonProps = {
   containerStyle?: ViewStyle;
   testStyles?: string;
   isLoading?: boolean;
+  disabled?: boolean;
   textStyle?: TextStyle;
 };
 
@@ -16,18 +17,21 @@ const CustomButton = ({
   handlePress,
   containerStyle,
   isLoading,
+  disabled,
   textStyle,
 }: CustomButtonProps) => {
+  const isDisabled = isLoading || disabled;
+
   return (
     <TouchableOpacity
       onPress={handlePress}
       activeOpacity={0.7}
       style={[
         styles.button,
-        isLoading && styles.buttonDisabled,
+        isDisabled && styles.buttonDisabled,
         containerStyle,
       ]}
-      disabled={isLoading}>
+      disabled={isDisabled}>
       <Text style={[styles.buttonText, textStyle]}>
         {title}
       </Text>

@@ -410,10 +410,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stepIconCompleted: {
-    backgroundColor: Colors.primary || '#F83758',
+    backgroundColor: Colors.primary,
   },
   stepIconCurrent: {
-    backgroundColor: Colors.primary || '#F83758',
+    backgroundColor: Colors.primary,
     borderWidth: r(3),
     borderColor: '#FFE5E8',
   },
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     minHeight: r(40),
   },
   stepLineCompleted: {
-    backgroundColor: Colors.primary || '#F83758',
+    backgroundColor: Colors.primary,
   },
   stepContent: {
     flex: 1,
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     color: Colors.black[100],
   },
   stepTitleCurrent: {
-    color: Colors.primary || '#F83758',
+    color: Colors.primary,
     fontFamily: FontFamilies.mbold,
   },
   stepDescription: {
@@ -466,12 +466,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   primaryButton: {
-    backgroundColor: Colors.primary || '#F83758',
+    backgroundColor: Colors.primary,
   },
   secondaryButton: {
     backgroundColor: Colors.white,
     borderWidth: r(1),
-    borderColor: Colors.primary || '#F83758',
+    borderColor: Colors.primary,
   },
   primaryButtonText: {
     fontSize: FontSizes.base,
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     fontSize: FontSizes.base,
     fontFamily: FontFamilies.msemibold,
-    color: Colors.primary || '#F83758',
+    color: Colors.primary,
   },
 });
 

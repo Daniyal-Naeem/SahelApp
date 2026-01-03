@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   sendButton: {
-    backgroundColor: Colors.action || '#F83758',
+    backgroundColor: Colors.primary,
     borderRadius: r(8),
     paddingVertical: Spacing[4],
     alignItems: 'center',

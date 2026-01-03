@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     borderWidth: r(2),
     borderColor: Colors.white,
     padding: r(2),
-    backgroundColor: '#FFEEF1',
+    backgroundColor: Colors.primaryLight,
   },
   reviewAvatar: {
     width: '100%',

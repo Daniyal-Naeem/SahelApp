@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   addressCardSelected: {
-    borderColor: Colors.primary || '#F83758',
+    borderColor: Colors.primary,
     borderWidth: r(1.5),
   },
   actionButtonsContainer: {
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
     color: Colors.black[100],
   },
   saveButton: {
-    backgroundColor: Colors.primary || '#F83758',
+    backgroundColor: Colors.primary,
   },
   saveButtonText: {
     fontSize: FontSizes.base,

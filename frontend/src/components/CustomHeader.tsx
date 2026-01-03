@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: r(-6),
     right: r(-6),
-    backgroundColor: Colors.primary || '#F83758',
+    backgroundColor: Colors.primary,
     borderRadius: r(10),
     minWidth: r(20),
     height: r(20),

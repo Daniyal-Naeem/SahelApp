@@ -6,7 +6,7 @@ module.exports = {
       // For React Native, fontFamily should match the PostScript name from font files
       colors: {
         primary: "#FFFFFF",
-        action: "#F83758",
+        action: "#00c853",
         black: {
           100: "#000",
           200: "#C4C4C4",

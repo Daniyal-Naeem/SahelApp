@@ -75,6 +75,24 @@ const titles = [
   "Men's & Boys Formal Shoes",
 ];
 
+const vendors = [
+  'FashionHub',
+  'TechStore',
+  'BeautyBazaar',
+  'SportZone',
+  'HomeDecor Plus',
+  'ElectroMart',
+  'StyleCentral',
+  'GadgetWorld',
+  'LuxuryLane',
+  'DailyEssentials',
+  'PremiumBrands',
+  'TrendyWear',
+  'SmartShop',
+  'ValueMart',
+  'EliteCollection',
+];
+
 const randomTitle = (): string =>
   titles[Math.floor(Math.random() * titles.length)];
 
@@ -93,6 +111,9 @@ const randomStars = (): number => Math.random() * 5;
 
 const randomNumberOfReview = (): number => Math.floor(Math.random() * 10000);
 
+const randomVendor = (): string =>
+  vendors[Math.floor(Math.random() * vendors.length)];
+
 const ProductData: ProductTypes[] = Array.from(
   {length: 15},
   (): ProductTypes => {
@@ -108,6 +129,7 @@ const ProductData: ProductTypes[] = Array.from(
       priceOff: randomPriceOff(price, priceBeforeDeal),
       stars: randomStars(),
       numberOfReview: randomNumberOfReview(),
+      vendor: randomVendor(),
       tags: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -115,10 +137,6 @@ const ProductData: ProductTypes[] = Array.from(
     };
   },
 );
-/**
-
- */
-// TabBar data
 const tabName = ['Home', 'Wishlist', 'Cart', 'Search', 'Setting'];
 const TabBarData: TabBarTypes[] = [
   {
@@ -172,6 +190,7 @@ const DetailedProductData: ProductTypes[] = [
     priceOff: '40%',
     stars: 4.5,
     numberOfReview: 56890,
+    vendor: 'BeautyBazaar',
     image: [
       'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=500&h=500&fit=crop',
       'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=500&h=500&fit=crop',
@@ -249,6 +268,7 @@ const DetailedProductData: ProductTypes[] = [
     priceOff: '40%',
     stars: 4.5,
     numberOfReview: 344567,
+    vendor: 'SportZone',
     image: [
       'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=500&h=500&fit=crop',
       'https://images.unsplash.com/photo-1626179450517-53c541fced0c?w=500&h=500&fit=crop',
@@ -309,6 +329,7 @@ const DetailedProductData: ProductTypes[] = [
     priceOff: '50%',
     stars: 4.5,
     numberOfReview: 56890,
+    vendor: 'FashionHub',
     image: [
       'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=500&h=500&fit=crop',
       'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=500&h=500&fit=crop',
@@ -427,6 +448,7 @@ const DetailedProductData: ProductTypes[] = [
     priceOff: '40%',
     stars: 4.5,
     numberOfReview: 56890,
+    vendor: 'ElectroMart',
     image: [
       'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=500&h=500&fit=crop',
       'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=500&h=500&fit=crop',
@@ -487,6 +509,7 @@ const DetailedProductData: ProductTypes[] = [
     priceOff: '40%',
     stars: 5,
     numberOfReview: 344567,
+    vendor: 'LuxuryLane',
     image: [
       'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop',
       'https://images.unsplash.com/photo-1524592094714-0f0654e20363?w=500&h=500&fit=crop',

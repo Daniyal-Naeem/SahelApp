@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   welcomeBubble: {
-    backgroundColor: '#FFEEF1',
+    backgroundColor: Colors.primaryLight,
     borderRadius: r(12),
     padding: Spacing[3],
     width: '80%',
@@ -842,7 +842,7 @@ const styles = StyleSheet.create({
     borderRadius: r(10),
     overflow: 'hidden',
     maxWidth: '80%',
-    backgroundColor: '#FFEEF1',
+    backgroundColor: Colors.primaryLight,
     padding: r(2),
   },
   messageImage: {

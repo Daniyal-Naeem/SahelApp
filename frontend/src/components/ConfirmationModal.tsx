@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing[3],
     paddingHorizontal: Spacing[5],
     borderRadius: r(8),
-    backgroundColor: Colors.primary || '#F83758',
+    backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },

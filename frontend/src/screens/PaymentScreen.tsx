@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing[3],
   },
   paymentMethodCardSelected: {
-    borderColor: Colors.action || '#F83758',
+    borderColor: Colors.primary,
     borderWidth: 1,
     backgroundColor: Colors.white,
   },

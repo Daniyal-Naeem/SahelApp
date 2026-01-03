@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.gray[200] || '#E5E7EB',
   },
   languageItemSelected: {
-    borderColor: Colors.primary || '#F83758',
+    borderColor: Colors.primary,
     backgroundColor: '#FFF0F0',
   },
   languageContent: {
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     width: r(24),
     height: r(24),
     borderRadius: r(12),
-    backgroundColor: Colors.primary || '#F83758',
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: Spacing[3],

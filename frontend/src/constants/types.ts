@@ -62,6 +62,7 @@ type ProductTypes = {
   priceOff: string;
   stars: number;
   numberOfReview: number;
+  vendor?: string; // Name of the vendor/seller
   ukSide?: string[] | number[];
   tags: string[];
   createdAt: string;

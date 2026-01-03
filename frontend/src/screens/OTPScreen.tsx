@@ -10,6 +10,7 @@ type Props = {};
 const OTPScreen = (_props: Props) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [code, setCode] = useState(['', '', '', '']);
+  const [error, setError] = useState('');
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
   type RootStackParamList = {
@@ -17,16 +18,16 @@ const OTPScreen = (_props: Props) => {
   };
 
   useEffect(() => {
-    // Auto-focus first input on mount
     inputRefs.current[0]?.focus();
   }, []);
 
+  const isOTPComplete = code.every(digit => digit.length === 1);
+
   const handleChangeText = (text: string, index: number) => {
-    // Only allow digits
+    if (error) setError('');
     const digit = text.replace(/[^0-9]/g, '');
     
     if (digit.length > 1) {
-      // If pasting multiple digits, distribute them
       const digits = digit.slice(0, 4).split('');
       const newCode = [...code];
       digits.forEach((d, i) => {
@@ -35,17 +36,14 @@ const OTPScreen = (_props: Props) => {
         }
       });
       setCode(newCode);
-      
-      // Focus the next empty input or the last one
+
       const nextIndex = Math.min(index + digits.length, 3);
       inputRefs.current[nextIndex]?.focus();
     } else {
-      // Single digit input
       const newCode = [...code];
       newCode[index] = digit;
       setCode(newCode);
-      
-      // Auto-focus next input if digit entered
+
       if (digit && index < 3) {
         inputRefs.current[index + 1]?.focus();
       }
@@ -53,40 +51,36 @@ const OTPScreen = (_props: Props) => {
   };
 
   const handleKeyPress = (key: string, index: number) => {
-    // Handle backspace to go to previous input
     if (key === 'Backspace' && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
   const handleNext = () => {
-    // Handle next button press
     const fullCode = code.join('');
     if (fullCode.length === 4) {
-      // Navigate to ResetPassword screen after OTP verification
+      setError('');
       navigation.navigate('ResetPassword');
+    } else {
+      setError('Please enter the complete 4-digit code');
     }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        {/* Title */}
         <Text style={[styles.title, {fontFamily: FontFamilies.msemibold}]}>
           Enter Code
         </Text>
 
-        {/* Instructions */}
         <Text style={styles.instruction}>
           Enter 4-digit code we sent you on your number.
         </Text>
 
-        {/* Phone Number */}
         <Text style={styles.phoneNumber}>
           +98*******00
         </Text>
 
-        {/* OTP Input Fields */}
         <View style={styles.otpContainer}>
           {code.map((digit, index) => (
             <TextInput
@@ -94,7 +88,11 @@ const OTPScreen = (_props: Props) => {
               ref={ref => {
                 inputRefs.current[index] = ref;
               }}
-              style={styles.otpInput}
+              style={[
+                styles.otpInput,
+                digit ? styles.otpInputFilled : styles.otpInputEmpty,
+                error ? styles.otpInputError : null,
+              ]}
               value={digit}
               onChangeText={text => handleChangeText(text, index)}
               onKeyPress={({nativeEvent}) => handleKeyPress(nativeEvent.key, index)}
@@ -105,10 +103,16 @@ const OTPScreen = (_props: Props) => {
           ))}
         </View>
 
-        {/* Next Button - Below OTP boxes */}
+        {error ? (
+          <Text style={styles.errorText}>
+            {error}
+          </Text>
+        ) : null}
+
         <CustomButton
           title="Next"
           handlePress={handleNext}
+          disabled={!isOTPComplete}
         />
       </View>
     </View>
@@ -119,7 +123,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
-    paddingHorizontal: Spacing[5], // Consistent horizontal padding
+    paddingHorizontal: Spacing[5],
   },
   content: {
     paddingTop: Spacing[28],
@@ -157,6 +161,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.black[100],
     marginHorizontal: Spacing[4],
+  },
+  otpInputFilled: {
+    borderColor: Colors.action,
+    backgroundColor: Colors.white,
+  },
+  otpInputEmpty: {
+    borderColor: Colors.gray[300],
+    backgroundColor: Colors.gray[50],
+  },
+  otpInputError: {
+    borderColor: Colors.red[500],
+  },
+  errorText: {
+    color: Colors.red[500],
+    fontSize: FontSizes.sm,
+    textAlign: 'center',
+    marginBottom: Spacing[4],
+    fontFamily: FontFamilies.mmedium,
   },
 });
 

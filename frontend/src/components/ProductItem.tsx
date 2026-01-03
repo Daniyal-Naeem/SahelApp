@@ -45,34 +45,27 @@ const ProductItem = ({
 }: ProductItemProps) => {
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
-  // Check if item is in wishlist from Redux store
   const isInWishlist = useAppSelector(state =>
     state.wishlist.items.some(item => item._id === itemDetails._id),
   );
   const NavigateToProductsDetails = () => {
-    // Navigate to ProductDetails in the root Stack Navigator (accessible from all tabs)
-    // Get the root navigator by traversing up the navigation tree
     let rootNavigator = navigation;
     while (rootNavigator.getParent()) {
       rootNavigator = rootNavigator.getParent() as any;
     }
-    
-    // Navigate to ProductDetails in the root stack
+
     (rootNavigator as any).navigate('ProductDetails', {itemDetails});
   };
 
   const handleFavoritePress = (e: any) => {
     e.stopPropagation();
-    // Dispatch Redux action to toggle wishlist - Redux state will update and trigger re-render
     dispatch(toggleWishlist(itemDetails));
   };
 
-  // Format number with commas
   const formatNumber = (num: number): string => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
-  // Render stars using SVG icons
   const renderStars = () => {
     const fullStars = Math.floor(stars);
     const hasHalfStar = stars % 1 >= 0.5;
@@ -189,7 +182,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: r(200),
     resizeMode: 'cover',
-    // Border radius handled by imageContainer
   },
   heartButton: {
     position: 'absolute',
@@ -209,7 +201,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: r(16),
     color: Colors.black[100],
-    marginBottom: Spacing[2],
+    marginBottom: Spacing[1],
     textAlign: 'left',
     fontFamily: FontFamilies.mmedium,
     fontWeight: '500',

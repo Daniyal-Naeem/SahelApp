@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabActive: {
-    backgroundColor: '#FFEEF1',
+    backgroundColor: Colors.primaryLight,
   },
   tabText: {
     fontSize: FontSizes.sm,
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     fontFamily: FontFamilies.msemibold,
-    color: Colors.red[500] || '#EF4444',
+    color: Colors.primary,
   },
   scrollView: {
     flex: 1,
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderRadius: r(12),
     borderWidth: r(1.5),
-    borderColor: Colors.red[500] || '#EF4444',
+    borderColor: Colors.primary,
     overflow: 'hidden',
   },
   cutoutLeft: {
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
     // Create cutout effect by matching background and border
     borderWidth: r(1.5),
-    borderColor: Colors.red[500] || '#EF4444',
+    borderColor: Colors.primary,
   },
   cutoutRight: {
     position: 'absolute',
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
     // Create cutout effect by matching background and border
     borderWidth: r(1.5),
-    borderColor: Colors.red[500] || '#EF4444',
+    borderColor: Colors.primary,
   },
   cardTopSection: {
     flexDirection: 'row',
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: FontSizes.xl,
     fontFamily: FontFamilies.msemibold,
-    color: Colors.red[500] || '#EF4444',
+    color: Colors.primary,
   },
   validUntil: {
     fontSize: FontSizes.xs,
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing[4],
     marginVertical: Spacing[1],
     borderTopWidth: r(1),
-    borderTopColor: Colors.red[500] || '#EF4444',
+    borderTopColor: Colors.primary,
     borderStyle: 'dashed',
   },
   cardBottomSection: {

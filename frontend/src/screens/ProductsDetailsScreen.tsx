@@ -54,17 +54,15 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   const [selectedVariationIndex, setSelectedVariationIndex] = useState<
     number | null
   >(() => {
-    // Default to first variation if available
     if (itemDetails?.variations && itemDetails.variations.length > 0) {
       const firstVariation = itemDetails.variations[0];
       if (firstVariation?.options && firstVariation.options.length > 0) {
-        return 0; // Default to first displayed variation
+        return 0;
       }
     }
     return null;
   });
 
-  // Initialize selected delivery and color from data
   const [selectedDeliveryIndex, setSelectedDeliveryIndex] = useState<number>(
     itemDetails?.deliveryOptions && itemDetails.deliveryOptions.length > 0
       ? 0
@@ -72,7 +70,6 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   );
   const [selectedColorIndex, setSelectedColorIndex] = useState<number | null>(
     () => {
-      // Initialize from data if available, otherwise default to first color
       const index =
         itemDetails?.colorOptions?.findIndex(
           (opt: {isSelected?: boolean}) => opt.isSelected,
@@ -88,18 +85,16 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   const baseProductImages = itemDetails?.image || [];
   const currency = (itemDetails as any)?.currency || 'SAR';
   const screenWidth = Dimensions.get('window').width;
-  const carouselWidth = screenWidth - Spacing[5] * 2; // Subtract horizontal padding
-  const availableButtonWidth = screenWidth - Spacing[5] * 2; // Available width for buttons
+  const carouselWidth = screenWidth - Spacing[5] * 2;
+  const availableButtonWidth = screenWidth - Spacing[5] * 2;
 
   const GoBack = () => {
     navigation.goBack();
   };
 
-  // Function to add item to cart (used by "Add to Cart" button)
   const handleAddToCart = () => {
     if (!itemDetails) return;
 
-    // Get all variation options
     const allVariationOptions =
       itemDetails?.variations?.flatMap((variation: VariationType) =>
         (variation?.options || []).map(
@@ -112,28 +107,24 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
       ) || [];
     const displayedVariations = allVariationOptions.slice(0, 2);
 
-    // Get selected variation value
     let selectedVariation: string | undefined;
     if (selectedVariationIndex !== null && displayedVariations[selectedVariationIndex]) {
       const selectedOption = displayedVariations[selectedVariationIndex];
       selectedVariation = selectedOption.value || selectedOption.label;
     }
 
-    // Get selected color value
     let selectedColor: string | undefined;
     if (selectedColorIndex !== null && itemDetails.colorOptions?.[selectedColorIndex]) {
       const selectedColorOption = itemDetails.colorOptions[selectedColorIndex];
       selectedColor = selectedColorOption.color || selectedColorOption.name;
     }
 
-    // Get selected delivery value
     let selectedDelivery: string | undefined;
     if (selectedDeliveryIndex >= 0 && itemDetails.deliveryOptions?.[selectedDeliveryIndex]) {
       const selectedDeliveryOption = itemDetails.deliveryOptions[selectedDeliveryIndex];
       selectedDelivery = selectedDeliveryOption.type || `${selectedDeliveryOption.duration} - ${selectedDeliveryOption.price}`;
     }
 
-    // Create cart item with all product details and selected options
     const cartItem = {
       ...itemDetails,
       quantity: 1,
@@ -147,7 +138,6 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     toast.showToast(`${itemDetails.title} has been added to your cart`);
   };
 
-  // Function to navigate to cart tab (used by cart icon in header)
   const navigateToCartTab = () => {
     (navigation as any).navigate('HomeScreen', {
       screen: 'Dashboard',
@@ -162,7 +152,6 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   };
 
   const NavigateToSendGift = () => {
-    // Navigate to GiftScreen (main gifts management screen)
     (navigation as any).navigate('HomeScreen', {
       screen: 'Gifts',
     });
@@ -195,28 +184,22 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     return starsArray;
   };
 
-  // Render stars for Rating & Reviews section using EmptyStar
   const renderReviewStars = (rating: number) => {
-    // Ensure rating is between 0 and 5
     const normalizedRating = Math.max(0, Math.min(5, rating || 0));
     const fullStars = Math.floor(normalizedRating);
     const hasHalfStar = normalizedRating % 1 >= 0.5;
     const starsArray = [];
 
-    // Always show 5 stars
     for (let i = 0; i < 5; i++) {
       if (i < fullStars) {
-        // Full star
         starsArray.push(
           <SvgXml key={i} xml={activeStar} width={r(16)} height={r(16)} />,
         );
       } else if (i === fullStars && hasHalfStar) {
-        // Half star
         starsArray.push(
           <SvgXml key={i} xml={halfStar} width={r(16)} height={r(16)} />,
         );
       } else {
-        // Empty star
         starsArray.push(
           <SvgXml key={i} xml={EmptyStar} width={r(16)} height={r(16)} />,
         );
@@ -225,7 +208,6 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     return starsArray;
   };
 
-  // Get all variations with their options for display (with images)
   const allVariationOptions =
     itemDetails?.variations?.flatMap((variation: VariationType) =>
       (variation?.options || []).map(
@@ -244,12 +226,9 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
       ),
     ) || [];
 
-  // Limit displayed variations to 2
   const displayedVariations = allVariationOptions.slice(0, 2);
   const hasMoreVariations = allVariationOptions.length > 2;
 
-  // Get product images for carousel - update if variation is selected
-  // In e-commerce: when a variation is selected, show images for that variation
   const getProductImages = () => {
     if (
       selectedVariationIndex !== null &&
@@ -257,9 +236,7 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     ) {
       const selectedOption = displayedVariations[selectedVariationIndex];
 
-      // If selected variation has specific images, get all images for that variation
       if (selectedOption?.image) {
-        // Get all images for this variation from the variations data
         const variationImages =
           itemDetails?.variations?.flatMap((variation: VariationType) =>
             (variation?.options || [])
@@ -276,7 +253,6 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
           return variationImages as string[];
         }
 
-        // If no variation-specific images, use the selected image + base images
         return [selectedOption.image, ...baseProductImages].filter(Boolean);
       }
     }
@@ -285,8 +261,6 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
 
   const productImages = getProductImages();
 
-  // Get all variation images with their associated variation info
-  // In e-commerce: show ALL variation images, highlight selected ones
   const getAllVariationImagesWithInfo = () => {
     const imagesWithInfo: Array<{
       image: string;
@@ -312,7 +286,6 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
       );
     });
 
-    // Remove duplicates based on image URL
     const uniqueImages = Array.from(
       new Map(imagesWithInfo.map(item => [item.image, item])).values(),
     );
@@ -322,7 +295,6 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
 
   const variationImagesWithInfo = getAllVariationImagesWithInfo();
 
-  // Get images for display (just the URLs)
   const displayVariationImages =
     variationImagesWithInfo.length > 0
       ? variationImagesWithInfo.map(item => item.image)
@@ -333,14 +305,12 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
           'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?w=400',
         ];
 
-  // Helper to check if an image belongs to the selected variation
   const isImageForSelectedVariation = (imageUrl: string) => {
     if (selectedVariationIndex === null) return false;
 
     const selectedOption = displayedVariations[selectedVariationIndex];
     if (!selectedOption) return false;
 
-    // Check if this image belongs to the selected variation
     return variationImagesWithInfo.some(
       item =>
         item.image === imageUrl &&
@@ -349,32 +319,23 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     );
   };
 
-  // Handle variation selection - E-commerce style
   const handleVariationSelect = (index: number) => {
-    // In e-commerce, selecting a variation should update the product view
-    // Don't toggle - always select the clicked variation
     if (index >= 0 && index < displayedVariations.length) {
       setSelectedVariationIndex(index);
-
-      // Reset carousel to first image when variation changes
       setCurrentImageIndex(0);
     }
   };
 
-  // Helper function to get short variation name - just the essential part
   const getShortVariationName = (label: string) => {
     if (!label) return '';
 
-    // Trim and get first word (removes "Collection", "Color", etc.)
     const trimmed = label.trim();
     const firstWord = trimmed.split(/\s+/)[0];
 
-    // For single letter sizes (S, M, L, etc.), return uppercase
     if (firstWord.length === 1 && /[A-Za-z]/.test(firstWord)) {
       return firstWord.toUpperCase();
     }
 
-    // Return first word, capitalize first letter
     return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
   };
 
@@ -463,6 +424,12 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
       {/* Product Name and Subtitle */}
       <Text style={styles.productName}>{itemDetails?.title}</Text>
       <Text style={styles.subtitle}>{itemDetails?.subtitle}</Text>
+      {itemDetails?.vendor && (
+        <View style={styles.vendorContainer}>
+          <Text style={styles.vendorPrefix}>by </Text>
+          <Text style={styles.vendorName}>{itemDetails.vendor}</Text>
+        </View>
+      )}
 
       {/* Rating */}
       <View style={styles.ratingRow}>
@@ -565,7 +532,6 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
               horizontal
               showsHorizontalScrollIndicator={false}
               renderItem={({item, index}) => {
-                // Check if this image belongs to the selected variation
                 const isSelectedImage = isImageForSelectedVariation(item);
 
                 return (
@@ -690,7 +656,6 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
             {itemDetails.reviews.length > 1 && (
               <TouchableOpacity
                 onPress={() => {
-                  // Navigate to Reviews screen in root stack
                   navigation.navigate('Reviews', {
                     reviews: itemDetails.reviews || [],
                     productTitle: itemDetails?.title || '',
@@ -838,7 +803,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gray[300] || '#D3D3D3',
   },
   paginationDotActive: {
-    backgroundColor: '#FF69B4',
+    backgroundColor: Colors.primary,
     width: r(12),
     height: r(12),
     borderRadius: r(6),
@@ -863,13 +828,13 @@ const styles = StyleSheet.create({
     color: Colors.black[100],
   },
   discountBadge: {
-    backgroundColor: '#FFE6EB',
+    backgroundColor: Colors.primaryLight,
     paddingHorizontal: r(12),
     paddingVertical: r(6),
     borderRadius: r(6),
   },
   discountText: {
-    color: '#FA7189',
+    color: Colors.primary,
     fontSize: FontSizes.sm,
     fontFamily: FontFamilies.msemibold,
   },
@@ -889,7 +854,22 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.sm,
     fontFamily: FontFamilies.mregular,
     color: Colors.black[100],
+    marginBottom: Spacing[1],
+  },
+  vendorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: Spacing[3],
+  },
+  vendorPrefix: {
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.mregular,
+    color: Colors.gray[600] || '#6B7280',
+  },
+  vendorName: {
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.black[100],
   },
   ratingRow: {
     flexDirection: 'row',
@@ -943,7 +923,7 @@ const styles = StyleSheet.create({
   moreText: {
     fontSize: FontSizes.sm,
     fontFamily: FontFamilies.mmedium,
-    color: '#FF6B6B',
+    color: Colors.primary,
   },
   buttonsRow: {
     flexDirection: 'row',
@@ -994,7 +974,7 @@ const styles = StyleSheet.create({
     width: r(40),
     height: r(40),
     borderRadius: r(20),
-    backgroundColor: Colors.red[500] || '#EF4444',
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1069,7 +1049,7 @@ const styles = StyleSheet.create({
     gap: Spacing[2],
   },
   specChip: {
-    backgroundColor: '#FFEEF1',
+    backgroundColor: Colors.primaryLight,
     paddingHorizontal: r(12),
     paddingVertical: r(8),
     borderRadius: r(8),
@@ -1093,7 +1073,7 @@ const styles = StyleSheet.create({
   },
   deliveryOptionSelected: {
     borderWidth: r(1),
-    borderColor: '#F83758',
+    borderColor: Colors.primary,
   },
   deliveryContent: {
     flex: 1,
@@ -1107,7 +1087,7 @@ const styles = StyleSheet.create({
     color: Colors.black[100],
   },
   deliveryDurationBadge: {
-    backgroundColor: '#FFEEF1',
+    backgroundColor: Colors.primaryLight,
     paddingHorizontal: r(8),
     paddingVertical: r(4),
     borderRadius: r(4),
@@ -1115,7 +1095,7 @@ const styles = StyleSheet.create({
   deliveryDuration: {
     fontSize: FontSizes.sm,
     fontFamily: FontFamilies.mregular,
-    color: '#F83758',
+    color: Colors.primary,
   },
   deliveryPrice: {
     fontSize: FontSizes.base,
@@ -1153,7 +1133,7 @@ const styles = StyleSheet.create({
   viewAllText: {
     fontSize: FontSizes.sm,
     fontFamily: FontFamilies.mmedium,
-    color: Colors.red[500],
+    color: Colors.primary,
     textDecorationLine: 'underline',
   },
   ratingDisplay: {
@@ -1163,7 +1143,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing[4],
   },
   ratingBadge: {
-    backgroundColor: '#FFEEF1',
+    backgroundColor: Colors.primaryLight,
     paddingHorizontal: r(10),
     paddingVertical: r(6),
     borderRadius: r(6),
@@ -1181,7 +1161,7 @@ const styles = StyleSheet.create({
     width: r(50),
     height: r(50),
     borderRadius: r(25),
-    backgroundColor: '#FFEEF1',
+    backgroundColor: Colors.primaryLight,
     borderWidth: r(2),
     borderColor: Colors.white,
   },
@@ -1231,7 +1211,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: r(8),
-    backgroundColor: '#F83758',
+    backgroundColor: Colors.primary,
     paddingVertical: r(14),
     borderRadius: r(12),
   },
@@ -1250,7 +1230,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: r(8),
     borderWidth: r(1),
-    borderColor: '#F83758',
+    borderColor: Colors.primary,
     backgroundColor: 'transparent',
     paddingVertical: r(14),
     borderRadius: r(12),
@@ -1260,7 +1240,7 @@ const styles = StyleSheet.create({
   buyNowText: {
     fontSize: FontSizes.base,
     fontFamily: FontFamilies.msemibold,
-    color: '#F83758',
+    color: Colors.primary,
   },
   similarSection: {
     marginBottom: Spacing[8],

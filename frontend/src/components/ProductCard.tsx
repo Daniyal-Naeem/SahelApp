@@ -81,6 +81,7 @@ const ProductCard = ({itemDetails, showTotalItem = false, totalItems = 1}: Produ
   const currency = (itemDetails as any)?.currency || 'SAR';
   const productImage = itemDetails?.image?.[0] || '';
   const productTitle = itemDetails?.title || 'Product';
+  const productVendor = itemDetails?.vendor || '';
   const rating = itemDetails?.stars || 0;
   const price = itemDetails?.price || 0;
   const priceBeforeDeal = itemDetails?.priceBeforeDeal || 0;
@@ -103,7 +104,13 @@ const ProductCard = ({itemDetails, showTotalItem = false, totalItems = 1}: Produ
         />
         <View style={styles.productInfo}>
           <Text style={styles.productTitle}>{productTitle}</Text>
-          
+          {productVendor && (
+            <View style={styles.vendorContainer}>
+              <Text style={styles.vendorPrefix}>by </Text>
+              <Text style={styles.vendorName}>{productVendor}</Text>
+            </View>
+          )}
+
           {/* Variations */}
           {variationOptions.length > 0 && (
             <View style={styles.variationsContainer}>
@@ -212,7 +219,22 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     fontFamily: FontFamilies.msemibold,
     color: Colors.black[100],
+    marginBottom: r(2),
+  },
+  vendorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: r(4),
+  },
+  vendorPrefix: {
+    fontSize: FontSizes.sm,
+    fontFamily: FontFamilies.mregular,
+    color: Colors.gray[600] || '#6B7280',
+  },
+  vendorName: {
+    fontSize: FontSizes.sm,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.gray[700] || '#374151',
   },
   variationsContainer: {
     flexDirection: 'column',
@@ -300,7 +322,7 @@ const styles = StyleSheet.create({
   discountText: {
     fontSize: FontSizes.xs,
     fontFamily: FontFamilies.msemibold,
-    color: Colors.action || '#F83758',
+    color: Colors.primary,
   },
   originalPrice: {
     fontSize: FontSizes.sm,
