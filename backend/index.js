@@ -16,6 +16,7 @@ const giftCardRoute = require('./routes/giftCardRoute')
 const couponRoute = require('./routes/couponRoute')
 const reviewRoute = require('./routes/reviewRoute')
 const adminRoute = require('./routes/adminRoute')
+const debugRoute = require('./routes/debugRoute')
 
 // initialize a new express application instance
 const app = express();
@@ -62,6 +63,7 @@ app.use("/api/", giftCardRoute); // Gift card management
 app.use("/api/", couponRoute); // Coupon management
 app.use("/api/", reviewRoute); // Review approval & moderation
 app.use("/api/admin/", adminRoute);
+app.use("/api/", debugRoute); // Debug endpoint
 
 // Health check endpoint
 app.get('/', (req, res) => {
