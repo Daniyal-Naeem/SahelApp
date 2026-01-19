@@ -86,9 +86,21 @@ app.get('/health', (req, res) => {
 const PORT = process.env.PORT // http://localhost:4000/api/products/ -> POST
 const MONGODB_URI = process.env.MONGODB_URI;
 
-mongoose.connect(MONGODB_URI)
+// For Vercel serverless deployment
+if (process.env.VERCEL) {
+  // Connect to MongoDB without listening (Vercel handles requests)
+  mongoose.connect(MONGODB_URI)
+    .then(() => console.log('Connected to MongoDB for Vercel deployment'))
+    .catch((error) => console.log(`Error:`, error.message));
+} else {
+  // For local development
+  mongoose.connect(MONGODB_URI)
     .then(() => app.listen(PORT, () => console.log(`Connected to DB, and running on http://localhost:${PORT}/`)))
-    .catch((error) => console.log(`Error:`, error.message))
+    .catch((error) => console.log(`Error:`, error.message));
+}
+
+// Export for Vercel
+module.exports = app;
 
 
 
