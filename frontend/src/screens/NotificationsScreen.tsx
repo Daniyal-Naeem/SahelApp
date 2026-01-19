@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   unreadNotification: {
     backgroundColor: '#F0F9FF',
-    borderColor: Colors.primary || '#F83758',
+    borderColor: Colors.primary,
   },
   notificationContent: {
     flex: 1,
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     width: r(8),
     height: r(8),
     borderRadius: r(4),
-    backgroundColor: Colors.primary || '#F83758',
+    backgroundColor: Colors.primary,
     marginLeft: Spacing[2],
     alignSelf: 'flex-start',
     marginTop: Spacing[1],

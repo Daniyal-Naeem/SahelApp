@@ -1,11 +1,9 @@
-// Styles constants - converted from Tailwind config
-// All values match Tailwind defaults and custom theme
-
 import r from '../utils/responsive';
 
 export const Colors = {
-  primary: '#F83758', // Primary app color
-  action: '#F83758',
+  primary: '#00c853',
+  action: '#00c853',
+  primaryLight: '#e8f5e9', // Light green background for primary-themed elements
   black: {
     100: '#000',
     200: '#C4C4C4',
@@ -42,7 +40,6 @@ export const Colors = {
   },
 };
 
-// Base spacing values (will be scaled responsively)
 const BaseSpacing = {
   0: 0,
   1: 4,
@@ -61,7 +58,6 @@ const BaseSpacing = {
   32: 128,
 };
 
-// Responsive spacing - scales based on device width
 export const Spacing = {
   0: 0,
   1: r(BaseSpacing[1]),
@@ -80,7 +76,6 @@ export const Spacing = {
   32: r(BaseSpacing[32]),
 };
 
-// Base font sizes (will be scaled responsively)
 const BaseFontSizes = {
   xs: 12,
   sm: 14,
@@ -91,7 +86,6 @@ const BaseFontSizes = {
   '3xl': 30,
 };
 
-// Responsive font sizes - scales based on device width
 export const FontSizes = {
   xs: r(BaseFontSizes.xs),
   sm: r(BaseFontSizes.sm),
@@ -102,7 +96,6 @@ export const FontSizes = {
   '3xl': r(BaseFontSizes['3xl']),
 };
 
-// Export responsive function for direct use in components
 export { default as r } from '../utils/responsive';
 
 export const FontFamilies = {
@@ -139,7 +132,6 @@ export const FontWeights = {
   black: '900',
 };
 
-// Base border radius values (will be scaled responsively)
 const BaseBorderRadius = {
   none: 0,
   sm: 2,
@@ -151,7 +143,6 @@ const BaseBorderRadius = {
   full: 9999,
 };
 
-// Responsive border radius - scales based on device width
 export const BorderRadius = {
   none: 0,
   sm: r(BaseBorderRadius.sm),

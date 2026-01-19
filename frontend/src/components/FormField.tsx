@@ -23,9 +23,8 @@ type FormFieldProps = {
   error: string;
   backgroundColor?: string;
   borderColor?: string;
-  [key: string]: any; // add more props ...props
+  [key: string]: any;
 };
-// make reusable components to make our code clean
 const FormField = ({
   title,
   value,
@@ -42,7 +41,6 @@ const FormField = ({
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [shakeAnimation] = useState(new Animated.Value(0));
-  // let's handle the error
   const shake = () => {
     shakeAnimation.setValue(0);
     Animated.timing(shakeAnimation, {
@@ -51,13 +49,11 @@ const FormField = ({
       useNativeDriver: true,
       easing: Easing.bounce,
     }).start(() => {
-      // clear the animation after a period of time
       setTimeout(() => {
         setError?.(''); // hide the error
       }, 3000);
     });
   };
-  // if error shake
   useEffect(() => {
     if (error) {
       shake();
@@ -65,19 +61,17 @@ const FormField = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [error]);
 
-  // get Icon source
   const getIconSource = () => {
     if (title === 'Password') return icons.lock;
     if (title === 'Email') return icons.mail;
     if (title === 'Username or Email') return images.user;
     if (title === 'Confirm Password') return icons.lock;
-    return images.user; //default one!
+    return images.user;
   };
 
   return (
     <View style={otherStyles}>
       <Animated.View
-        // handle shake here with interpolate ..
         style={[
           styles.inputContainer,
           {
@@ -184,7 +178,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     marginTop: Spacing[3],
-    alignSelf: 'center',
+    alignSelf: 'flex-start',
   },
   errorTextContent: {
     color: Colors.red[500],

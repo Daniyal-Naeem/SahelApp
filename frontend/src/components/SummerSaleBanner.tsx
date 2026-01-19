@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Spacing[2],
-    backgroundColor: '#F4F4F4',
+    backgroundColor: Colors.primaryLight,
     paddingVertical: Spacing[4],
     borderBottomLeftRadius: r(12),
     borderBottomRightRadius: r(12),
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     color: Colors.black[100],
   },
   viewAllButton: {
-    backgroundColor: Colors.red[500],
+    backgroundColor: Colors.primary,
     borderRadius: r(8),
     paddingHorizontal: Spacing[4],
     paddingVertical: Spacing[3],

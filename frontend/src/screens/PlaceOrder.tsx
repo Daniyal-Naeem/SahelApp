@@ -72,6 +72,7 @@ const PlaceOrder = () => {
 
   const productImage = itemDetails?.image?.[0] || '';
   const productTitle = itemDetails?.title || 'Product';
+  const productVendor = itemDetails?.vendor || '';
 
   return (
     <View style={styles.container}>
@@ -95,7 +96,13 @@ const PlaceOrder = () => {
           <View style={styles.productDetails}>
             <Text style={styles.categoryTitle}>Women's Casual Wear</Text>
             <Text style={styles.productTitle}>{productTitle}</Text>
-            
+            {productVendor && (
+              <View style={styles.vendorContainer}>
+                <Text style={styles.vendorPrefix}>by </Text>
+                <Text style={styles.vendorName}>{productVendor}</Text>
+              </View>
+            )}
+
             <View style={styles.dropdownsContainer}>
               <TouchableOpacity
                 style={[styles.dropdown, styles.sizeDropdown]}
@@ -334,7 +341,22 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     fontFamily: FontFamilies.mregular,
     color: Colors.black[100],
+    marginBottom: Spacing[2],
+  },
+  vendorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: Spacing[4],
+  },
+  vendorPrefix: {
+    fontSize: FontSizes.sm,
+    fontFamily: FontFamilies.mregular,
+    color: Colors.gray[600] || '#6B7280',
+  },
+  vendorName: {
+    fontSize: FontSizes.sm,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.black[100],
   },
   dropdownsContainer: {
     flexDirection: 'row',
@@ -342,7 +364,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing[4],
   },
   dropdown: {
-    backgroundColor: Colors.gray[100] || '#F3F4F6',
+    backgroundColor: Colors.primaryLight,
     borderRadius: r(8),
     borderWidth: 0,
   },
@@ -387,7 +409,7 @@ const styles = StyleSheet.create({
   dropdownValue: {
     fontSize: FontSizes.xs,
     fontFamily: FontFamilies.mmedium,
-    color: Colors.action || '#F83758',
+    color: Colors.primary,
     flexShrink: 0,
   },
   dropdownIconContainer: {
@@ -434,7 +456,7 @@ const styles = StyleSheet.create({
   selectText: {
     fontSize: FontSizes.sm,
     fontFamily: FontFamilies.msemibold,
-    color: Colors.action || '#F83758',
+    color: Colors.primary,
   },
   paymentSection: {
     marginBottom: Spacing[2],
@@ -469,12 +491,12 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: FontSizes.sm,
     fontFamily: FontFamilies.mmedium,
-    color: Colors.action || '#F83758',
+    color: Colors.primary,
   },
   freeText: {
     fontSize: FontSizes.base,
     fontFamily: FontFamilies.msemibold,
-    color: Colors.action || '#F83758',
+    color: Colors.primary,
   },
   totalSection: {
     marginBottom: Spacing[4],
@@ -514,7 +536,7 @@ const styles = StyleSheet.create({
   viewDetailsText: {
     fontSize: FontSizes.sm,
     fontFamily: FontFamilies.mmedium,
-    color: Colors.action || '#F83758',
+    color: Colors.primary,
   },
   proceedButton: {
     flex: 1,
@@ -554,7 +576,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.gray[200] || '#E5E7EB',
   },
   modalItemSelected: {
-    backgroundColor: Colors.gray[50] || '#F9FAFB',
+    backgroundColor: Colors.primaryLight,
   },
   modalItemText: {
     fontSize: FontSizes.base,

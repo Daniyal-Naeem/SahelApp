@@ -59,6 +59,5 @@ const productSchema = new Schema({
         ref: 'userModel'
     }
 }, { timestamps: true })
-// let's add the timestamp to enable createdAt, and _id
 
 module.exports = mongoose.model("productsModel", productSchema)

@@ -31,7 +31,68 @@ const SignupScreen = (_props: Props) => {
     ForgotPassword: undefined;
     Login: undefined;
   };
-  const handleLogin = () => {};
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      return 'Email is required';
+    }
+    if (!emailRegex.test(email)) {
+      return 'Please enter a valid email address';
+    }
+    return '';
+  };
+
+  const validatePassword = (password: string) => {
+    if (!password) {
+      return 'Password is required';
+    }
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long';
+    }
+    return '';
+  };
+
+  const validateConfirmPassword = (confirmPassword: string, password: string) => {
+    if (!confirmPassword) {
+      return 'Please confirm your password';
+    }
+    if (confirmPassword !== password) {
+      return 'Passwords do not match';
+    }
+    return '';
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+
+    const emailError = validateEmail(form.email);
+    if (emailError) {
+      setEmailError(emailError);
+      isValid = false;
+    }
+
+    const passwordError = validatePassword(form.password);
+    if (passwordError) {
+      setPasswordError(passwordError);
+      isValid = false;
+    }
+
+    const confirmPasswordError = validateConfirmPassword(form.confirmPassword, form.password);
+    if (confirmPasswordError) {
+      setPasswordError(confirmPasswordError);
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
+  const handleLogin = () => {
+    if (validateForm()) {
+      // Proceed with signup logic
+      console.log('Form is valid, proceed with signup');
+    }
+  };
+
   const handleSignInWithProvider = () => {};
   const handleNavigateToLogin = () => {
     navigation.navigate('Login');
@@ -52,6 +113,10 @@ const SignupScreen = (_props: Props) => {
             setEmailError('');
             setForm({...form, email: e});
           }}
+          onBlur={() => {
+            const error = validateEmail(form.email);
+            if (error) setEmailError(error);
+          }}
           placeholder="Username or Email"
           otherStyles={styles.formField}
         />
@@ -65,6 +130,10 @@ const SignupScreen = (_props: Props) => {
               setPasswordError('');
               setForm({...form, password: e});
             }}
+            onBlur={() => {
+              const error = validatePassword(form.password);
+              if (error) setPasswordError(error);
+            }}
             placeholder="Password"
             otherStyles={styles.formField}
           />
@@ -77,12 +146,16 @@ const SignupScreen = (_props: Props) => {
               setPasswordError('');
               setForm({...form, confirmPassword: e});
             }}
+            onBlur={() => {
+              const error = validateConfirmPassword(form.confirmPassword, form.password);
+              if (error) setPasswordError(error);
+            }}
             placeholder="Confirm Password"
             otherStyles={styles.formField}
           />
 
           <Text style={[styles.termsText, {fontFamily: FontFamilies.mmedium}]}>
-            By clicking the <Text style={styles.termsTextRed}>Register</Text> button, you agree to the public offer
+            By clicking the <Text style={styles.termsTextPrimary}>Register</Text> button, you agree to the public offer
           </Text>
         </View>
         {/* submit btn */}
@@ -148,8 +221,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing[6],
     marginTop: Spacing[2],
   },
-  termsTextRed: {
-    color: Colors.red[600],
+  termsTextPrimary: {
+    color: Colors.primary,
   },
   buttonContainer: {
     marginBottom: Spacing[8],

@@ -185,12 +185,15 @@ const CheckoutScreen = () => {
             {addresses.length < 2 && (
               <TouchableOpacity
                 onPress={handleAddAddress}
-                style={styles.addAddressButtonContainer}>
+                style={styles.addAddressButtonContainer}
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                activeOpacity={0.8}>
                 <LinearGradient
                   colors={['#FFCA28', '#F1D534']}
                   start={{x: 0, y: 0}}
                   end={{x: 1, y: 0}}
-                  style={styles.addAddressButton}>
+                  style={styles.addAddressButton}
+                  pointerEvents="none">
                   <SvgXml xml={plusIcon} />
                 </LinearGradient>
               </TouchableOpacity>
@@ -296,7 +299,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   addressCardSelected: {
-    borderColor: Colors.primary || '#F83758',
+    borderColor: Colors.primary,
     borderWidth: r(1.5),
   },
   actionButtonsContainer: {
@@ -423,7 +426,7 @@ const styles = StyleSheet.create({
     color: Colors.black[100],
   },
   saveButton: {
-    backgroundColor: Colors.primary || '#F83758',
+    backgroundColor: Colors.primary,
   },
   saveButtonText: {
     fontSize: FontSizes.base,

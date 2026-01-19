@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     marginRight: Spacing[2],
   },
   filterButtonActive: {
-    backgroundColor: Colors.primary || '#F83758',
+    backgroundColor: Colors.primary,
   },
   filterText: {
     fontSize: FontSizes.sm,
