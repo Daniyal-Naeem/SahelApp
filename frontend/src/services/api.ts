@@ -5,7 +5,7 @@
 // For physical device, use your computer's local IP address
 const BASE_URL = __DEV__ 
   ? 'http://10.0.2.2:4000/api' // Android emulator - use 10.0.2.2 to access host machine
-  : 'https://your-production-url.com/api'; // Production
+  : 'https://sahal-backend.onrender.com/api'; // Production - UPDATE THIS after deploying backend
 
 // Helper function to handle API calls
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {

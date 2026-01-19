@@ -2,7 +2,14 @@ import axios, {AxiosInstance, InternalAxiosRequestConfig} from 'axios';
 import {getItem} from '../utils/AsyncStorage';
 
 const getBaseURL = (): string => {
-  return 'http://localhost:4000/api';
+  // For production APK, use deployed backend URL
+  // For local development, use localhost or emulator address
+  if (__DEV__) {
+    return 'http://10.0.2.2:4000/api'; // Android emulator
+  }
+  
+  // Production backend URL - UPDATE THIS after deploying backend
+  return 'https://sahal-backend.onrender.com/api';
 };
 
 const createAxiosInstance = (): AxiosInstance => {
