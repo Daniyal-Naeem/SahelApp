@@ -24,7 +24,7 @@ const setItem = async (key: string, value: AsyncStorageValue) => {
     const stringValue = stringifyValue(value);
     await AsyncStorage.setItem(key, stringValue);
   } catch (error) {
-    console.log(`Couldn't store item:`, error);
+    // Error handling - could be logged to error tracking service
   }
 };
 
@@ -34,7 +34,6 @@ const getItem = async (key: string): Promise<AsyncStorageValue> => {
     const value = await AsyncStorage.getItem(key);
     return parseValue(value);
   } catch (error) {
-    console.log(`Couldn't retrieve the value:`, error);
     return null;
   }
 };
@@ -44,7 +43,7 @@ const removeItem = async (key: string): Promise<void> => {
   try {
     await AsyncStorage.removeItem(key);
   } catch (error) {
-    console.log(`Couldn't remove the value:`, error);
+    // Error handling - could be logged to error tracking service
   }
 };
 

@@ -4,8 +4,15 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js",
-    "seed": "node scripts/seedProducts.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "seed": "node scripts/seedProducts.js",
+    "create-admin": "node scripts/createAdmin.js",
+    "reset-admin": "node scripts/resetAdminPassword.js",
+    "create-sample-products": "node scripts/createSampleProducts.js",
+    "sync-wallets": "node scripts/syncWallets.js",
+    "create-dummy-data": "node scripts/createDummyData.js",
+    "migrate-frontend-data": "node scripts/migrateFrontendData.js"
   },
   "keywords": [],
   "author": "",

@@ -1,12 +1,17 @@
-import {View, Text, TouchableOpacity, Image} from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import FastImage from 'react-native-fast-image';
 import React from 'react';
-import {ItemDetails, ProductTypes} from '../constants/types';
-import {images} from '../constants';
-import {Rating, AirbnbRating} from 'react-native-ratings';
+import {ItemDetails} from '../constants/types';
 import {useNavigation} from '@react-navigation/native';
-import {RootStackParamList} from '../screens/OnboardingScreen';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RouteStackParamList} from '../../App';
+import {Colors, Spacing, FontFamilies, r} from '../constants/styles';
+import {SvgXml} from 'react-native-svg';
+import {favoriteIcon} from '../assets/svgs/favoriteIcon';
+import {favoriteActiveIcon} from '../assets/svgs/favoriteActiveIcon';
+import {activeStar} from '../assets/svgs/activeStar';
+import {halfStar} from '../assets/svgs/halfstar';
+import {inactiveStar} from '../assets/svgs/inactiveStar';
+import {useAppSelector, useAppDispatch} from '../store';
+import {toggleWishlist} from '../store/wishlistSlice';
 
 type ProductItemProps = {
   image: string;
@@ -19,9 +24,12 @@ type ProductItemProps = {
   numberOfReview: number;
   ukSide?: number[];
   itemDetails: ItemDetails;
+  currency?: string; // Dynamic currency, defaults to 'SAR'
+  width?: number; // Optional width for grid layouts
+  forceFavoriteActive?: boolean; // Force show active favorite icon (e.g., in wishlist tab)
 };
 
-const ProductItem: React.FC<ProductItemProps> = ({
+const ProductItem = ({
   image,
   title,
   description,
@@ -31,54 +39,223 @@ const ProductItem: React.FC<ProductItemProps> = ({
   stars,
   numberOfReview,
   itemDetails,
-}) => {
-  const navigation = useNavigation<StackNavigationProp<RouteStackParamList, 'ProductDetails'>>();
+  currency = 'SAR', // Default currency
+  width,
+  forceFavoriteActive = false, // Default to false
+}: ProductItemProps) => {
+  const navigation = useNavigation<any>();
+  const dispatch = useAppDispatch();
+  const isInWishlist = useAppSelector(state =>
+    state.wishlist.items.some(item => item._id === itemDetails._id),
+  );
   const NavigateToProductsDetails = () => {
-    navigation.navigate('ProductDetails', {itemDetails});
+    let rootNavigator = navigation;
+    while (rootNavigator.getParent()) {
+      rootNavigator = rootNavigator.getParent() as any;
+    }
+
+    (rootNavigator as any).navigate('ProductDetails', {itemDetails});
+  };
+
+  const handleFavoritePress = (e: any) => {
+    e.stopPropagation();
+    dispatch(toggleWishlist(itemDetails));
+  };
+
+  const formatNumber = (num: number): string => {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
+  const renderStars = () => {
+    const fullStars = Math.floor(stars);
+    const hasHalfStar = stars % 1 >= 0.5;
+    const starsArray = [];
+
+    for (let i = 0; i < 5; i++) {
+      if (i < fullStars) {
+        starsArray.push(
+          <SvgXml
+            key={i}
+            xml={activeStar}
+            width={r(16)}
+            height={r(16)}
+          />
+        );
+      } else if (i === fullStars && hasHalfStar) {
+        starsArray.push(
+          <SvgXml
+            key={i}
+            xml={halfStar}
+            width={r(16)}
+            height={r(16)}
+          />
+        );
+      } else {
+        // Empty/inactive star
+        starsArray.push(
+          <SvgXml
+            key={i}
+            xml={inactiveStar}
+            width={r(16)}
+            height={r(16)}
+          />
+        );
+      }
+    }
+    return starsArray;
   };
 
   return (
     <TouchableOpacity
-      className="w-72 bg-white rounded-xl"
+      style={[styles.container, width ? {width} : {}]}
+      activeOpacity={0.6}
       onPress={NavigateToProductsDetails}>
-      <Image source={{uri: image}} className="w-full rounded-t-xl h-40  " />
-      <View className="px-3">
-        <Text className="text-3xl text-black-100 my-2 text-start font-bold">
+      <View style={styles.imageContainer}>
+        <FastImage source={{uri: image}} style={styles.image} />
+        <TouchableOpacity
+          style={styles.heartButton}
+        
+          onPress={handleFavoritePress}
+          hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+          <SvgXml
+            xml={forceFavoriteActive || isInWishlist ? favoriteActiveIcon : favoriteIcon}
+            width={r(24)}
+            height={r(24)}
+          />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.content}>
+        <Text style={styles.title}>
           {title}
         </Text>
-        <Text className="text-xl text-black-100/50 text-start font-medium">
+        <Text style={styles.description}>
           {description}
         </Text>
-        <Text className="text-black-100 font-bold text-2xl text-start">
-          {' '}
-          ${price}{' '}
-        </Text>
-        <View className="flex flex-row items-center gap-x-3">
-          <Text className="text-black-100/50 font-thin text-xl  line-through text-start">
-            {' '}
-            {priceBeforeDeal}{' '}
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>
+            {currency} {price}
           </Text>
-          <Text className="text-action font-thin text-xl "> {priceOff} </Text>
         </View>
-        <View className="flex flex-row items-center mb-3">
-          <View>
-            <AirbnbRating
-              count={stars}
-              reviews={['Terrible', 'Bad', 'Okay', 'Good', 'Great']}
-              defaultRating={stars}
-              size={20}
-              ratingContainerStyle={{flex: 1, flexDirection: 'row'}}
-            />
+        <View style={styles.priceContainer}>
+          <Text style={styles.priceBeforeDeal}>
+            {currency} {priceBeforeDeal}
+          </Text>
+          <Text style={styles.priceOff}>{priceOff}Off</Text>
+        </View>
+        <View style={styles.ratingContainer}>
+          <View style={styles.starsContainer}>
+            {renderStars()}
           </View>
-
-          <Text className="text-xl font-thin text-black-100/90 ">
-            {' '}
-            {numberOfReview}{' '}
+          <Text style={styles.reviewCount}>
+            {formatNumber(numberOfReview)}
           </Text>
         </View>
       </View>
     </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    width: r(288),
+    backgroundColor: Colors.white,
+    borderRadius: r(12),
+    // Removed overflow: 'hidden' to allow shadow to show
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05, // Reduced shadow opacity
+    shadowRadius: 2, // Reduced shadow radius
+    elevation: 1, // Reduced elevation for Android
+    marginBottom: r(4), // Add space for shadow at bottom
+  },
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+    overflow: 'hidden', // Apply overflow hidden to image container instead
+    borderTopLeftRadius: r(12),
+    borderTopRightRadius: r(12),
+  },
+  image: {
+    width: '100%',
+    height: r(200),
+    resizeMode: 'cover',
+  },
+  heartButton: {
+    position: 'absolute',
+    top: Spacing[2],
+    right: Spacing[2],
+    width: r(32),
+    height: r(32),
+    borderRadius: r(16),
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  content: {
+    paddingHorizontal: Spacing[1],
+    paddingVertical: Spacing[3],
+  },
+  title: {
+    fontSize: r(16),
+    color: Colors.black[100],
+    marginBottom: Spacing[1],
+    textAlign: 'left',
+    fontFamily: FontFamilies.mmedium,
+    fontWeight: '500',
+  },
+  description: {
+    fontSize: r(12),
+    color: Colors.black[100],
+    textAlign: 'left',
+    fontFamily: FontFamilies.mregular,
+    marginBottom: Spacing[3],
+    lineHeight: r(18)
+  },
+  priceRow: {
+    marginBottom: Spacing[1],
+  },
+  price: {
+    color: Colors.black[100],
+    fontFamily: FontFamilies.mmedium,
+    fontSize: r(18),
+    textAlign: 'left',
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    marginBottom: Spacing[3],
+  },
+  priceBeforeDeal: {
+    color: 'rgba(0, 0, 0, 0.5)',
+    fontFamily: FontFamilies.mregular || FontFamilies.mthin,
+    fontSize: r(12),
+    textDecorationLine: 'line-through',
+    textAlign: 'left',
+  },
+  priceOff: {
+    color: '#FF6B35', // Orange/red color for discount
+    fontFamily: FontFamilies.mregular || FontFamilies.mthin,
+    fontSize: r(12),
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: r(2),
+  },
+  reviewCount: {
+    fontSize: r(12),
+    fontFamily: FontFamilies.mregular || FontFamilies.mthin,
+    color: 'rgba(0, 0, 0, 0.5)', // Light gray
+  },
+});
 
 export default ProductItem;

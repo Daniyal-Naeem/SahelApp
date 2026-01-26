@@ -19,9 +19,9 @@ const ProductsContext = createContext<ProductsContextType | undefined>(
   undefined,
 );
 
-export const ProductsProvider: React.FC<{children: ReactNode}> = ({
+export const ProductsProvider = ({
   children,
-}) => {
+}: {children: ReactNode}) => {
   const [products, setProducts] = useState<ProductTypes[]>([]);
   const [wishlist, setWishlist] = useState<ProductTypes[]>([]);
   const [loading, setLoading] = useState(false);
