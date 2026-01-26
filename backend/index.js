@@ -41,6 +41,11 @@ app.use(cors({
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
     
+    // Allow Vercel deployments (admin panel and backend)
+    if (origin.includes('.vercel.app') || origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    
     if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
       callback(null, true);
     } else {
