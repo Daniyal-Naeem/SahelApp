@@ -261,31 +261,9 @@ const rejectVendor = async (req, res) => {
 const getDashboardStats = async (req, res) => {
     try {
         const now = new Date()
-        const [
-            totalUsers,
-            totalVendors,
-            pendingVendors,
-            totalOrders,
-            pendingOrders,
-            totalProducts,
-            totalRevenue,
-            totalBanners,
-            activeBanners,
-            totalDeals,
-            activeDeals,
-            totalGiftCards,
-            activeGiftCards,
-            redeemedGiftCards,
-            totalCoupons,
-            activeCoupons,
-            totalReviews,
-            pendingReviews,
-            flaggedReviews,
-            approvedReviews,
-            totalAppAds,
-            activeAppAds,
-            totalPinnedProducts
-        ] = await Promise.all([
+        
+        // Use Promise.allSettled to handle errors gracefully
+        const results = await Promise.allSettled([
             userModel.countDocuments({ role: 'user' }),
             userModel.countDocuments({ role: 'vendor', vendorStatus: 'approved' }),
             userModel.countDocuments({ role: 'vendor', vendorStatus: 'pending' }),
@@ -299,13 +277,19 @@ const getDashboardStats = async (req, res) => {
             bannerModel.countDocuments(),
             bannerModel.countDocuments({ 
                 isActive: true,
-                $or: [
-                    { startDate: { $exists: false } },
-                    { startDate: { $lte: now } }
-                ],
-                $or: [
-                    { endDate: { $exists: false } },
-                    { endDate: { $gte: now } }
+                $and: [
+                    {
+                        $or: [
+                            { startDate: { $exists: false } },
+                            { startDate: { $lte: now } }
+                        ]
+                    },
+                    {
+                        $or: [
+                            { endDate: { $exists: false } },
+                            { endDate: { $gte: now } }
+                        ]
+                    }
                 ]
             }),
             dealModel.countDocuments(),
@@ -333,17 +317,59 @@ const getDashboardStats = async (req, res) => {
             appAdModel.countDocuments(),
             appAdModel.countDocuments({ 
                 isActive: true,
-                $or: [
-                    { startDate: { $exists: false } },
-                    { startDate: { $lte: now } }
-                ],
-                $or: [
-                    { endDate: { $exists: false } },
-                    { endDate: { $gte: now } }
+                $and: [
+                    {
+                        $or: [
+                            { startDate: { $exists: false } },
+                            { startDate: { $lte: now } }
+                        ]
+                    },
+                    {
+                        $or: [
+                            { endDate: { $exists: false } },
+                            { endDate: { $gte: now } }
+                        ]
+                    }
                 ]
             }),
             pinnedProductModel.countDocuments({ isActive: true })
         ])
+
+        // Extract values, defaulting to 0 on error
+        const getValue = (result, index) => {
+            if (result.status === 'fulfilled') {
+                return Array.isArray(result.value) ? result.value : result.value
+            } else {
+                console.error(`Error fetching stat at index ${index}:`, result.reason?.message || result.reason)
+                return Array.isArray(result.value) ? [] : 0
+            }
+        }
+
+        const [
+            totalUsers,
+            totalVendors,
+            pendingVendors,
+            totalOrders,
+            pendingOrders,
+            totalProducts,
+            totalRevenue,
+            totalBanners,
+            activeBanners,
+            totalDeals,
+            activeDeals,
+            totalGiftCards,
+            activeGiftCards,
+            redeemedGiftCards,
+            totalCoupons,
+            activeCoupons,
+            totalReviews,
+            pendingReviews,
+            flaggedReviews,
+            approvedReviews,
+            totalAppAds,
+            activeAppAds,
+            totalPinnedProducts
+        ] = results.map(getValue)
 
         const revenue = totalRevenue.length > 0 ? totalRevenue[0].total : 0;
 
