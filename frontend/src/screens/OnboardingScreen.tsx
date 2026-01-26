@@ -28,15 +28,10 @@ const OnboardingScreen = (_props: Props) => {
 
   const handleDone = async () => {
     await setItem('onboarded', 200);
-    // Check if user has a token
-    const token = await getItem('token');
-    if (token) {
-      // User is authenticated, go to HomeScreen
-      navigation.navigate('HomeScreen');
-    } else {
-      // No token, go to LoginScreen
-      navigation.navigate('Login');
-    }
+    // Always navigate to HomeScreen (guest mode enabled)
+    // Users can browse products without authentication
+    // Authentication gates will handle protected features
+    navigation.navigate('HomeScreen');
   };
 
   const handleNext = () => {

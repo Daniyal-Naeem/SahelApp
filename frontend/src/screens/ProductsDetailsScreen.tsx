@@ -1,5 +1,5 @@
 import {RouteProp, useNavigation} from '@react-navigation/native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   FlatList,
   ScrollView,
@@ -8,6 +8,7 @@ import {
   View,
   StyleSheet,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import {useToast} from '../hooks/useToast';
 import FastImage from 'react-native-fast-image';
@@ -23,7 +24,10 @@ import {
   DeliveryOptionType,
 } from '../constants/types';
 import {useAppDispatch, useAppSelector} from '../store';
-import {addToCart} from '../store/cartSlice';
+import {addToCart as addToCartRedux, setCart} from '../store/cartSlice';
+import {getProductById, getAllProducts} from '../services/productService';
+import {addToCart as addToCartService, getCart} from '../services/cartService';
+import {checkAuthStatus} from '../utils/authGuard';
 import {activeStar} from '../assets/svgs/activeStar';
 import {inactiveStar} from '../assets/svgs/inactiveStar';
 import {halfStar} from '../assets/svgs/halfstar';
@@ -92,11 +96,15 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     navigation.goBack();
   };
 
-  const handleAddToCart = () => {
-    if (!itemDetails) return;
+  const handleAddToCart = async () => {
+    const currentItem = itemDetails;
+    if (!currentItem) {
+      toast.showToast('Product information is missing', 'error');
+      return;
+    }
 
     const allVariationOptions =
-      itemDetails?.variations?.flatMap((variation: VariationType) =>
+      currentItem?.variations?.flatMap((variation: VariationType) =>
         (variation?.options || []).map(
           (opt: {value?: string; label?: string; image?: string}) => ({
             value: opt?.value || '',
@@ -114,28 +122,78 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     }
 
     let selectedColor: string | undefined;
-    if (selectedColorIndex !== null && itemDetails.colorOptions?.[selectedColorIndex]) {
-      const selectedColorOption = itemDetails.colorOptions[selectedColorIndex];
+    if (selectedColorIndex !== null && currentItem.colorOptions?.[selectedColorIndex]) {
+      const selectedColorOption = currentItem.colorOptions[selectedColorIndex];
       selectedColor = selectedColorOption.color || selectedColorOption.name;
     }
 
     let selectedDelivery: string | undefined;
-    if (selectedDeliveryIndex >= 0 && itemDetails.deliveryOptions?.[selectedDeliveryIndex]) {
-      const selectedDeliveryOption = itemDetails.deliveryOptions[selectedDeliveryIndex];
+    if (selectedDeliveryIndex >= 0 && currentItem.deliveryOptions?.[selectedDeliveryIndex]) {
+      const selectedDeliveryOption = currentItem.deliveryOptions[selectedDeliveryIndex];
       selectedDelivery = selectedDeliveryOption.type || `${selectedDeliveryOption.duration} - ${selectedDeliveryOption.price}`;
     }
 
-    const cartItem = {
-      ...itemDetails,
-      quantity: 1,
-      selectedVariation,
-      selectedColor,
-      selectedDelivery,
-    };
-
-    dispatch(addToCart(cartItem));
-
-    toast.showToast(`${itemDetails.title} has been added to your cart`);
+    const isAuthenticated = await checkAuthStatus();
+    
+    try {
+      if (isAuthenticated) {
+        // Use cart service for authenticated users (handles API call)
+        await addToCartService({
+          product: currentItem._id,
+          quantity: 1,
+          variation: {
+            ...(selectedVariation && { variation: selectedVariation }),
+            ...(selectedColor && { color: selectedColor }),
+            ...(selectedDelivery && { delivery: selectedDelivery }),
+          },
+          price: currentItem.price,
+        });
+        // Refresh cart from backend and update Redux
+        try {
+          const updatedCart = await getCart();
+          if (updatedCart && updatedCart.items && Array.isArray(updatedCart.items)) {
+            // Map backend cart items to Redux format
+            const mappedItems = updatedCart.items.map((item: any) => ({
+              ...(item.product || item),
+              quantity: item.quantity || 1,
+              selectedVariation: item.variation?.variation,
+              selectedColor: item.variation?.color,
+              selectedDelivery: item.variation?.delivery,
+            }));
+            dispatch(setCart(mappedItems));
+          }
+        } catch (error) {
+          console.error('Error refreshing cart:', error);
+          // Don't show error to user, cart was already added
+        }
+        toast.showToast(`${currentItem.title || currentItem.name} has been added to your cart`);
+      } else {
+        // Use Redux for guest mode (local state)
+        const cartItem = {
+          ...currentItem,
+          quantity: 1,
+          selectedVariation,
+          selectedColor,
+          selectedDelivery,
+        };
+        dispatch(addToCartRedux(cartItem));
+        // Also save to local storage for persistence
+        await addToCartService({
+          product: currentItem._id || currentItem,
+          quantity: 1,
+          variation: {
+            ...(selectedVariation && { variation: selectedVariation }),
+            ...(selectedColor && { color: selectedColor }),
+            ...(selectedDelivery && { delivery: selectedDelivery }),
+          },
+          price: currentItem.price,
+        });
+        toast.showToast(`${currentItem.title || currentItem.name} has been added to your cart`);
+      }
+    } catch (error: any) {
+      console.error('Error adding to cart:', error);
+      toast.showToast(error?.message || 'Failed to add product to cart', 'error');
+    }
   };
 
   const navigateToCartTab = () => {

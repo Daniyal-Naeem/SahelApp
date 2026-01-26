@@ -6,11 +6,12 @@ import {
   ScrollView,
   StyleSheet,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
 import {ProductItem, CustomSearch} from '../components';
 import {ProductTypes} from '../constants/types';
@@ -21,6 +22,8 @@ import {filterIcon} from '../assets/svgs/filter';
 import {sortIcon} from '../assets/svgs/sortIcon';
 import {images, icons} from '../constants';
 import {useAppSelector} from '../store';
+import {checkAuthStatus} from '../utils/authGuard';
+import {getWishlist} from '../services/wishlistService';
 
 type Props = {};
 
@@ -30,10 +33,74 @@ const WishlistTab = (_props: Props) => {
   const navigation = useNavigation<DrawerNavigationProp<any>>();
   const insets = useSafeAreaInsets();
   const width = Dimensions.get('window').width;
-  const wishlistItems = useAppSelector(state => state.wishlist.items);
+  const [isLoading, setIsLoading] = useState(false);
+  const [displayProducts, setDisplayProducts] = useState<ProductTypes[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
-  // Use wishlist items from Redux store
-  const displayProducts: ProductTypes[] = wishlistItems;
+  // Load wishlist from API when authenticated
+  const loadWishlist = async () => {
+    setIsLoading(true);
+    try {
+      const wishlistData = await getWishlist();
+      if (wishlistData && wishlistData.items) {
+        // Map backend wishlist items to frontend ProductTypes format
+        const products = wishlistData.items.map((item: any) => {
+          const product = item.product || item;
+          return {
+            ...product,
+            _id: product._id || product.id,
+            // Ensure image is an array
+            image: Array.isArray(product.image) 
+              ? product.image 
+              : product.images 
+                ? (Array.isArray(product.images) ? product.images : [product.images])
+                : product.image 
+                  ? [product.image] 
+                  : [],
+            // Map backend fields to frontend format
+            title: product.name || product.title,
+            description: product.description || '',
+            price: product.price || 0,
+            priceBeforeDeal: product.originalPrice || product.priceBeforeDeal || product.price || 0,
+            priceOff: product.originalPrice && product.price
+              ? `${Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%`
+              : '0%',
+            stars: product.rating || product.stars || 0,
+            numberOfReview: product.reviewsCount || product.numberOfReview || 0,
+          };
+        });
+        setDisplayProducts(products);
+      } else {
+        setDisplayProducts([]);
+      }
+    } catch (error) {
+      console.error('Error loading wishlist:', error);
+      setDisplayProducts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Check authentication and load wishlist when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkAuthAndLoad = async () => {
+        const authStatus = await checkAuthStatus();
+        setIsAuthenticated(authStatus);
+        
+        if (authStatus) {
+          // User is authenticated, load wishlist from API
+          await loadWishlist();
+        } else {
+          // User is not authenticated, show empty state (don't redirect)
+          setDisplayProducts([]);
+          setIsLoading(false);
+        }
+      };
+      
+      checkAuthAndLoad();
+    }, []) // loadWishlist is now defined before useFocusEffect, so no dependency needed
+  );
 
   const NavigateToProfile = () => {
     // Navigate to Profile tab
@@ -107,7 +174,11 @@ const WishlistTab = (_props: Props) => {
       </View>
 
       {/* Products Grid or Empty State */}
-      {displayProducts.length > 0 ? (
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : displayProducts.length > 0 ? (
         <FlatList
           data={displayProducts}
           numColumns={2}
@@ -115,14 +186,14 @@ const WishlistTab = (_props: Props) => {
           keyExtractor={(item, index) => item._id || index.toString()}
           renderItem={({item}) => (
             <ProductItem
-              image={item.image[0]}
-              title={item.title}
-              description={item.description}
-              price={item.price}
-              priceBeforeDeal={item.priceBeforeDeal}
-              priceOff={item.priceOff}
-              stars={item.stars}
-              numberOfReview={item.numberOfReview}
+              image={getProductImage(item)}
+              title={item.title || item.name || 'Product'}
+              description={item.description || ''}
+              price={item.price || 0}
+              priceBeforeDeal={item.priceBeforeDeal || item.price || 0}
+              priceOff={item.priceOff || '0%'}
+              stars={item.stars || item.rating || 0}
+              numberOfReview={item.numberOfReview || item.reviewsCount || 0}
               itemDetails={item}
               currency={(item as any).currency || 'SAR'}
               width={itemWidth}
@@ -135,10 +206,21 @@ const WishlistTab = (_props: Props) => {
         />
       ) : (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Your wishlist is empty</Text>
-          <Text style={styles.emptySubtext}>
-            Add items to your wishlist by tapping the heart icon on products
+          <Text style={styles.emptyText}>
+            {isAuthenticated ? 'Your wishlist is empty' : 'Login to view your wishlist'}
           </Text>
+          <Text style={styles.emptySubtext}>
+            {isAuthenticated 
+              ? 'Add items to your wishlist by tapping the heart icon on products'
+              : 'Sign in to save your favorite products and access them anytime'}
+          </Text>
+          {!isAuthenticated && (
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.loginButtonText}>Login</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </ScrollView>
@@ -229,6 +311,24 @@ const styles = StyleSheet.create({
     color: Colors.gray[600] || '#4B5563',
     textAlign: 'center',
     paddingHorizontal: Spacing[5],
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Spacing[10],
+  },
+  loginButton: {
+    marginTop: Spacing[4],
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing[6],
+    paddingVertical: Spacing[3],
+    borderRadius: r(8),
+  },
+  loginButtonText: {
+    color: Colors.white,
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.msemibold,
   },
 });
 

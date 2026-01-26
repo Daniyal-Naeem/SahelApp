@@ -20,9 +20,20 @@ const registerUser = async (req, res) => {
     try {
         const { name, email, password, phone, role } = req.body;
 
-        // Validate required fields
-        if (!name || !email || !password) {
-            return res.status(400).json({ error: "Name, email, and password are required" })
+        // Validate required fields (name is optional on signup)
+        if (!email || !password) {
+            return res.status(400).json({ error: "Email and password are required" })
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: "Please enter a valid email address" })
+        }
+
+        // Validate password length
+        if (password.length < 6) {
+            return res.status(400).json({ error: "Password must be at least 6 characters long" })
         }
 
         // Check if user already exists
@@ -31,13 +42,17 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ error: "User with this email already exists" })
         }
 
-        // Create new user
+        // Create new user (name is optional, can be set later in profile)
         const userData = {
-            name,
             email: email.toLowerCase(),
             password,
             phone: phone || "",
             role: role || 'user'
+        }
+        
+        // Only include name if provided (don't set empty string)
+        if (name && name.trim()) {
+            userData.name = name.trim();
         }
 
         // Add vendor-specific fields if role is vendor
@@ -146,6 +161,13 @@ const updateProfile = async (req, res) => {
         // Validate ID
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: "No such ID" })
+        }
+
+        // Name is required when updating profile
+        if (req.body.name !== undefined) {
+            if (!req.body.name || req.body.name.trim().length < 2) {
+                return res.status(400).json({ error: "Name is required and must be at least 2 characters long" })
+            }
         }
 
         // Don't allow password update through this route

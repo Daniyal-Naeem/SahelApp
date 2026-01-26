@@ -34,6 +34,7 @@ const SettingTab = (_props: Props) => {
   const [errorMessage, setErrorMessage] = useState('');
 
   const [form, setForm] = useState({
+    name: '',
     email: 'aashifa@gmail.com',
     password: '***********',
     pincode: '450116',
@@ -47,6 +48,7 @@ const SettingTab = (_props: Props) => {
   });
 
   // Error states
+  const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [pincodeError, setPincodeError] = useState('');
@@ -179,6 +181,20 @@ const SettingTab = (_props: Props) => {
           <Text style={styles.sectionTitle}>
             Personal Details
           </Text>
+          <FormField
+            title="Full Name *"
+            value={form.name}
+            placeholder="Enter your full name"
+            handleChangeText={(text: string) => {
+              setNameError('');
+              setForm({...form, name: text});
+            }}
+            setError={setNameError}
+            error={nameError}
+            otherStyles={styles.formField}
+            backgroundColor="#FFFFFF"
+            borderColor="#C8C8C8"
+          />
           <FormField
             title="Email"
             value={form.email}

@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import {useToast} from '../hooks/useToast';
 import LinearGradient from 'react-native-linear-gradient';
-import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
+import {useNavigation, useRoute, RouteProp, useFocusEffect} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteStackParamList} from '../../App';
 import {ItemDetails} from '../constants/types';
@@ -19,6 +19,7 @@ import {deliveritIcon} from '../assets/svgs/deliveritIcon';
 import { plusIcon } from '../assets/svgs/plusIcon';
 import { editIcon } from '../assets/svgs/editIcon';
 import {trashIcon} from '../assets/svgs/trashIcon';
+import {protectScreen} from '../utils/authGuard';
 
 type ScreenRouteProps = RouteProp<RouteStackParamList, 'Checkout'>;
 type ScreenNavigationProps = StackNavigationProp<
@@ -49,6 +50,24 @@ const CheckoutScreen = () => {
 
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
   const [newAddress, setNewAddress] = useState('');
+
+  // Protect screen - require authentication
+  useFocusEffect(
+    React.useCallback(() => {
+      protectScreen(
+        async () => {
+          // User is authenticated, screen can be accessed
+          // Load user addresses, etc. if needed
+        },
+        navigation,
+        {
+          redirectTo: 'login',
+          actionType: 'proceed_to_checkout',
+          actionData: { itemDetails },
+        }
+      );
+    }, [navigation, itemDetails])
+  );
 
   const handleGoBack = () => {
     navigation.goBack();
@@ -120,6 +139,12 @@ const CheckoutScreen = () => {
   };
 
   const handleProceed = () => {
+    // Validate that an address is selected
+    const selectedAddress = addresses.find(addr => addr.isSelected);
+    if (!selectedAddress) {
+      toast.showToast('Please select a delivery address');
+      return;
+    }
     navigation.navigate('PlaceOrder', {itemDetails: itemDetails!});
   };
 

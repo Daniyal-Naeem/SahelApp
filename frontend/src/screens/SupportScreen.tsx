@@ -1,4 +1,4 @@
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import React, {useState, useEffect} from 'react';
 import {
   View,
@@ -37,6 +37,7 @@ import CheckIcon from '../assets/svgs/check.svg';
 import {galleryIcon} from '../assets/svgs/galleryIcon';
 import {menuListIcon} from '../assets/svgs/menuListIcon';
 import type {OrderData} from '../components/OrderCard';
+import {protectScreen} from '../utils/authGuard';
 
 type StepType =
   | 'issue-selection'
@@ -97,6 +98,28 @@ const SupportScreen = () => {
       keyboardDidShowListener.remove();
     };
   }, []);
+
+  // Protect screen - require authentication
+  useFocusEffect(
+    React.useCallback(() => {
+      protectScreen(
+        async () => {
+          // User is authenticated, screen can be accessed
+          // TODO: Load support conversations from API
+        },
+        navigation,
+        {
+          redirectTo: 'login',
+          actionType: 'access_support',
+          actionData: {
+            screen: 'Support',
+            draftMessage: message,
+            selectedIssue: selectedIssue,
+          },
+        }
+      );
+    }, [navigation, message, selectedIssue])
+  );
 
   const GoBack = () => {
     navigation.goBack();

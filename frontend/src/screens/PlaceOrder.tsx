@@ -18,6 +18,7 @@ import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
 import {dropdownArrow} from '../assets/svgs/dropdownArrow';
 import { coupon } from '../assets/svgs/coupon';
+import {requireAuth, checkAuthStatus} from '../utils/authGuard';
 
 type ScreenRouteProps = RouteProp<RouteStackParamList, 'PlaceOrder'>;
 type ScreenNavigationProps = StackNavigationProp<
@@ -42,8 +43,24 @@ const PlaceOrder = () => {
     navigation.goBack();
   };
 
-  const handleProceedToPayment = () => {
-    navigation.navigate('Payment', {itemDetails: itemDetails!});
+  const handleProceedToPayment = async () => {
+    const isAuthenticated = await checkAuthStatus();
+    if (!isAuthenticated) {
+      await requireAuth(
+        async () => {
+          navigation.navigate('Payment', {itemDetails: itemDetails!});
+        },
+        {
+          redirectTo: 'login',
+          preserveState: true,
+          actionType: 'proceed_to_checkout',
+          actionData: { itemDetails },
+          navigation,
+        }
+      );
+    } else {
+      navigation.navigate('Payment', {itemDetails: itemDetails!});
+    }
   };
 
   const handleViewDetails = () => {

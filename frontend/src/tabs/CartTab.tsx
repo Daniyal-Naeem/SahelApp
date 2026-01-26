@@ -1,4 +1,5 @@
-import React from 'react';
+import React, {useEffect} from 'react';
+import {useFocusEffect} from '@react-navigation/native';
 import {
   View,
   Text,
@@ -11,13 +12,15 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {useSelector, useDispatch} from 'react-redux';
 import {RouteStackParamList} from '../../App';
 import {RootState} from '../store/store';
-import {updateCartItemQuantity, removeFromCart} from '../store/cartSlice';
+import {updateCartItemQuantity, removeFromCart, setCart as setCartRedux} from '../store/cartSlice';
 import {ProductCard, CustomButton, CustomHeader} from '../components';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
 import {plusIcon} from '../assets/svgs/plusIcon';
 import {trashIcon} from '../assets/svgs/trashIcon';
 import {ItemDetails} from '../constants/types';
+import {requireAuth, checkAuthStatus} from '../utils/authGuard';
+import {syncCartToBackend, getCart, updateCartItem, removeFromCart as removeFromCartAPI} from '../services/cartService';
 
 type NavigationProp = StackNavigationProp<RouteStackParamList>;
 
@@ -33,42 +36,159 @@ const CartTab = () => {
     (navigation as any).navigate('Home');
   };
 
-  const handleIncreaseQuantity = (itemId: string, currentQuantity: number) => {
-    dispatch(updateCartItemQuantity({id: itemId, quantity: currentQuantity + 1}));
-  };
+  // Load cart from backend when authenticated user opens cart tab
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadCart = async () => {
+        const isAuthenticated = await checkAuthStatus();
+        if (isAuthenticated) {
+          try {
+            const cart = await getCart();
+            if (cart && cart.items && Array.isArray(cart.items)) {
+              // Map backend cart items to Redux format
+              const mappedItems = cart.items.map((item: any) => ({
+                ...(item.product || item),
+                quantity: item.quantity || 1,
+                selectedVariation: item.variation?.variation,
+                selectedColor: item.variation?.color,
+                selectedDelivery: item.variation?.delivery,
+              }));
+              dispatch(setCartRedux(mappedItems));
+            }
+          } catch (error) {
+            console.error('Error loading cart:', error);
+          }
+        }
+      };
+      loadCart();
+    }, [dispatch])
+  );
 
-  const handleDecreaseQuantity = (itemId: string, currentQuantity: number) => {
-    if (currentQuantity > 1) {
-      dispatch(updateCartItemQuantity({id: itemId, quantity: currentQuantity - 1}));
+  const handleIncreaseQuantity = async (itemId: string, currentQuantity: number) => {
+    const isAuthenticated = await checkAuthStatus();
+    if (isAuthenticated) {
+      try {
+        await updateCartItem(itemId, currentQuantity + 1);
+        // Refresh cart from backend
+        const updatedCart = await getCart();
+        if (updatedCart && updatedCart.items && Array.isArray(updatedCart.items)) {
+          const mappedItems = updatedCart.items.map((item: any) => ({
+            ...(item.product || item),
+            quantity: item.quantity || 1,
+            selectedVariation: item.variation?.variation,
+            selectedColor: item.variation?.color,
+            selectedDelivery: item.variation?.delivery,
+          }));
+          dispatch(setCartRedux(mappedItems));
+        }
+      } catch (error) {
+        console.error('Error updating cart:', error);
+        // Fallback to Redux only
+        dispatch(updateCartItemQuantity({id: itemId, quantity: currentQuantity + 1}));
+      }
+    } else {
+      dispatch(updateCartItemQuantity({id: itemId, quantity: currentQuantity + 1}));
     }
   };
 
-  const handleRemoveItem = (itemId: string) => {
-    dispatch(removeFromCart(itemId));
+  const handleDecreaseQuantity = async (itemId: string, currentQuantity: number) => {
+    if (currentQuantity > 1) {
+      const isAuthenticated = await checkAuthStatus();
+      if (isAuthenticated) {
+        try {
+          await updateCartItem(itemId, currentQuantity - 1);
+          // Refresh cart from backend
+          const updatedCart = await getCart();
+          if (updatedCart && updatedCart.items && Array.isArray(updatedCart.items)) {
+            const mappedItems = updatedCart.items.map((item: any) => ({
+              ...(item.product || item),
+              quantity: item.quantity || 1,
+              selectedVariation: item.variation?.variation,
+              selectedColor: item.variation?.color,
+              selectedDelivery: item.variation?.delivery,
+            }));
+            dispatch(setCartRedux(mappedItems));
+          }
+        } catch (error) {
+          console.error('Error updating cart:', error);
+          // Fallback to Redux only
+          dispatch(updateCartItemQuantity({id: itemId, quantity: currentQuantity - 1}));
+        }
+      } else {
+        dispatch(updateCartItemQuantity({id: itemId, quantity: currentQuantity - 1}));
+      }
+    }
   };
 
-  const handleProceedToCheckout = () => {
+  const handleRemoveItem = async (itemId: string) => {
+    const isAuthenticated = await checkAuthStatus();
+    if (isAuthenticated) {
+      try {
+        await removeFromCartAPI(itemId);
+        // Refresh cart from backend
+        const updatedCart = await getCart();
+        if (updatedCart && updatedCart.items && Array.isArray(updatedCart.items)) {
+          const mappedItems = updatedCart.items.map((item: any) => ({
+            ...(item.product || item),
+            quantity: item.quantity || 1,
+            selectedVariation: item.variation?.variation,
+            selectedColor: item.variation?.color,
+            selectedDelivery: item.variation?.delivery,
+          }));
+          dispatch(setCartRedux(mappedItems));
+        }
+      } catch (error) {
+        console.error('Error removing cart item:', error);
+        // Fallback to Redux only
+        dispatch(removeFromCart(itemId));
+      }
+    } else {
+      dispatch(removeFromCart(itemId));
+    }
+  };
+
+  const handleProceedToCheckout = async () => {
     if (cartItems.length === 0) return;
 
-    const firstItem = cartItems[0];
-    const itemDetails: ItemDetails = {
-      _id: firstItem._id,
-      title: firstItem.title,
-      description: firstItem.description,
-      price: firstItem.price,
-      priceBeforeDeal: firstItem.priceBeforeDeal,
-      priceOff: firstItem.priceOff || '',
-      stars: firstItem.stars || 0,
-      numberOfReview: firstItem.numberOfReview || 0,
-      image: firstItem.image,
-      tags: firstItem.tags || [],
-      createdAt: firstItem.createdAt || '',
-      updatedAt: firstItem.updatedAt || '',
-      __v: firstItem.__v || 0,
-      variations: firstItem.variations,
-    };
-    
-    navigation.navigate('Checkout', {itemDetails});
+    // Auth gate: Require authentication before checkout
+    await requireAuth(
+      async () => {
+        // User is authenticated, sync cart to backend and proceed
+        try {
+          await syncCartToBackend();
+        } catch (error) {
+          console.error('Error syncing cart:', error);
+          // Continue anyway - cart might already be synced
+        }
+
+        const firstItem = cartItems[0];
+        const itemDetails: ItemDetails = {
+          _id: firstItem._id,
+          title: firstItem.title,
+          description: firstItem.description,
+          price: firstItem.price,
+          priceBeforeDeal: firstItem.priceBeforeDeal,
+          priceOff: firstItem.priceOff || '',
+          stars: firstItem.stars || 0,
+          numberOfReview: firstItem.numberOfReview || 0,
+          image: firstItem.image,
+          tags: firstItem.tags || [],
+          createdAt: firstItem.createdAt || '',
+          updatedAt: firstItem.updatedAt || '',
+          __v: firstItem.__v || 0,
+          variations: firstItem.variations,
+        };
+        
+        navigation.navigate('Checkout', {itemDetails});
+      },
+      {
+        redirectTo: 'login',
+        preserveState: true,
+        actionType: 'proceed_to_checkout',
+        actionData: { cartItems },
+        navigation,
+      }
+    );
   };
 
   const formatNumber = (num: number): string => {

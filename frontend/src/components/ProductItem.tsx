@@ -1,6 +1,6 @@
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import FastImage from 'react-native-fast-image';
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {ItemDetails} from '../constants/types';
 import {useNavigation} from '@react-navigation/native';
 import {Colors, Spacing, FontFamilies, r} from '../constants/styles';
@@ -11,7 +11,9 @@ import {activeStar} from '../assets/svgs/activeStar';
 import {halfStar} from '../assets/svgs/halfstar';
 import {inactiveStar} from '../assets/svgs/inactiveStar';
 import {useAppSelector, useAppDispatch} from '../store';
-import {toggleWishlist} from '../store/wishlistSlice';
+import {toggleWishlist, addToWishlist as addToWishlistRedux, removeFromWishlist as removeFromWishlistRedux} from '../store/wishlistSlice';
+import {requireAuth, checkAuthStatus} from '../utils/authGuard';
+import {toggleWishlist as toggleWishlistAPI, checkWishlist} from '../services/wishlistService';
 
 type ProductItemProps = {
   image: string;
@@ -45,9 +47,37 @@ const ProductItem = ({
 }: ProductItemProps) => {
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
-  const isInWishlist = useAppSelector(state =>
+  const [isInWishlistAPI, setIsInWishlistAPI] = useState(false);
+  const [isCheckingWishlist, setIsCheckingWishlist] = useState(false);
+  
+  // Check Redux state (for guest mode or local state)
+  const isInWishlistRedux = useAppSelector(state =>
     state.wishlist.items.some(item => item._id === itemDetails._id),
   );
+  
+  // Use API status if authenticated, otherwise use Redux
+  const isInWishlist = forceFavoriteActive || (isInWishlistAPI || isInWishlistRedux);
+
+  // Check wishlist status from API when component mounts (if authenticated)
+  useEffect(() => {
+    const checkWishlistStatus = async () => {
+      const isAuthenticated = await checkAuthStatus();
+      if (isAuthenticated && itemDetails._id) {
+        setIsCheckingWishlist(true);
+        try {
+          const inWishlist = await checkWishlist(itemDetails._id);
+          setIsInWishlistAPI(inWishlist);
+        } catch (error) {
+          console.error('Error checking wishlist status:', error);
+        } finally {
+          setIsCheckingWishlist(false);
+        }
+      }
+    };
+    
+    checkWishlistStatus();
+  }, [itemDetails._id]);
+
   const NavigateToProductsDetails = () => {
     let rootNavigator = navigation;
     while (rootNavigator.getParent()) {
@@ -57,9 +87,46 @@ const ProductItem = ({
     (rootNavigator as any).navigate('ProductDetails', {itemDetails});
   };
 
-  const handleFavoritePress = (e: any) => {
+  const handleFavoritePress = async (e: any) => {
     e.stopPropagation();
-    dispatch(toggleWishlist(itemDetails));
+    
+    // Auth gate: Require authentication for wishlist
+    await requireAuth(
+      async () => {
+        // User is authenticated, toggle wishlist via API
+        try {
+          const wishlistData = await toggleWishlistAPI(itemDetails._id);
+          // Update local state based on API response
+          if (wishlistData && wishlistData.items) {
+            const isInWishlist = wishlistData.items.some(
+              (item: any) => (item.product?._id || item.product?.id) === itemDetails._id
+            );
+            setIsInWishlistAPI(isInWishlist);
+            
+            // Also update Redux for consistency
+            if (isInWishlist) {
+              dispatch(addToWishlistRedux(itemDetails as any));
+            } else {
+              dispatch(removeFromWishlistRedux(itemDetails._id));
+            }
+          }
+        } catch (error) {
+          console.error('Error toggling wishlist:', error);
+          // Fallback to Redux on error
+          dispatch(toggleWishlist(itemDetails));
+        }
+      },
+      {
+        redirectTo: 'login',
+        preserveState: true,
+        actionType: 'add_to_wishlist',
+        actionData: { productId: itemDetails._id },
+        navigation,
+      }
+    );
+    
+    // Don't update Redux for guest mode - pending action will handle it after login
+    // This prevents inconsistent state where item is in Redux but not in backend
   };
 
   const formatNumber = (num: number): string => {

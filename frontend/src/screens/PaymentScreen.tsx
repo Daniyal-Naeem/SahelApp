@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,14 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
+import {useNavigation, useRoute, RouteProp, useFocusEffect} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteStackParamList} from '../../App';
 import {ItemDetails} from '../constants/types';
 import {CustomHeader, CustomButton, ConfirmationModal} from '../components';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
+import {checkAuthStatus} from '../utils/authGuard';
+import {storePendingAction, storeNavigationState} from '../utils/pendingActions';
 
 type ScreenRouteProps = RouteProp<RouteStackParamList, 'Payment'>;
 type ScreenNavigationProps = StackNavigationProp<
@@ -32,12 +34,64 @@ const PaymentScreen = () => {
 
   const [selectedPayment, setSelectedPayment] = useState<string>('visa1');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Check authentication on screen focus
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkAuth = async () => {
+        setIsCheckingAuth(true);
+        const authStatus = await checkAuthStatus();
+        setIsAuthenticated(authStatus);
+        
+        if (!authStatus) {
+          // Store pending action and navigation state
+          await storePendingAction({
+            type: 'proceed_to_checkout',
+            data: { itemDetails, screen: 'Payment' },
+            redirectTo: 'login',
+            timestamp: Date.now(),
+          });
+          
+          try {
+            const navigationState = navigation.getState();
+            await storeNavigationState(navigationState);
+          } catch (error) {
+            console.error('Error storing navigation state:', error);
+          }
+          
+          // Redirect to login
+          navigation.navigate('Login');
+        }
+        
+        setIsCheckingAuth(false);
+      };
+      
+      checkAuth();
+    }, [navigation, itemDetails])
+  );
 
   const handleGoBack = () => {
     navigation.goBack();
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    // Double-check authentication before proceeding
+    const authStatus = await checkAuthStatus();
+    if (!authStatus) {
+      // Store pending action
+      await storePendingAction({
+        type: 'proceed_to_checkout',
+        data: { itemDetails, screen: 'Payment', action: 'complete_payment' },
+        redirectTo: 'login',
+        timestamp: Date.now(),
+      });
+      
+      navigation.navigate('Login');
+      return;
+    }
+    
     setShowSuccessModal(true);
   };
 
@@ -76,6 +130,27 @@ const PaymentScreen = () => {
         return 'VISA';
     }
   };
+
+  // Show loading state while checking auth
+  if (isCheckingAuth) {
+    return (
+      <View style={styles.container}>
+        <CustomHeader
+          title="Checkout"
+          onBackPress={handleGoBack}
+          showBorder={true}
+        />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Don't render payment screen if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>

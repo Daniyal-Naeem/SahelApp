@@ -1,4 +1,4 @@
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import React, {useState} from 'react';
 import {
   ScrollView,
@@ -7,15 +7,40 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import {CustomHeader, OrderCard} from '../components';
 import {Colors, Spacing, FontFamilies, r, FontSizes} from '../constants/styles';
 import {orders} from '../constants/data';
 import type {OrderData} from '../components/OrderCard';
+import {protectScreen} from '../utils/authGuard';
+import {getUserOrders, type Order} from '../services/orderService';
 
 const OrdersScreen = () => {
   const navigation = useNavigation<any>();
   const [selectedFilter, setSelectedFilter] = useState<string>('All');
+  const [isLoading, setIsLoading] = useState(false);
+  const [ordersList, setOrdersList] = useState<OrderData[]>([]);
+
+  // Map backend Order to frontend OrderData format
+  const mapOrderToOrderData = (order: Order): OrderData => {
+    return {
+      id: order._id,
+      orderNumber: order._id.substring(0, 8).toUpperCase(),
+      status: order.status,
+      total: order.total,
+      itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
+      images: order.items.map(item => {
+        if (typeof item.product === 'object' && item.product?.images) {
+          return item.product.images[0] || '';
+        }
+        return '';
+      }).filter(Boolean),
+      orderDate: order.orderDate || order.createdAt || new Date().toISOString(),
+      estimatedDelivery: order.estimatedDelivery,
+      deliveryType: order.shippingAddress?.city || 'Standard',
+    };
+  };
 
   const GoBack = () => {
     navigation.goBack();
@@ -25,12 +50,46 @@ const OrdersScreen = () => {
     navigation.navigate('OrderDetails', {order});
   };
 
+  const loadOrders = async () => {
+    setIsLoading(true);
+    try {
+      const ordersData = await getUserOrders();
+      // Map backend orders to frontend OrderData format
+      const mappedOrders = ordersData.map(mapOrderToOrderData);
+      setOrdersList(mappedOrders);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      // Fallback to empty array on error
+      setOrdersList([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Protect screen - require authentication
+  useFocusEffect(
+    React.useCallback(() => {
+      protectScreen(
+        async () => {
+          // User is authenticated, load orders
+          await loadOrders();
+        },
+        navigation,
+        {
+          redirectTo: 'login',
+          actionType: 'access_orders',
+          actionData: { screen: 'Orders' },
+        }
+      );
+    }, [navigation])
+  );
+
   const filterOptions = ['All', 'Pending', 'Processing', 'Shipped', 'Delivered'];
 
   const filteredOrders =
     selectedFilter === 'All'
-      ? orders
-      : orders.filter(order => order.status === selectedFilter);
+      ? ordersList
+      : ordersList.filter(order => order.status === selectedFilter);
 
   const renderOrderItem = ({item}: {item: OrderData}) => (
     <View style={styles.orderCardWrapper}>
@@ -78,7 +137,11 @@ const OrdersScreen = () => {
       </View>
 
       {/* Orders List */}
-      {filteredOrders.length > 0 ? (
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : filteredOrders.length > 0 ? (
         <FlatList
           data={filteredOrders}
           renderItem={renderOrderItem}
@@ -158,6 +221,12 @@ const styles = StyleSheet.create({
     fontFamily: FontFamilies.mregular,
     color: Colors.gray[500] || '#6B7280',
     textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Spacing[10],
   },
 });
 

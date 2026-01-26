@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import {SvgXml} from 'react-native-svg';
 import {CustomButton, FormField} from '../components';
@@ -13,23 +14,28 @@ import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {googleIcon} from '../assets/svgs/googleIcon';
 import AppleIcon from '../assets/svgs/Apple.svg';
 import FacebookIcon from '../assets/svgs/Facebook.svg';
+import {register, googleLogin, appleLogin, facebookLogin} from '../services/authService';
+import {executePendingActions} from '../utils/authGuard';
+import {syncCartToBackend, getCart} from '../services/cartService';
+import {useAppDispatch} from '../store';
+import {setCart} from '../store/cartSlice';
 
 type Props = {};
-// let's go with get started first
+
 const SignupScreen = (_props: Props) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [isSubmitting, _setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
     email: '',
-    username: '',
     password: '',
     confirmPassword: '',
   });
   type RootStackParamList = {
     ForgotPassword: undefined;
     Login: undefined;
+    HomeScreen: undefined;
   };
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -86,14 +92,98 @@ const SignupScreen = (_props: Props) => {
     return isValid;
   };
 
-  const handleLogin = () => {
-    if (validateForm()) {
-      // Proceed with signup logic
-      console.log('Form is valid, proceed with signup');
+  const handleSignup = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const registerData = {
+        email: form.email.trim(),
+        password: form.password,
+      };
+      
+      await register(registerData, navigation);
+      
+      // Sync cart to backend after registration
+      try {
+        await syncCartToBackend();
+        // Refresh Redux cart from backend after sync
+        const backendCart = await getCart();
+        if (backendCart && backendCart.items && Array.isArray(backendCart.items)) {
+          const mappedItems = backendCart.items.map((item: any) => ({
+            ...(item.product || item),
+            quantity: item.quantity || 1,
+            selectedVariation: item.variation?.variation,
+            selectedColor: item.variation?.color,
+            selectedDelivery: item.variation?.delivery,
+          }));
+          dispatch(setCart(mappedItems));
+        }
+      } catch (cartError) {
+        console.error('Error syncing cart:', cartError);
+      }
+      
+      // Execute pending actions (wishlist, checkout, etc.)
+      await executePendingActions(navigation);
+      
+      // Navigate to home
+      navigation.navigate('HomeScreen');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Registration failed. Please try again.';
+      Alert.alert('Registration Error', errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
-  const handleSignInWithProvider = () => {};
+  
+  const handleGoogleSignup = async () => {
+    setIsSubmitting(true);
+    try {
+      // TODO: Implement Google Sign-In SDK integration
+      Alert.alert('Coming Soon', 'Google signup will be available soon');
+    } catch (error: any) {
+      Alert.alert('Error', 'Google signup failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleAppleSignup = async () => {
+    setIsSubmitting(true);
+    try {
+      // TODO: Implement Apple Sign-In SDK integration
+      Alert.alert('Coming Soon', 'Apple signup will be available soon');
+    } catch (error: any) {
+      Alert.alert('Error', 'Apple signup failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleFacebookSignup = async () => {
+    setIsSubmitting(true);
+    try {
+      // TODO: Implement Facebook Sign-In SDK integration
+      Alert.alert('Coming Soon', 'Facebook signup will be available soon');
+    } catch (error: any) {
+      Alert.alert('Error', 'Facebook signup failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleSignInWithProvider = (provider: 'google' | 'apple' | 'facebook') => {
+    if (provider === 'google') {
+      handleGoogleSignup();
+    } else if (provider === 'apple') {
+      handleAppleSignup();
+    } else if (provider === 'facebook') {
+      handleFacebookSignup();
+    }
+  };
+  
   const handleNavigateToLogin = () => {
     navigation.navigate('Login');
   };
@@ -105,7 +195,7 @@ const SignupScreen = (_props: Props) => {
       <View>
         {/* text input */}
         <FormField
-          title="Username or Email"
+          title="Email"
           value={form.email}
           setError={setEmailError}
           error={emailError}
@@ -117,7 +207,7 @@ const SignupScreen = (_props: Props) => {
             const error = validateEmail(form.email);
             if (error) setEmailError(error);
           }}
-          placeholder="Username or Email"
+          placeholder="Enter your email"
           otherStyles={styles.formField}
         />
         <View>
@@ -161,7 +251,7 @@ const SignupScreen = (_props: Props) => {
         {/* submit btn */}
         <CustomButton
           title="Create Account"
-          handlePress={handleLogin}
+          handlePress={handleSignup}
           isLoading={isSubmitting}
           containerStyle={styles.buttonContainer}
         />
@@ -175,13 +265,13 @@ const SignupScreen = (_props: Props) => {
         
           </View>
           <View style={styles.socialContainer}>
-            <TouchableOpacity onPress={handleSignInWithProvider} style={styles.socialButton}>
+            <TouchableOpacity onPress={() => handleSignInWithProvider('google')} style={styles.socialButton}>
               <SvgXml xml={googleIcon} width={r(24)} height={r(24)} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleSignInWithProvider} style={styles.socialButton}>
+            <TouchableOpacity onPress={() => handleSignInWithProvider('apple')} style={styles.socialButton}>
               <AppleIcon width={r(24)} height={r(24)} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleSignInWithProvider} style={styles.socialButton}>
+            <TouchableOpacity onPress={() => handleSignInWithProvider('facebook')} style={styles.socialButton}>
               <FacebookIcon width={r(24)} height={r(24)} />
             </TouchableOpacity>
           </View>

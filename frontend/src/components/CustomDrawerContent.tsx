@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import FastImage from 'react-native-fast-image';
 import {
   DrawerContentScrollView,
 } from '@react-navigation/drawer';
-import {CommonActions} from '@react-navigation/native';
+import {CommonActions, useFocusEffect} from '@react-navigation/native';
 import {icons} from '../constants';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import { SvgXml } from 'react-native-svg';
@@ -23,6 +23,8 @@ import { language } from '../assets/svgs/languauge';
 import { settings } from '../assets/svgs/settings';
 import { logout } from '../assets/svgs/logout';
 import { orderIcon } from '../assets/svgs/orderIcon';
+import {checkAuthStatus} from '../utils/authGuard';
+import {getItem} from '../utils/AsyncStorage';
 
 interface MenuItem {
   id: string;
@@ -34,6 +36,38 @@ interface MenuItem {
 
 const CustomDrawerContent = (props: any) => {
   const [activeMenuItemId, setActiveMenuItemId] = useState<string>('1'); // Default to first item
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userInfo, setUserInfo] = useState<{name?: string; email?: string} | null>(null);
+
+  // Check authentication status when drawer opens
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkAuth = async () => {
+        const authStatus = await checkAuthStatus();
+        setIsAuthenticated(authStatus);
+        
+        if (authStatus) {
+          // Load user info
+          try {
+            const userData = await getItem('user');
+            if (userData) {
+              const user = typeof userData === 'string' ? JSON.parse(userData) : userData;
+              setUserInfo({
+                name: user.name || user.username || 'User',
+                email: user.email || '',
+              });
+            }
+          } catch (error) {
+            console.error('Error loading user info:', error);
+          }
+        } else {
+          setUserInfo(null);
+        }
+      };
+      
+      checkAuth();
+    }, [])
+  );
 
   const menuItems: MenuItem[] = [
     {id: '1', label: 'Join VIP Club', icon: VIPIcon, route: 'VIPClub'},
@@ -123,8 +157,12 @@ const CustomDrawerContent = (props: any) => {
             resizeMode={FastImage.resizeMode.cover}
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>SAM KAMERON</Text>
-            <Text style={styles.profileEmail}>samkam@gmail.com</Text>
+            <Text style={styles.profileName}>
+              {isAuthenticated && userInfo?.name ? userInfo.name.toUpperCase() : 'GUEST USER'}
+            </Text>
+            <Text style={styles.profileEmail}>
+              {isAuthenticated && userInfo?.email ? userInfo.email : 'Not logged in'}
+            </Text>
           </View>
         </View>
 
@@ -159,18 +197,20 @@ const CustomDrawerContent = (props: any) => {
         </View>
       </DrawerContentScrollView>
 
-      {/* Logout Button - Fixed at bottom */}
-      <View style={styles.logoutContainer}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <SvgXml
-            xml={logout}
-            width={r(24)}
-            height={r(24)}
-            style={styles.menuIcon}
-          />
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Logout Button - Fixed at bottom (only show if authenticated) */}
+      {isAuthenticated && (
+        <View style={styles.logoutContainer}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <SvgXml
+              xml={logout}
+              width={r(24)}
+              height={r(24)}
+              style={styles.menuIcon}
+            />
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };

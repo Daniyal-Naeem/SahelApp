@@ -8,7 +8,7 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import Carousel from 'react-native-reanimated-carousel';
@@ -24,6 +24,8 @@ import {SvgXml} from 'react-native-svg';
 import {homeMenu} from '../assets/svgs/homeMenu';
 import {filterIcon} from '../assets/svgs/filter';
 import {sortIcon} from '../assets/svgs/sortIcon';
+import {getAllProducts} from '../services/productService';
+import {getProductImage} from '../utils/productHelpers';
 
 type Props = {};
 
@@ -48,8 +50,56 @@ const HomeTab = (_props: Props) => {
   type RootStackParamList = {
     Setting: undefined;
   };
-  // Use detailed product data matching UI designs
-  const [products] = useState<ProductTypes[]>(DetailedProductData);
+  
+  // State for products from API
+  const [products, setProducts] = useState<ProductTypes[]>(DetailedProductData);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+
+  // Load products from API on component mount
+  useEffect(() => {
+    const loadProducts = async () => {
+      setIsLoadingProducts(true);
+      try {
+        const productsData = await getAllProducts({
+          limit: 20, // Load first 20 products
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+        });
+        
+        if (productsData && productsData.products) {
+          // Map backend products to frontend ProductTypes format
+          const mappedProducts = productsData.products.map((product: any) => ({
+            _id: product._id,
+            title: product.name,
+            description: product.description || '',
+            price: product.price,
+            priceBeforeDeal: product.originalPrice || product.price,
+            priceOff: product.originalPrice 
+              ? `${Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%`
+              : '0%',
+            stars: product.rating || 0,
+            numberOfReview: product.reviewsCount || 0,
+            image: product.images || [],
+            tags: [],
+            createdAt: product.createdAt || '',
+            updatedAt: product.updatedAt || '',
+            __v: 0,
+            variations: product.variations || [],
+            colorOptions: product.colors || [],
+            deliveryOptions: [],
+          }));
+          setProducts(mappedProducts);
+        }
+      } catch (error) {
+        console.error('Error loading products:', error);
+        // Keep dummy data on error
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
 
   const NavigateToProfile = () => {
     // Navigate to Profile tab
@@ -254,7 +304,7 @@ const HomeTab = (_props: Props) => {
           data={products}
           renderItem={({item}) => (
             <ProductItem
-              image={item.image[0]}
+              image={getProductImage(item)}
               title={item.title}
               description={item.description}
               price={item.price}
@@ -282,7 +332,7 @@ const HomeTab = (_props: Props) => {
           data={products}
           renderItem={({item}) => (
             <ProductItem
-              image={item.image[0]}
+              image={getProductImage(item)}
               title={item.title}
               description={item.description}
               price={item.price}

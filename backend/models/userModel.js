@@ -6,7 +6,7 @@ const Schema = mongoose.Schema;
 const userSchema = new Schema({
     name: {
         type: String,
-        required: [true, "Name is required"],
+        required: false, // Name is optional on signup, required only in profile setup
         trim: true
     },
     email: {
