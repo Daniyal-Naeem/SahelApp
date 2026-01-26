@@ -5,10 +5,14 @@ const {
     getSingleProduct,
     createNewProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    searchProducts
 } = require('../controllers/productsController')
 
 const router = express.Router()
+
+// Search products (must be before /:id route)
+router.get('/search', searchProducts)
 
 router.get('/', getAllProducts)
 router.get('/:id', getSingleProduct)

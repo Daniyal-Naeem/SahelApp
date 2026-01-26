@@ -7,6 +7,8 @@ const authRoute = require('./routes/authRoute')
 const categoryRoute = require('./routes/categoryRoute')
 const orderRoute = require('./routes/orderRoute')
 const notificationRoute = require('./routes/notificationRoute')
+const cartRoute = require('./routes/cartRoute')
+const wishlistRoute = require('./routes/wishlistRoute')
 const creditRoute = require('./routes/creditRoute')
 const creditV1Route = require('./routes/creditV1Route')
 const creditAdminRoute = require('./routes/creditAdminRoute')
@@ -54,6 +56,8 @@ app.use("/api/products/", productsRoute);
 app.use("/api/categories/", categoryRoute);
 app.use("/api/orders/", orderRoute);
 app.use("/api/notifications/", notificationRoute);
+app.use("/api/cart/", cartRoute);
+app.use("/api/wishlist/", wishlistRoute);
 app.use("/api/credits/", creditRoute); // Legacy credit routes
 app.use("/api/v1/credits/", creditV1Route); // New v1 credit routes (top-up, transfer, etc.)
 app.use("/api/v1/checkout/", checkoutRoute); // Checkout credit integration

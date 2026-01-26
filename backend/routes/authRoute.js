@@ -3,7 +3,12 @@ const {
     registerUser,
     loginUser,
     getCurrentUser,
-    updateProfile
+    updateProfile,
+    forgotPassword,
+    verifyOTP,
+    resetPassword,
+    googleLogin,
+    facebookLogin
 } = require('../controllers/authController')
 const { authenticate } = require('../middleware/authMiddleware')
 
@@ -14,6 +19,19 @@ router.post('/register', registerUser)
 
 // Login user
 router.post('/login', loginUser)
+
+// Social login (mobile app only)
+router.post('/google', googleLogin)
+router.post('/facebook', facebookLogin)
+
+// Forgot password - Send OTP (mobile app only)
+router.post('/forgot-password', forgotPassword)
+
+// Verify OTP (mobile app only)
+router.post('/verify-otp', verifyOTP)
+
+// Reset password (mobile app only)
+router.post('/reset-password', resetPassword)
 
 // Get current user profile (protected)
 router.get('/me', authenticate, getCurrentUser)
