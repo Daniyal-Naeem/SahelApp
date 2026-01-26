@@ -97,15 +97,26 @@ app.get('/health', (req, res) => {
 const PORT = process.env.PORT // http://localhost:4000/api/products/ -> POST
 const MONGODB_URI = process.env.MONGODB_URI;
 
+// MongoDB connection options for better serverless support
+const mongooseOptions = {
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+  socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+  bufferCommands: false, // Disable mongoose buffering
+  bufferMaxEntries: 0, // Disable mongoose buffering
+}
+
 // For Vercel serverless deployment
 if (process.env.VERCEL) {
   // Connect to MongoDB without listening (Vercel handles requests)
-  mongoose.connect(MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB for Vercel deployment'))
-    .catch((error) => console.log(`Error:`, error.message));
+  // Use cached connection if available (for serverless)
+  if (mongoose.connection.readyState === 0) {
+    mongoose.connect(MONGODB_URI, mongooseOptions)
+      .then(() => console.log('Connected to MongoDB for Vercel deployment'))
+      .catch((error) => console.error(`MongoDB connection error:`, error.message));
+  }
 } else {
   // For local development
-  mongoose.connect(MONGODB_URI)
+  mongoose.connect(MONGODB_URI, mongooseOptions)
     .then(() => app.listen(PORT, () => console.log(`Connected to DB, and running on http://localhost:${PORT}/`)))
     .catch((error) => console.log(`Error:`, error.message));
 }
