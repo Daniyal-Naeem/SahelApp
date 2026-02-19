@@ -28,6 +28,7 @@ import {addToCart as addToCartRedux, setCart} from '../store/cartSlice';
 import {getProductById, getAllProducts} from '../services/productService';
 import {addToCart as addToCartService, getCart} from '../services/cartService';
 import {checkAuthStatus} from '../utils/authGuard';
+import {getReviews, Review} from '../services/reviewService';
 import {activeStar} from '../assets/svgs/activeStar';
 import {inactiveStar} from '../assets/svgs/inactiveStar';
 import {halfStar} from '../assets/svgs/halfstar';
@@ -85,6 +86,46 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
         : null;
     },
   );
+
+  // State for reviews from API
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+  const [productRating, setProductRating] = useState(itemDetails?.stars || 0);
+  const [reviewCount, setReviewCount] = useState(itemDetails?.numberOfReview || 0);
+
+  // Fetch reviews when component mounts or productId changes
+  useEffect(() => {
+    const loadReviews = async () => {
+      const productId = itemDetails?._id;
+      if (productId) {
+        setIsLoadingReviews(true);
+        try {
+          const response = await getReviews({ productId, limit: 5 });
+          setReviews(response.reviews || []);
+          setReviewCount(response.pagination?.total || 0);
+          
+          // Calculate average rating from reviews
+          if (response.reviews && response.reviews.length > 0) {
+            const avgRating = response.reviews.reduce((sum, r) => sum + r.rating, 0) / response.reviews.length;
+            setProductRating(avgRating);
+          }
+        } catch (error) {
+          console.error('Error loading reviews:', error);
+          // Keep existing reviews from itemDetails as fallback
+          if (itemDetails?.reviews && itemDetails.reviews.length > 0) {
+            setReviews(itemDetails.reviews as any);
+          }
+        } finally {
+          setIsLoadingReviews(false);
+        }
+      } else if (itemDetails?.reviews && itemDetails.reviews.length > 0) {
+        // Fallback to itemDetails reviews
+        setReviews(itemDetails.reviews as any);
+      }
+    };
+
+    loadReviews();
+  }, [itemDetails?._id]);
 
   const baseProductImages = itemDetails?.image || [];
   const currency = (itemDetails as any)?.currency || 'SAR';
@@ -707,52 +748,65 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
       )}
 
       {/* Rating & Reviews Section */}
-      {itemDetails?.reviews && itemDetails.reviews.length > 0 && (
+      {(reviews.length > 0 || reviewCount > 0) && (
         <View style={styles.section}>
           <View style={styles.reviewsHeader}>
             <Text style={styles.sectionTitle}>Rating & Reviews</Text>
-            {itemDetails.reviews.length > 1 && (
+            {reviewCount > 1 && (
               <TouchableOpacity
                 onPress={() => {
                   navigation.navigate('Reviews', {
-                    reviews: itemDetails.reviews || [],
+                    productId: itemDetails?._id,
                     productTitle: itemDetails?.title || '',
+                    reviews: reviews.length > 0 ? reviews : undefined,
                   });
                 }}>
-                <Text style={styles.viewAllText}>View All</Text>
+                <Text style={styles.viewAllText}>View All ({reviewCount})</Text>
               </TouchableOpacity>
             )}
           </View>
           <View style={styles.ratingDisplay}>
             <View style={styles.starsContainer}>
-              {renderReviewStars(itemDetails.stars || 0)}
+              {renderReviewStars(productRating)}
             </View>
             <View style={styles.ratingBadge}>
-              <Text style={styles.ratingNumber}>{itemDetails.stars}/5</Text>
+              <Text style={styles.ratingNumber}>{productRating.toFixed(1)}/5</Text>
             </View>
           </View>
-          <View style={styles.reviewItem}>
-            <FastImage
-              source={{
-                uri:
-                  itemDetails.reviews[0]?.userAvatar ||
-                  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-              }}
-              style={styles.reviewAvatar}
-              resizeMode={FastImage.resizeMode.cover}
-            />
-            <View style={styles.reviewContent}>
-              <Text style={styles.reviewerName}>
-                {itemDetails.reviews[0].userName}
-              </Text>
-              <View style={styles.reviewStars}>
-                {renderReviewStars(itemDetails.reviews[0].rating)}
+          {reviews.length > 0 && (
+            <View style={styles.reviewItem}>
+              <FastImage
+                source={{
+                  uri:
+                    reviews[0].user?.avatar ||
+                    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+                }}
+                style={styles.reviewAvatar}
+                resizeMode={FastImage.resizeMode.cover}
+              />
+              <View style={styles.reviewContent}>
+                <View style={styles.reviewerHeader}>
+                  <Text style={styles.reviewerName}>
+                    {reviews[0].user?.name || 'Anonymous'}
+                  </Text>
+                  {reviews[0].verifiedPurchase && (
+                    <View style={styles.verifiedBadge}>
+                      <Text style={styles.verifiedText}>✓ Verified</Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.reviewStars}>
+                  {renderReviewStars(reviews[0].rating)}
+                </View>
+                {reviews[0].title && (
+                  <Text style={styles.reviewTitle}>{reviews[0].title}</Text>
+                )}
+                <Text style={styles.reviewText} numberOfLines={3}>
+                  {reviews[0].comment}
+                </Text>
               </View>
-              <Text style={styles.reviewText} numberOfLines={3}>
-                {itemDetails.reviews[0].comment}
-              </Text>
             </View>
-          </View>
+          )}
         </View>
       )}
 
@@ -1226,7 +1280,30 @@ const styles = StyleSheet.create({
   reviewContent: {
     flex: 1,
   },
+  reviewerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    marginBottom: r(4),
+    flexWrap: 'wrap',
+  },
   reviewerName: {
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.black[100],
+  },
+  verifiedBadge: {
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: Spacing[2],
+    paddingVertical: r(2),
+    borderRadius: r(4),
+  },
+  verifiedText: {
+    fontSize: FontSizes.xs,
+    fontFamily: FontFamilies.mmedium,
+    color: Colors.primary,
+  },
+  reviewTitle: {
     fontSize: FontSizes.base,
     fontFamily: FontFamilies.msemibold,
     color: Colors.black[100],

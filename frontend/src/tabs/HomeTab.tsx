@@ -26,6 +26,9 @@ import {filterIcon} from '../assets/svgs/filter';
 import {sortIcon} from '../assets/svgs/sortIcon';
 import {getAllProducts} from '../services/productService';
 import {getProductImage} from '../utils/productHelpers';
+import {getAllBanners, trackBannerClick, Banner} from '../services/bannerService';
+import {getAllDeals, Deal, getTimeRemaining} from '../services/dealService';
+import {getPinnedProducts, PinnedProduct} from '../services/pinnedProductService';
 
 type Props = {};
 
@@ -38,15 +41,22 @@ const HomeTab = (_props: Props) => {
   // Calculate carousel dimensions for dummy images
   const carouselWidth = width - Spacing[5] * 2;
   const carouselHeight = r(200);
-  // Use e-commerce dummy images with proper aspect ratio
-  const bannerImages = [
+  
+  // Fallback banner images if API fails
+  const fallbackBannerImages = [
     {uri: `https://images.unsplash.com/photo-1607082349566-187342175e2f?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // Shopping
     {uri: `https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // E-commerce
     {uri: `https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // Store shopping
-    {uri: `https://images.unsplash.com/photo-1556740758-90de374c12ad?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // Retail
-    {uri: `https://images.unsplash.com/photo-1607083206968-13611e3d76db?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // Fashion store
   ];
+  
+  // State for banners, deals, and pinned products
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [bannerImages, setBannerImages] = useState<Array<{uri: string; id?: string}>>(fallbackBannerImages);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [pinnedProducts, setPinnedProducts] = useState<PinnedProduct[]>([]);
+  const [isLoadingBanners, setIsLoadingBanners] = useState(false);
+  const [isLoadingDeals, setIsLoadingDeals] = useState(false);
   type RootStackParamList = {
     Setting: undefined;
   };
@@ -54,6 +64,72 @@ const HomeTab = (_props: Props) => {
   // State for products from API
   const [products, setProducts] = useState<ProductTypes[]>(DetailedProductData);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+
+  // Load banners from API
+  useEffect(() => {
+    const loadBanners = async () => {
+      setIsLoadingBanners(true);
+      try {
+        const bannersData = await getAllBanners();
+        if (bannersData && bannersData.length > 0) {
+          setBanners(bannersData);
+          // Map banners to image format for carousel
+          const bannerImagesData = bannersData
+            .filter(banner => banner.image) // Only banners with images
+            .map(banner => ({
+              uri: banner.image,
+              id: banner._id,
+            }));
+          
+          if (bannerImagesData.length > 0) {
+            setBannerImages(bannerImagesData);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading banners:', error);
+        // Keep fallback images on error
+      } finally {
+        setIsLoadingBanners(false);
+      }
+    };
+
+    loadBanners();
+  }, []);
+
+  // Load deals from API
+  useEffect(() => {
+    const loadDeals = async () => {
+      setIsLoadingDeals(true);
+      try {
+        const dealsData = await getAllDeals();
+        if (dealsData && dealsData.length > 0) {
+          setDeals(dealsData);
+        }
+      } catch (error) {
+        console.error('Error loading deals:', error);
+      } finally {
+        setIsLoadingDeals(false);
+      }
+    };
+
+    loadDeals();
+  }, []);
+
+  // Load pinned products from API
+  useEffect(() => {
+    const loadPinnedProducts = async () => {
+      try {
+        const pinnedData = await getPinnedProducts();
+        if (pinnedData && pinnedData.length > 0) {
+          setPinnedProducts(pinnedData);
+        }
+      } catch (error) {
+        console.error('Error loading pinned products:', error);
+      }
+    };
+
+    loadPinnedProducts();
+  }, []);
 
   // Load products from API on component mount
   useEffect(() => {
@@ -66,33 +142,68 @@ const HomeTab = (_props: Props) => {
           sortOrder: 'desc',
         });
         
-        if (productsData && productsData.products) {
+        // Backend returns array directly when products exist
+        // Backend returns {message: " No Products Found "} when no products (404)
+        // Handle both array response and object with products property
+        let productsArray: any[] = [];
+        
+        if (Array.isArray(productsData)) {
+          // Backend returns array directly when products exist
+          productsArray = productsData;
+        } else if (productsData && productsData.products && Array.isArray(productsData.products)) {
+          // Backend returns object with products property
+          productsArray = productsData.products;
+        } else if (productsData && Array.isArray(productsData.data)) {
+          // Backend returns object with data property
+          productsArray = productsData.data;
+        } else if (productsData && productsData.message) {
+          // Backend returns {message: " No Products Found "} when no products
+          console.log('Backend message:', productsData.message);
+          // Keep dummy data if no products in database
+          return; // Exit early, keep dummy data
+        }
+        
+        if (productsArray && productsArray.length > 0) {
           // Map backend products to frontend ProductTypes format
-          const mappedProducts = productsData.products.map((product: any) => ({
+          const mappedProducts = productsArray.map((product: any) => ({
             _id: product._id,
-            title: product.name,
+            title: product.title || product.name || 'Untitled Product', // Backend uses 'title'
             description: product.description || '',
-            price: product.price,
-            priceBeforeDeal: product.originalPrice || product.price,
-            priceOff: product.originalPrice 
-              ? `${Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%`
-              : '0%',
-            stars: product.rating || 0,
-            numberOfReview: product.reviewsCount || 0,
-            image: product.images || [],
-            tags: [],
+            price: product.price || 0,
+            priceBeforeDeal: product.priceBeforeDeal || product.originalPrice || product.price || 0,
+            priceOff: product.priceOff || (product.priceBeforeDeal && product.price 
+              ? `${Math.round(((product.priceBeforeDeal - product.price) / product.priceBeforeDeal) * 100)}%`
+              : '0%'),
+            stars: product.stars || product.rating || 0,
+            numberOfReview: product.numberOfReview || product.reviewsCount || 0,
+            image: product.image || product.images || [],
+            tags: product.tags || [],
             createdAt: product.createdAt || '',
             updatedAt: product.updatedAt || '',
-            __v: 0,
+            __v: product.__v || 0,
             variations: product.variations || [],
             colorOptions: product.colors || [],
             deliveryOptions: [],
           }));
           setProducts(mappedProducts);
+          console.log(`Loaded ${mappedProducts.length} products from API`);
+        } else {
+          console.log('No products found in API response - using dummy data');
+          // Keep dummy data if no products returned
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error loading products:', error);
-        // Keep dummy data on error
+        console.error('Error status:', error.response?.status);
+        console.error('Error details:', error.response?.data || error.message);
+        
+        // Handle 404 specifically (no products found)
+        if (error.response?.status === 404) {
+          console.log('No products found (404) - using dummy data');
+          // Keep dummy data
+        } else {
+          // Other errors - keep dummy data as fallback
+          console.log('API error - using dummy data as fallback');
+        }
       } finally {
         setIsLoadingProducts(false);
       }
@@ -100,6 +211,54 @@ const HomeTab = (_props: Props) => {
 
     loadProducts();
   }, []);
+
+  // Handle banner click
+  const handleBannerPress = async (banner: Banner | {id?: string}) => {
+    if (banner && '_id' in banner && banner._id) {
+      try {
+        await trackBannerClick(banner._id);
+        // Navigate to banner targetUrl if available
+        if (banner.targetUrl) {
+          try {
+            const url = banner.targetUrl;
+            
+            // Handle different URL formats
+            if (url.startsWith('/products/') || url.includes('product')) {
+              // Navigate to product details
+              const productId = url.split('/products/')[1]?.split('/')[0] || url.split('product=')[1]?.split('&')[0];
+              if (productId) {
+                // Would need to fetch product details first
+                // For now, navigate to product details screen with ID
+                navigation.navigate('ProductDetails', {
+                  itemDetails: {_id: productId} as any,
+                });
+              }
+            } else if (url.startsWith('/categories/') || url.includes('category')) {
+              // Navigate to category
+              const categoryTitle = url.split('/categories/')[1]?.split('/')[0] || url.split('category=')[1]?.split('&')[0];
+              if (categoryTitle) {
+                handleSelectCategory(decodeURIComponent(categoryTitle));
+              }
+            } else if (url.includes('deal') || url.includes('deals')) {
+              // Navigate to deals
+              handleDealOfTheDayPress();
+            } else if (url.startsWith('http')) {
+              // External URL - could open in browser
+              // For now, just log it
+              console.log('External URL:', url);
+            } else {
+              // Default: just log
+              console.log('Navigate to:', url);
+            }
+          } catch (error) {
+            console.error('Error navigating from banner:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error tracking banner click:', error);
+      }
+    }
+  };
 
   const NavigateToProfile = () => {
     // Navigate to Profile tab
@@ -231,13 +390,24 @@ const HomeTab = (_props: Props) => {
             const actualIndex = ((index % bannerImages.length) + bannerImages.length) % bannerImages.length;
             setCurrentBannerIndex(actualIndex);
           }}
-          renderItem={({item}) => (
-            <FastImage
-              source={item}
-              resizeMode={FastImage.resizeMode.cover}
-              style={styles.dealImage}
-            />
-          )}
+          renderItem={({item, index}) => {
+            const banner = banners.find(b => b._id === item.id) || null;
+            return (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => {
+                  if (banner) {
+                    handleBannerPress(banner);
+                  }
+                }}>
+                <FastImage
+                  source={item}
+                  resizeMode={FastImage.resizeMode.cover}
+                  style={styles.dealImage}
+                />
+              </TouchableOpacity>
+            );
+          }}
         />
         {/* Pagination dots */}
         <View style={styles.paginationContainer}>
@@ -292,12 +462,21 @@ const HomeTab = (_props: Props) => {
         </View>
       </View>
       {/* deal of the day */}
-      <DealBanner
-        title="Deal of the Day"
-        timeRemaining="22h 55m 20s remaining"
-        buttonText="View all"
-        onButtonPress={handleDealOfTheDayPress}
-      />
+      {deals.length > 0 && deals[0] ? (
+        <DealBanner
+          title={deals[0].title || "Deal of the Day"}
+          timeRemaining={getTimeRemaining(deals[0].endDate)}
+          buttonText="View all"
+          onButtonPress={handleDealOfTheDayPress}
+        />
+      ) : (
+        <DealBanner
+          title="Deal of the Day"
+          timeRemaining="22h 55m 20s remaining"
+          buttonText="View all"
+          onButtonPress={handleDealOfTheDayPress}
+        />
+      )}
       {/* Products */}
       <View style={styles.productsContainer}>
         <FlatList
@@ -320,12 +499,27 @@ const HomeTab = (_props: Props) => {
           ItemSeparatorComponent={() => <View style={styles.separator} />}
         />
       </View>
-      <DealBanner
-        title="Under SAR 20"
-        lastDate="29/02/22"
-        buttonText="View all"
-        onButtonPress={() => {}}
-      />
+      {/* Under Price Deal */}
+      {deals.find(deal => deal.type === 'under_price') ? (
+        (() => {
+          const underPriceDeal = deals.find(deal => deal.type === 'under_price')!;
+          return (
+            <DealBanner
+              title={underPriceDeal.title || "Under SAR 20"}
+              lastDate={new Date(underPriceDeal.endDate).toLocaleDateString('en-GB')}
+              buttonText="View all"
+              onButtonPress={() => {}}
+            />
+          );
+        })()
+      ) : (
+        <DealBanner
+          title="Under SAR 20"
+          lastDate="29/02/22"
+          buttonText="View all"
+          onButtonPress={() => {}}
+        />
+      )}
       {/* Products */}
       <View style={styles.productsContainer}>
         <FlatList

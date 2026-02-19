@@ -3,20 +3,22 @@ import axios from './axios';
 // Order type (adjust based on your backend response)
 export interface Order {
   _id: string;
-  userId: string;
+  orderNumber?: string;
+  user?: string | any;
   items: OrderItem[];
   total: number;
   subtotal: number;
-  tax?: number;
-  shipping?: number;
-  status: OrderStatus;
+  shippingCost?: number;
+  discount?: number;
+  creditUsed?: number;
+  status: BackendOrderStatus; // Backend uses lowercase
   paymentMethod?: string;
+  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
   shippingAddress?: Address;
-  billingAddress?: Address;
-  orderDate: string;
-  estimatedDelivery?: string;
   trackingNumber?: string;
   notes?: string;
+  shippedAt?: string;
+  deliveredAt?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -33,14 +35,49 @@ export interface OrderItem {
   };
 }
 
+// Backend statuses (lowercase)
+export type BackendOrderStatus = 
+  | 'pending'
+  | 'confirmed'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled';
+
+// Frontend display statuses (capitalized)
 export type OrderStatus = 
   | 'Pending'
+  | 'Confirmed'
   | 'Processing'
   | 'Shipped'
-  | 'In Transit'
-  | 'Out for Delivery'
   | 'Delivered'
   | 'Cancelled';
+
+// Map backend status to frontend display status
+export const mapBackendStatusToDisplay = (backendStatus: BackendOrderStatus): OrderStatus => {
+  const statusMap: Record<BackendOrderStatus, OrderStatus> = {
+    'pending': 'Pending',
+    'confirmed': 'Confirmed',
+    'processing': 'Processing',
+    'shipped': 'Shipped',
+    'delivered': 'Delivered',
+    'cancelled': 'Cancelled',
+  };
+  return statusMap[backendStatus] || 'Pending';
+};
+
+// Map frontend display status to backend status
+export const mapDisplayStatusToBackend = (displayStatus: OrderStatus): BackendOrderStatus => {
+  const statusMap: Record<OrderStatus, BackendOrderStatus> = {
+    'Pending': 'pending',
+    'Confirmed': 'confirmed',
+    'Processing': 'processing',
+    'Shipped': 'shipped',
+    'Delivered': 'delivered',
+    'Cancelled': 'cancelled',
+  };
+  return statusMap[displayStatus] || 'pending';
+};
 
 export interface Address {
   street: string;
@@ -104,11 +141,17 @@ export const getOrderById = async (orderId: string): Promise<Order> => {
  */
 export const updateOrderStatus = async (
   orderId: string,
-  status: OrderStatus
+  status: BackendOrderStatus,
+  trackingNumber?: string,
+  notes?: string
 ): Promise<Order> => {
   try {
-    const res = await axios.put(`/orders/${orderId}/status`, { status });
-    return res.data;
+    const payload: any = { status };
+    if (trackingNumber) payload.trackingNumber = trackingNumber;
+    if (notes !== undefined) payload.notes = notes;
+    
+    const res = await axios.put(`/orders/${orderId}/status`, payload);
+    return res.data.order || res.data;
   } catch (error: any) {
     throw error;
   }
@@ -120,7 +163,7 @@ export const updateOrderStatus = async (
 export const cancelOrder = async (orderId: string): Promise<Order> => {
   try {
     const res = await axios.put(`/orders/${orderId}/cancel`);
-    return res.data;
+    return res.data.order || res.data;
   } catch (error: any) {
     throw error;
   }
@@ -129,12 +172,40 @@ export const cancelOrder = async (orderId: string): Promise<Order> => {
 /**
  * Get orders by status (requires authentication)
  */
-export const getOrdersByStatus = async (status: OrderStatus): Promise<Order[]> => {
+export const getOrdersByStatus = async (status: BackendOrderStatus): Promise<Order[]> => {
   try {
-    const orders = await getUserOrders();
-    return orders.filter(order => order.status === status);
+    const res = await axios.get('/orders/my-orders', { params: { status } });
+    return res.data.orders || res.data || [];
   } catch (error: any) {
     throw error;
   }
 };
+
+/**
+ * Format order date for display
+ */
+export const formatOrderDate = (dateString?: string): string => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+};
+
+/**
+ * Get estimated delivery date (7 days from order date)
+ */
+export const getEstimatedDelivery = (orderDate?: string): string => {
+  if (!orderDate) return 'N/A';
+  const date = new Date(orderDate);
+  date.setDate(date.getDate() + 7);
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+};
+
 

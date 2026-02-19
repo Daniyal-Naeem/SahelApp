@@ -17,6 +17,8 @@ const bannerRoute = require('./routes/bannerRoute')
 const giftCardRoute = require('./routes/giftCardRoute')
 const couponRoute = require('./routes/couponRoute')
 const reviewRoute = require('./routes/reviewRoute')
+const vipRoute = require('./routes/vipRoute')
+const supportRoute = require('./routes/supportRoute')
 const adminRoute = require('./routes/adminRoute')
 const debugRoute = require('./routes/debugRoute')
 
@@ -55,6 +57,9 @@ app.use(cors({
   credentials: true
 }))
 
+// Serve static files (uploads)
+app.use('/uploads', express.static('uploads'))
+
 // routes
 app.use("/api/auth/", authRoute);
 app.use("/api/products/", productsRoute);
@@ -71,6 +76,8 @@ app.use("/api/", bannerRoute); // Banner & homepage content management
 app.use("/api/", giftCardRoute); // Gift card management
 app.use("/api/", couponRoute); // Coupon management
 app.use("/api/", reviewRoute); // Review approval & moderation
+app.use("/api/vip/", vipRoute); // VIP Club management
+app.use("/api/support/", supportRoute); // Support/Chat system
 app.use("/api/admin/", adminRoute);
 app.use("/api/", debugRoute); // Debug endpoint
 

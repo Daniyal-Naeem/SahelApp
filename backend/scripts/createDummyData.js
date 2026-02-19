@@ -11,6 +11,8 @@ const productsModel = require('../models/productsModel')
 const userModel = require('../models/userModel')
 const categoryModel = require('../models/categoryModel')
 const orderModel = require('../models/orderModel')
+const notificationModel = require('../models/notificationModel')
+const supportConversationModel = require('../models/supportConversationModel')
 
 const MONGODB_URI = process.env.MONGODB_URI
 
@@ -77,6 +79,15 @@ const sampleDeals = [
     isActive: true,
     startDate: new Date(),
     endDate: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
+  },
+  {
+    title: 'Under SAR 20',
+    description: 'Great deals under SAR 20',
+    type: 'under_price',
+    discount: 0, // Not applicable for under_price
+    isActive: true,
+    startDate: new Date(),
+    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
   }
 ]
 
@@ -381,6 +392,175 @@ async function createDummyData() {
       }
     }
 
+    // Create Notifications (if we have users)
+    console.log('Creating notifications...')
+    if (users.length > 0) {
+      const notifications = []
+      const notificationTemplates = [
+        {
+          title: 'New Product Available',
+          message: 'Check out our latest collection of summer dresses',
+          type: 'promotion',
+          priority: 'medium'
+        },
+        {
+          title: 'Order Shipped',
+          message: 'Your order has been shipped and will arrive soon',
+          type: 'order',
+          priority: 'high'
+        },
+        {
+          title: 'Special Offer',
+          message: 'Get 30% off on all beauty products this weekend',
+          type: 'promotion',
+          priority: 'medium'
+        },
+        {
+          title: 'Welcome Bonus',
+          message: 'You have received a welcome bonus of 100 credits',
+          type: 'system',
+          priority: 'low'
+        },
+        {
+          title: 'Order Delivered',
+          message: 'Your order has been delivered successfully',
+          type: 'order',
+          priority: 'high'
+        },
+        {
+          title: 'Payment Received',
+          message: 'Your payment has been processed successfully',
+          type: 'payment',
+          priority: 'high'
+        }
+      ]
+
+      // Create notifications for each user
+      for (const user of users) {
+        const numNotifications = Math.floor(Math.random() * 4) + 2 // 2-5 notifications per user
+        for (let i = 0; i < numNotifications; i++) {
+          const template = notificationTemplates[Math.floor(Math.random() * notificationTemplates.length)]
+          const isRead = Math.random() > 0.4 // 60% chance of being unread
+          const createdAt = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) // Random time in last 7 days
+          
+          notifications.push({
+            user: user._id,
+            title: template.title,
+            message: template.message,
+            type: template.type,
+            priority: template.priority,
+            isRead: isRead,
+            readAt: isRead ? new Date(createdAt.getTime() + Math.random() * 24 * 60 * 60 * 1000) : undefined,
+            createdAt: createdAt
+          })
+        }
+      }
+
+      if (notifications.length > 0) {
+        await notificationModel.insertMany(notifications)
+        console.log(`✓ Created ${notifications.length} notifications`)
+      }
+    }
+
+    // Create VIP Memberships (if we have users)
+    console.log('Creating VIP memberships...')
+    if (users.length > 0) {
+      const tiers = ['bronze', 'silver', 'gold', 'platinum']
+      let vipCount = 0
+
+      for (let i = 0; i < users.length; i++) {
+        const user = users[i]
+        // 60% chance of being a VIP member
+        if (Math.random() > 0.4) {
+          const tier = tiers[Math.min(Math.floor(i / 2), tiers.length - 1)] // Distribute tiers
+          const points = tier === 'bronze' ? Math.floor(Math.random() * 2000) :
+                        tier === 'silver' ? Math.floor(Math.random() * 3000) + 2000 :
+                        tier === 'gold' ? Math.floor(Math.random() * 5000) + 5000 :
+                        Math.floor(Math.random() * 5000) + 10000
+
+          const joinedAt = new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000) // Random time in last year
+          const expiresAt = new Date(joinedAt)
+          expiresAt.setFullYear(expiresAt.getFullYear() + 1)
+
+          user.vipMembership = {
+            isMember: true,
+            joinedAt: joinedAt,
+            expiresAt: expiresAt,
+            tier: tier,
+            points: points
+          }
+
+          await user.save()
+          vipCount++
+        }
+      }
+
+      console.log(`✓ Created ${vipCount} VIP memberships`)
+    }
+
+    // Create Support Conversations (if we have users)
+    console.log('Creating support conversations...')
+    if (users.length > 0) {
+      const supportMessages = [
+        'I have an issue with my recent order',
+        'My package was not delivered',
+        'I need help with a refund',
+        'Product quality issue',
+        'Payment problem',
+        'Shipping delay',
+      ]
+      let conversationCount = 0
+
+      // Create 1-2 conversations per user (30% chance)
+      for (const user of users) {
+        if (Math.random() > 0.7) {
+          const numConversations = Math.floor(Math.random() * 2) + 1
+          
+          for (let i = 0; i < numConversations; i++) {
+            const status = Math.random() > 0.7 ? 'closed' : 'open'
+            const createdAt = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000) // Random time in last 30 days
+            
+            const initialMessage = supportMessages[Math.floor(Math.random() * supportMessages.length)]
+            
+            const conversation = await supportConversationModel.create({
+              user: user._id,
+              subject: `Support Request - ${initialMessage.substring(0, 30)}`,
+              status: status,
+              messages: [{
+                sender: 'user',
+                text: initialMessage,
+                isRead: true,
+                readAt: createdAt,
+                createdAt: createdAt
+              }],
+              lastMessageAt: createdAt,
+              unreadCount: 0,
+              createdAt: createdAt
+            })
+
+            // Add a support response for some conversations
+            if (Math.random() > 0.5) {
+              const responseTime = new Date(createdAt.getTime() + Math.random() * 24 * 60 * 60 * 1000)
+              conversation.messages.push({
+                sender: 'support',
+                text: 'Thank you for contacting us. We are looking into your issue and will get back to you soon.',
+                isRead: status === 'closed',
+                readAt: status === 'closed' ? responseTime : undefined,
+                createdAt: responseTime
+              })
+              conversation.lastMessageAt = responseTime
+              conversation.unreadCount = status === 'open' ? 1 : 0
+              await conversation.save()
+            }
+
+            conversationCount++
+          }
+        }
+      }
+
+      console.log(`✓ Created ${conversationCount} support conversations`)
+    }
+
     console.log('\n=== Dummy Data Creation Complete ===\n')
     console.log('Summary:')
     console.log(`- Banners: ${banners.length}`)
@@ -391,6 +571,9 @@ async function createDummyData() {
     console.log(`- Pinned Products: ${products.length > 0 ? Math.min(3, products.length) : 0}`)
     console.log(`- Reviews: ${products.length > 0 && users.length > 0 ? 'Created' : 'Skipped (need products and users)'}`)
     console.log(`- Orders: ${products.length > 0 && users.length > 0 ? 'Created' : 'Skipped (need products and users)'}`)
+    console.log(`- Notifications: ${users.length > 0 ? 'Created' : 'Skipped (need users)'}`)
+    console.log(`- VIP Memberships: ${users.length > 0 ? 'Created' : 'Skipped (need users)'}`)
+    console.log(`- Support Conversations: ${users.length > 0 ? 'Created' : 'Skipped (need users)'}`)
 
     process.exit(0)
   } catch (error) {

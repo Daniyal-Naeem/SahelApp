@@ -1,13 +1,13 @@
 import axios, {AxiosInstance, InternalAxiosRequestConfig} from 'axios';
 import {getItem} from '../utils/AsyncStorage';
 
-const getBaseURL = (): string => {
+export const getBaseURL = (): string => {
   // For Android emulator, use 10.0.2.2 instead of localhost
   // For iOS simulator, use localhost
   // For physical device, use your computer's local IP address
   return __DEV__ 
     ? 'http://10.0.2.2:4000/api' // Android emulator - use 10.0.2.2 to access host machine
-    : 'https://backend-4oii8uftk-daniyals-projects-a2864b3d.vercel.app/api'; // Production
+    : 'https://backend-i472hxgzw-daniyals-projects-a2864b3d.vercel.app/api'; // Production - Vercel Backend
 };
 
 const createAxiosInstance = (): AxiosInstance => {

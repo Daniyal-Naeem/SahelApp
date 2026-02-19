@@ -64,6 +64,28 @@ const userSchema = new Schema({
     isActive: {
         type: Boolean,
         default: true
+    },
+    // VIP Club membership
+    vipMembership: {
+        isMember: {
+            type: Boolean,
+            default: false
+        },
+        joinedAt: {
+            type: Date
+        },
+        expiresAt: {
+            type: Date
+        },
+        tier: {
+            type: String,
+            enum: ['bronze', 'silver', 'gold', 'platinum'],
+            default: 'bronze'
+        },
+        points: {
+            type: Number,
+            default: 0
+        }
     }
 }, { timestamps: true })
 

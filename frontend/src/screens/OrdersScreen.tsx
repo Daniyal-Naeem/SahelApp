@@ -8,36 +8,53 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import {CustomHeader, OrderCard} from '../components';
 import {Colors, Spacing, FontFamilies, r, FontSizes} from '../constants/styles';
 import {orders} from '../constants/data';
 import type {OrderData} from '../components/OrderCard';
 import {protectScreen} from '../utils/authGuard';
-import {getUserOrders, type Order} from '../services/orderService';
+import {
+  getUserOrders,
+  type Order,
+  mapBackendStatusToDisplay,
+  formatOrderDate,
+  getEstimatedDelivery,
+} from '../services/orderService';
 
 const OrdersScreen = () => {
   const navigation = useNavigation<any>();
   const [selectedFilter, setSelectedFilter] = useState<string>('All');
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [ordersList, setOrdersList] = useState<OrderData[]>([]);
 
   // Map backend Order to frontend OrderData format
   const mapOrderToOrderData = (order: Order): OrderData => {
+    const displayStatus = mapBackendStatusToDisplay(order.status);
+    const orderDate = formatOrderDate(order.createdAt);
+    const estimatedDelivery = order.deliveredAt 
+      ? formatOrderDate(order.deliveredAt)
+      : getEstimatedDelivery(order.createdAt);
+
     return {
       id: order._id,
-      orderNumber: order._id.substring(0, 8).toUpperCase(),
-      status: order.status,
+      orderNumber: order.orderNumber || order._id.substring(0, 8).toUpperCase(),
+      status: displayStatus,
       total: order.total,
       itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
       images: order.items.map(item => {
-        if (typeof item.product === 'object' && item.product?.images) {
-          return item.product.images[0] || '';
+        if (typeof item.product === 'object' && item.product?.image) {
+          const image = item.product.image;
+          return Array.isArray(image) ? image[0] : image;
         }
         return '';
       }).filter(Boolean),
-      orderDate: order.orderDate || order.createdAt || new Date().toISOString(),
-      estimatedDelivery: order.estimatedDelivery,
+      orderDate,
+      estimatedDelivery,
+      trackingNumber: order.trackingNumber,
+      totalAmount: order.total,
       deliveryType: order.shippingAddress?.city || 'Standard',
     };
   };
@@ -47,11 +64,15 @@ const OrdersScreen = () => {
   };
 
   const handleOrderPress = (order: OrderData) => {
-    navigation.navigate('OrderDetails', {order});
+    // Pass both orderId and order data for compatibility
+    navigation.navigate('OrderDetails', {
+      orderId: order.id,
+      order: order, // Keep for backward compatibility
+    });
   };
 
-  const loadOrders = async () => {
-    setIsLoading(true);
+  const loadOrders = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     try {
       const ordersData = await getUserOrders();
       // Map backend orders to frontend OrderData format
@@ -63,7 +84,14 @@ const OrdersScreen = () => {
       setOrdersList([]);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
+  };
+
+  // Handle refresh
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    loadOrders(false);
   };
 
   // Protect screen - require authentication
@@ -84,7 +112,7 @@ const OrdersScreen = () => {
     }, [navigation])
   );
 
-  const filterOptions = ['All', 'Pending', 'Processing', 'Shipped', 'Delivered'];
+  const filterOptions = ['All', 'Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
 
   const filteredOrders =
     selectedFilter === 'All'
@@ -148,6 +176,13 @@ const OrdersScreen = () => {
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              colors={[Colors.primary]}
+            />
+          }
         />
       ) : (
         <View style={styles.emptyContainer}>

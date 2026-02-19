@@ -45,12 +45,12 @@ export type RouteStackParamList = {
   HomeScreen: {screen?: string; initialTab?: string; scrollToAddress?: boolean} | undefined;
   Checkout: {itemDetails: ItemDetails} | undefined;
   PlaceOrder: {itemDetails: ItemDetails} | undefined;
-  Payment: {itemDetails: ItemDetails} | undefined;
+  Payment: {itemDetails: ItemDetails; couponCode?: string; couponDiscount?: number} | undefined;
   ForgotPassword: undefined;
   OTP: undefined;
   ResetPassword: undefined;
   ProductDetails: {itemDetails: ItemDetails} | undefined;
-  Reviews: {reviews: any[]; productTitle?: string} | undefined;
+  Reviews: {reviews?: any[]; productId?: string; productTitle?: string} | undefined;
   SendGift: {itemDetails: ItemDetails} | undefined;
   VIPClub: undefined;
   Notifications: undefined;
@@ -58,7 +58,7 @@ export type RouteStackParamList = {
   Language: undefined;
   Gifts: undefined;
   Orders: undefined;
-  OrderDetails: {order: any} | undefined;
+  OrderDetails: {orderId?: string; order?: any} | undefined;
 };
 
 const Drawer = createDrawerNavigator();

@@ -1,10 +1,11 @@
 import {useNavigation} from '@react-navigation/native';
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   FlatList,
   Text,
   View,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import {SvgXml} from 'react-native-svg';
@@ -14,10 +15,43 @@ import {EmptyStar} from '../assets/svgs/emptyStar';
 import {activeStar} from '../assets/svgs/activeStar';
 import {halfStar} from '../assets/svgs/halfstar';
 import {CustomHeader} from '../components';
+import {getReviews, Review} from '../services/reviewService';
 
 const ReviewsScreen = ({route}: ScreenProps<'Reviews'>) => {
   const navigation = useNavigation<ScreenProps<'Reviews'>['navigation']>();
-  const {reviews = []} = route.params || {};
+  const {reviews: routeReviews = [], productId, productTitle} = route.params || {};
+
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load reviews from API if productId is provided
+  useEffect(() => {
+    const loadReviews = async () => {
+      if (productId) {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const response = await getReviews({ productId, limit: 50 });
+          setReviews(response.reviews || []);
+        } catch (err: any) {
+          console.error('Error loading reviews:', err);
+          setError('Failed to load reviews');
+          // Fallback to route reviews if API fails
+          if (routeReviews && routeReviews.length > 0) {
+            setReviews(routeReviews as any);
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      } else if (routeReviews && routeReviews.length > 0) {
+        // Use route reviews as fallback
+        setReviews(routeReviews as any);
+      }
+    };
+
+    loadReviews();
+  }, [productId, routeReviews]);
 
   const GoBack = () => {
     navigation.goBack();
@@ -48,13 +82,20 @@ const ReviewsScreen = ({route}: ScreenProps<'Reviews'>) => {
     return starsArray;
   };
 
-  const renderReviewItem = ({item}: {item: ReviewType}) => {
+  const renderReviewItem = ({item}: {item: Review | ReviewType}) => {
+    // Handle both API Review format and legacy ReviewType format
+    const userName = (item as Review).user?.name || (item as ReviewType).userName || 'Anonymous';
+    const userAvatar = (item as Review).user?.avatar || (item as ReviewType).userAvatar;
+    const rating = item.rating || 0;
+    const comment = item.comment || '';
+    const verifiedPurchase = (item as Review).verifiedPurchase;
+
     return (
       <View style={styles.reviewItem}>
         <View style={styles.avatarContainer}>
           <FastImage
             source={{
-              uri: item?.userAvatar || 
+              uri: userAvatar || 
               'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop'
             }}
             style={styles.reviewAvatar}
@@ -62,14 +103,24 @@ const ReviewsScreen = ({route}: ScreenProps<'Reviews'>) => {
           />
         </View>
         <View style={styles.reviewContent}>
-          <Text style={styles.reviewerName}>
-            {item.userName}
-          </Text>
-          <View style={styles.reviewStars}>
-            {renderReviewStars(item.rating)}
+          <View style={styles.reviewerHeader}>
+            <Text style={styles.reviewerName}>
+              {userName}
+            </Text>
+            {verifiedPurchase && (
+              <View style={styles.verifiedBadge}>
+                <Text style={styles.verifiedText}>✓ Verified Purchase</Text>
+              </View>
+            )}
           </View>
+          <View style={styles.reviewStars}>
+            {renderReviewStars(rating)}
+          </View>
+          {(item as Review).title && (
+            <Text style={styles.reviewTitle}>{(item as Review).title}</Text>
+          )}
           <Text style={styles.reviewText}>
-            {item.comment}
+            {comment}
           </Text>
         </View>
       </View>
@@ -90,13 +141,28 @@ const ReviewsScreen = ({route}: ScreenProps<'Reviews'>) => {
       </View>
 
       {/* Reviews List */}
-      <FlatList
-        data={reviews}
-        renderItem={renderReviewItem}
-        keyExtractor={(item, index) => `review-${index}`}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Loading reviews...</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>{error}</Text>
+        </View>
+      ) : reviews.length > 0 ? (
+        <FlatList
+          data={reviews}
+          renderItem={renderReviewItem}
+          keyExtractor={(item, index) => (item as Review)._id || `review-${index}`}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No reviews yet</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -155,6 +221,53 @@ const styles = StyleSheet.create({
     fontFamily: FontFamilies.mregular,
     color: Colors.gray[600] || '#4B5563',
     lineHeight: r(20),
+  },
+  reviewerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    marginBottom: r(4),
+    flexWrap: 'wrap',
+  },
+  verifiedBadge: {
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: Spacing[2],
+    paddingVertical: r(2),
+    borderRadius: r(4),
+  },
+  verifiedText: {
+    fontSize: FontSizes.xs,
+    fontFamily: FontFamilies.mmedium,
+    color: Colors.primary,
+  },
+  reviewTitle: {
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.black[100],
+    marginBottom: r(4),
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Spacing[12],
+  },
+  loadingText: {
+    marginTop: Spacing[4],
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.mregular,
+    color: Colors.gray[500] || '#6B7280',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Spacing[12],
+  },
+  emptyText: {
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.mregular,
+    color: Colors.gray[500] || '#6B7280',
   },
 });
 

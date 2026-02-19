@@ -1,18 +1,28 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import FastImage from 'react-native-fast-image';
 import {CustomHeader} from '../components';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {icons} from '../constants';
 import PurchaseIcon from '../assets/svgs/purchase.svg';
 import GiftIcon from '../assets/svgs/gift.svg';
+import {
+  getUserGiftCards,
+  redeemGiftCard,
+  formatGiftCardStatus,
+  formatExpiryDate,
+  GiftCard,
+} from '../services/giftCardService';
+import {checkAuthStatus} from '../utils/authGuard';
 
 type GiftType = 'voucher' | 'gift';
 type GiftStatus = 'collected' | 'redeem';
@@ -25,11 +35,15 @@ interface GiftItem {
   subDescription?: string;
   validUntil: string;
   status: GiftStatus;
+  giftCard?: GiftCard; // Store original gift card data
 }
 
 const GiftScreen = () => {
   const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState<'received' | 'shared'>('received');
+  const [receivedGifts, setReceivedGifts] = useState<GiftItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const handleGoBack = () => {
     navigation.goBack();
@@ -45,35 +59,114 @@ const GiftScreen = () => {
     });
   };
 
-  const receivedGifts: GiftItem[] = [
-    {
-      id: '1',
-      type: 'voucher',
-      title: 'Voucher',
-      description: 'First Purchase',
-      subDescription: '25% off for your next order',
-      validUntil: '5.16.20',
-      status: 'collected',
-    },
-    {
-      id: '2',
-      type: 'gift',
-      title: 'Gift',
-      description: 'Gift From Ahmed Ali',
-      subDescription: 'Ahmed Ali sent you a gift of SAR 250',
-      validUntil: '6.20.20',
-      status: 'collected',
-    },
-    {
-      id: '3',
-      type: 'gift',
-      title: 'Gift',
-      description: 'Gift From Abu Rehan',
-      subDescription: 'Abu Rehan sent Women printed Kurta as a gift.',
-      validUntil: '6.20.20',
-      status: 'redeem',
-    },
-  ];
+  // Load gift cards from API
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadGiftCards = async () => {
+        setIsLoading(true);
+        try {
+          const authStatus = await checkAuthStatus();
+          setIsAuthenticated(authStatus);
+
+          if (authStatus) {
+            const giftCards = await getUserGiftCards();
+            
+            // Map gift cards to GiftItem format
+            const mappedGifts: GiftItem[] = giftCards.map((card: GiftCard) => {
+              // Determine type based on card properties
+              const isVoucher = card.type === 'digital' && !card.purchasedBy;
+              const senderName = card.purchasedBy?.name || card.assignedTo?.name || 'Unknown';
+              
+              return {
+                id: card._id,
+                type: isVoucher ? 'voucher' : 'gift',
+                title: isVoucher ? 'Voucher' : 'Gift',
+                description: isVoucher 
+                  ? 'Gift Card' 
+                  : `Gift From ${senderName}`,
+                subDescription: isVoucher
+                  ? `SAR ${card.amount} gift card`
+                  : `${senderName} sent you a gift of SAR ${card.amount}`,
+                validUntil: formatExpiryDate(card.expiresAt),
+                status: formatGiftCardStatus(card.status),
+                giftCard: card,
+              };
+            });
+
+            setReceivedGifts(mappedGifts);
+          } else {
+            setReceivedGifts([]);
+          }
+        } catch (error) {
+          console.error('Error loading gift cards:', error);
+          // Keep empty array on error
+          setReceivedGifts([]);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      loadGiftCards();
+    }, [])
+  );
+
+  // Handle gift card redemption
+  const handleRedeem = async (item: GiftItem) => {
+    if (!item.giftCard || item.status === 'collected') {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      Alert.alert('Login Required', 'Please login to redeem gift cards');
+      return;
+    }
+
+    try {
+      Alert.alert(
+        'Redeem Gift Card',
+        `Are you sure you want to redeem this gift card? You will receive SAR ${item.giftCard.amount} in credits.`,
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Redeem',
+            onPress: async () => {
+              try {
+                await redeemGiftCard(item.giftCard!.code);
+                Alert.alert('Success', `Gift card redeemed! SAR ${item.giftCard!.amount} has been added to your account.`);
+                // Reload gift cards
+                const giftCards = await getUserGiftCards();
+                const mappedGifts: GiftItem[] = giftCards.map((card: GiftCard) => {
+                  const isVoucher = card.type === 'digital' && !card.purchasedBy;
+                  const senderName = card.purchasedBy?.name || card.assignedTo?.name || 'Unknown';
+                  
+                  return {
+                    id: card._id,
+                    type: isVoucher ? 'voucher' : 'gift',
+                    title: isVoucher ? 'Voucher' : 'Gift',
+                    description: isVoucher ? 'Gift Card' : `Gift From ${senderName}`,
+                    subDescription: isVoucher
+                      ? `SAR ${card.amount} gift card`
+                      : `${senderName} sent you a gift of SAR ${card.amount}`,
+                    validUntil: formatExpiryDate(card.expiresAt),
+                    status: formatGiftCardStatus(card.status),
+                    giftCard: card,
+                  };
+                });
+                setReceivedGifts(mappedGifts);
+              } catch (error: any) {
+                Alert.alert('Error', error.response?.data?.error || 'Failed to redeem gift card');
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Error redeeming gift card:', error);
+    }
+  };
 
   const sharedGifts: GiftItem[] = [
     // Add shared gifts data here when available
@@ -119,7 +212,9 @@ const GiftScreen = () => {
               style={[
                 styles.actionButton,
                 isCollected ? styles.collectedButton : styles.redeemButton,
-              ]}>
+              ]}
+              onPress={() => !isCollected && handleRedeem(item)}
+              disabled={isCollected}>
               <Text
                 style={[
                   styles.actionButtonText,
@@ -190,8 +285,17 @@ const GiftScreen = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
-        {activeTab === 'received' ? (
-          receivedGifts.length > 0 ? (
+        {isLoading ? (
+          <View style={styles.emptyContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={[styles.emptyText, {marginTop: Spacing[4]}]}>Loading gift cards...</Text>
+          </View>
+        ) : activeTab === 'received' ? (
+          !isAuthenticated ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Please login to view your gift cards</Text>
+            </View>
+          ) : receivedGifts.length > 0 ? (
             receivedGifts.map(item => renderGiftCard(item))
           ) : (
             <View style={styles.emptyContainer}>

@@ -34,13 +34,23 @@ export interface SupportAttachment {
 export interface CreateConversationPayload {
   subject?: string;
   initialMessage: string;
-  attachments?: File[];
+  attachments?: Array<{
+    uri?: string;
+    path?: string;
+    type?: string;
+    filename?: string;
+  }>;
 }
 
 // Send message payload
 export interface SendMessagePayload {
   text: string;
-  attachments?: File[];
+  attachments?: Array<{
+    uri?: string;
+    path?: string;
+    type?: string;
+    filename?: string;
+  }>;
 }
 
 /**
@@ -80,8 +90,13 @@ export const createConversation = async (
       formData.append('subject', payload.subject);
     }
     if (payload.attachments) {
-      payload.attachments.forEach((file, index) => {
-        formData.append(`attachments`, file as any);
+      payload.attachments.forEach((file) => {
+        // React Native FormData format
+        formData.append('attachments', {
+          uri: file.uri || file.path,
+          type: file.type || 'image/jpeg',
+          name: file.filename || 'image.jpg',
+        } as any);
       });
     }
 
@@ -90,7 +105,7 @@ export const createConversation = async (
         'Content-Type': 'multipart/form-data',
       },
     });
-    return res.data;
+    return res.data.conversation || res.data;
   } catch (error: any) {
     throw error;
   }
@@ -108,7 +123,12 @@ export const sendMessage = async (
     formData.append('text', payload.text);
     if (payload.attachments) {
       payload.attachments.forEach((file) => {
-        formData.append(`attachments`, file as any);
+        // React Native FormData format
+        formData.append('attachments', {
+          uri: file.uri || file.path,
+          type: file.type || 'image/jpeg',
+          name: file.filename || 'image.jpg',
+        } as any);
       });
     }
 
@@ -121,7 +141,7 @@ export const sendMessage = async (
         },
       }
     );
-    return res.data;
+    return res.data.messageData || res.data;
   } catch (error: any) {
     throw error;
   }
@@ -163,4 +183,5 @@ export const markConversationAsRead = async (conversationId: string): Promise<vo
     throw error;
   }
 };
+
 

@@ -38,6 +38,16 @@ import {galleryIcon} from '../assets/svgs/galleryIcon';
 import {menuListIcon} from '../assets/svgs/menuListIcon';
 import type {OrderData} from '../components/OrderCard';
 import {protectScreen} from '../utils/authGuard';
+import {
+  getConversations,
+  getConversation,
+  createConversation,
+  sendMessage,
+  markConversationAsRead,
+  type SupportConversation,
+  type SupportMessage,
+} from '../services/supportService';
+import {getBaseURL} from '../services/axios';
 
 type StepType =
   | 'issue-selection'
@@ -77,6 +87,9 @@ const SupportScreen = () => {
       selectedOrderId: null,
       messages: [],
     });
+  const [currentConversation, setCurrentConversation] = useState<SupportConversation | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const MAX_MESSAGE_LENGTH = 1000;
 
   useEffect(() => {
@@ -99,13 +112,13 @@ const SupportScreen = () => {
     };
   }, []);
 
-  // Protect screen - require authentication
+  // Load conversations and protect screen
   useFocusEffect(
     React.useCallback(() => {
       protectScreen(
         async () => {
-          // User is authenticated, screen can be accessed
-          // TODO: Load support conversations from API
+          // User is authenticated, load conversations
+          await loadConversations();
         },
         navigation,
         {
@@ -118,8 +131,54 @@ const SupportScreen = () => {
           },
         }
       );
-    }, [navigation, message, selectedIssue])
+    }, [navigation, message, selectedIssue, loadConversations])
   );
+
+  // Load conversations from API
+  const loadConversations = React.useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const conversations = await getConversations();
+      // If there's an open conversation, load it
+      const openConversation = conversations.find(c => c.status === 'open');
+      if (openConversation) {
+        // Load full conversation with messages
+        const fullConversation = await getConversation(openConversation._id);
+        setCurrentConversation(fullConversation);
+        // Convert API messages to display format
+        const displayMessages = fullConversation.messages.map(msg => {
+          const imageUrl = msg.attachments?.find(a => a.type === 'image')?.url;
+          // Construct full URL if relative path
+          const fullImageUrl = imageUrl && !imageUrl.startsWith('http') 
+            ? `${getBaseURL()}${imageUrl}` 
+            : imageUrl;
+          
+          return {
+            type: msg.sender === 'user' ? 'user' : 'support' as const,
+            text: msg.text,
+            image: fullImageUrl,
+            timestamp: new Date(msg.createdAt),
+          };
+        });
+        setSupportSessionData(prev => ({
+          ...prev,
+          messages: displayMessages,
+        }));
+      } else {
+        // No open conversation, reset state
+        setCurrentConversation(null);
+        setSupportSessionData(prev => ({
+          ...prev,
+          messages: [],
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      toast.showToast('Failed to load conversations', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
 
   const GoBack = () => {
     navigation.goBack();
@@ -136,7 +195,7 @@ const SupportScreen = () => {
   };
 
   // Step navigation handlers
-  const handleNext = () => {
+  const handleNext = async () => {
     switch (currentStep) {
       case 'issue-selection':
         if (selectedIssue) {
@@ -218,7 +277,64 @@ const SupportScreen = () => {
         }
         break;
       case 'final-step':
+        // Submit conversation to API
+        await handleSubmitConversation();
         break;
+    }
+  };
+
+  // Submit conversation to API
+  const handleSubmitConversation = async () => {
+    if (!supportSessionData.selectedIssue) return;
+
+    setIsSubmitting(true);
+    try {
+      // Build initial message from session data
+      let initialMessage = supportSessionData.selectedIssue;
+      if (supportSessionData.selectedSubOption) {
+        initialMessage += ` - ${supportSessionData.selectedSubOption}`;
+      }
+      if (supportSessionData.selectedOrderId) {
+        initialMessage += ` (Order: ${supportSessionData.selectedOrderId})`;
+      }
+      if (message.trim()) {
+        initialMessage += `\n\n${message.trim()}`;
+      }
+
+      // Collect image attachments
+      const attachments = supportSessionData.messages
+        .filter(msg => msg.image)
+        .map(msg => ({
+          uri: msg.image!,
+          path: msg.image!,
+          type: 'image/jpeg',
+          filename: 'image.jpg',
+        }));
+
+      // Create conversation
+      const conversation = await createConversation({
+        subject: `${supportSessionData.selectedIssue}${supportSessionData.selectedSubOption ? ` - ${supportSessionData.selectedSubOption}` : ''}`,
+        initialMessage,
+        attachments: attachments.length > 0 ? attachments : undefined,
+      });
+
+      setCurrentConversation(conversation);
+      toast.showToast('Support request submitted successfully!', 'success');
+      
+      // Clear form and reset to chat view
+      setCurrentStep('issue-selection');
+      setMessage('');
+      setSelectedIssue('Order Issues');
+      setSelectedSubOption(null);
+      setSelectedOrderId(null);
+    } catch (error: any) {
+      console.error('Error submitting conversation:', error);
+      toast.showToast(
+        error.response?.data?.error || 'Failed to submit support request',
+        'error'
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -249,7 +365,7 @@ const SupportScreen = () => {
     }
   };
 
-  const handleGalleryPress = () => {
+  const handleGalleryPress = async () => {
     ImagePicker.openPicker({
       width: 800,
       height: 800,
@@ -258,7 +374,7 @@ const SupportScreen = () => {
       includeBase64: false,
       mediaType: 'photo',
     })
-      .then((image) => {
+      .then(async (image) => {
         // Add image message to chat
         const newMessage = {
           type: 'user' as const,
@@ -270,6 +386,62 @@ const SupportScreen = () => {
           ...prev,
           messages: [...prev.messages, newMessage],
         }));
+
+        // If we have a conversation, send image to API
+        if (currentConversation) {
+          try {
+            await sendMessage(currentConversation._id, {
+              text: '', // Empty text for image-only messages
+              attachments: [{
+                uri: image.path,
+                path: image.path,
+                type: image.mime || 'image/jpeg',
+                filename: image.filename || 'image.jpg',
+              }],
+            });
+            // Reload conversation
+            await loadConversations();
+          } catch (error: any) {
+            console.error('Error sending image:', error);
+            toast.showToast(
+              error.response?.data?.error || 'Failed to send image',
+              'error'
+            );
+            // Remove image from UI on error
+            setSupportSessionData(prev => ({
+              ...prev,
+              messages: prev.messages.filter((_, idx) => idx !== prev.messages.length - 1),
+            }));
+          }
+        } else {
+          // No conversation exists, create one with image
+          try {
+            const conversation = await createConversation({
+              subject: 'Support Request with Image',
+              initialMessage: 'Please see attached image',
+              attachments: [{
+                uri: image.path,
+                path: image.path,
+                type: image.mime || 'image/jpeg',
+                filename: image.filename || 'image.jpg',
+              }],
+            });
+            setCurrentConversation(conversation);
+            await loadConversations();
+            toast.showToast('Support request created', 'success');
+          } catch (error: any) {
+            console.error('Error creating conversation with image:', error);
+            toast.showToast(
+              error.response?.data?.error || 'Failed to send image',
+              'error'
+            );
+            // Remove image from UI on error
+            setSupportSessionData(prev => ({
+              ...prev,
+              messages: prev.messages.filter((_, idx) => idx !== prev.messages.length - 1),
+            }));
+          }
+        }
       })
       .catch((error) => {
         if (error.code !== 'E_PICKER_CANCELLED') {
@@ -285,11 +457,15 @@ const SupportScreen = () => {
   const handleMenuPress = () => {
   };
 
-  const sendMessageToChat = () => {
+  const sendMessageToChat = async () => {
     if (message.trim() && message.length <= MAX_MESSAGE_LENGTH) {
+      const messageText = message.trim();
+      setMessage(''); // Clear input immediately for better UX
+
+      // Optimistically add message to UI
       const newMessage = {
         type: 'user' as const,
-        text: message.trim(),
+        text: messageText,
         timestamp: new Date(),
       };
 
@@ -298,7 +474,51 @@ const SupportScreen = () => {
         messages: [...prev.messages, newMessage],
       }));
 
-      setMessage('');
+      // If we have a conversation, send message to API
+      if (currentConversation) {
+        try {
+          await sendMessage(currentConversation._id, {
+            text: messageText,
+          });
+          // Reload conversation to get support responses
+          await loadConversations();
+        } catch (error: any) {
+          console.error('Error sending message:', error);
+          toast.showToast(
+            error.response?.data?.error || 'Failed to send message',
+            'error'
+          );
+          // Remove optimistic message on error
+          setSupportSessionData(prev => ({
+            ...prev,
+            messages: prev.messages.filter((_, idx) => idx !== prev.messages.length - 1),
+          }));
+          setMessage(messageText); // Restore message text
+        }
+      } else {
+        // No conversation exists, create one first
+        try {
+          const conversation = await createConversation({
+            subject: 'Support Request',
+            initialMessage: messageText,
+          });
+          setCurrentConversation(conversation);
+          await loadConversations();
+          toast.showToast('Support request created', 'success');
+        } catch (error: any) {
+          console.error('Error creating conversation:', error);
+          toast.showToast(
+            error.response?.data?.error || 'Failed to create support request',
+            'error'
+          );
+          // Remove optimistic message on error
+          setSupportSessionData(prev => ({
+            ...prev,
+            messages: prev.messages.filter((_, idx) => idx !== prev.messages.length - 1),
+          }));
+          setMessage(messageText); // Restore message text
+        }
+      }
     }
   };
 

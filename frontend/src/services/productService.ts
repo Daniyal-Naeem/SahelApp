@@ -78,8 +78,24 @@ export const getAllProducts = async (params?: ProductQueryParams) => {
     const queryString = queryParams.toString();
     const url = queryString ? `/products?${queryString}` : '/products';
     const res = await axios.get(url);
+    
+    // Backend returns array when products exist, or {message: " No Products Found "} when empty
+    // Handle both cases
+    if (res.data && Array.isArray(res.data)) {
+      return res.data; // Return array directly
+    } else if (res.data && res.data.message) {
+      // No products found - return empty array instead of throwing error
+      console.log('No products found:', res.data.message);
+      return [];
+    }
+    
     return res.data;
   } catch (error: any) {
+    // Handle 404 (no products found) gracefully
+    if (error.response?.status === 404) {
+      console.log('No products found (404)');
+      return [];
+    }
     throw error;
   }
 };
@@ -111,4 +127,5 @@ export const getProductsByVendor = async (vendorId: string, params?: ProductQuer
     throw error;
   }
 };
+
 

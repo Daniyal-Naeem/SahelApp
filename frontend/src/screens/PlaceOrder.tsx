@@ -7,6 +7,9 @@ import {
   StyleSheet,
   Modal,
   FlatList,
+  TextInput,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
@@ -19,6 +22,7 @@ import {SvgXml} from 'react-native-svg';
 import {dropdownArrow} from '../assets/svgs/dropdownArrow';
 import { coupon } from '../assets/svgs/coupon';
 import {requireAuth, checkAuthStatus} from '../utils/authGuard';
+import {validateCoupon, CouponValidationResult} from '../services/couponService';
 
 type ScreenRouteProps = RouteProp<RouteStackParamList, 'PlaceOrder'>;
 type ScreenNavigationProps = StackNavigationProp<
@@ -35,6 +39,10 @@ const PlaceOrder = () => {
   const [selectedQty, setSelectedQty] = useState('1');
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [showQtyModal, setShowQtyModal] = useState(false);
+  const [showCouponModal, setShowCouponModal] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponValidation, setCouponValidation] = useState<CouponValidationResult | null>(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
   const sizes = ['Small', 'Medium', 'Large', 'XL'];
   const quantities = ['1', '2', '3', '4', '5'];
@@ -48,18 +56,30 @@ const PlaceOrder = () => {
     if (!isAuthenticated) {
       await requireAuth(
         async () => {
-          navigation.navigate('Payment', {itemDetails: itemDetails!});
+          navigation.navigate('Payment', {
+            itemDetails: itemDetails!,
+            couponCode: couponValidation?.valid ? couponCode : undefined,
+            couponDiscount: couponValidation?.discount || 0,
+          });
         },
         {
           redirectTo: 'login',
           preserveState: true,
           actionType: 'proceed_to_checkout',
-          actionData: { itemDetails },
+          actionData: { 
+            itemDetails,
+            couponCode: couponValidation?.valid ? couponCode : undefined,
+            couponDiscount: couponValidation?.discount || 0,
+          },
           navigation,
         }
       );
     } else {
-      navigation.navigate('Payment', {itemDetails: itemDetails!});
+      navigation.navigate('Payment', {
+        itemDetails: itemDetails!,
+        couponCode: couponValidation?.valid ? couponCode : undefined,
+        couponDiscount: couponValidation?.discount || 0,
+      });
     }
   };
 
@@ -67,6 +87,48 @@ const PlaceOrder = () => {
   };
 
   const handleApplyCoupon = () => {
+    setShowCouponModal(true);
+  };
+
+  const handleValidateCoupon = async () => {
+    if (!couponCode.trim()) {
+      Alert.alert('Error', 'Please enter a coupon code');
+      return;
+    }
+
+    setIsValidatingCoupon(true);
+    try {
+      const quantity = parseInt(selectedQty) || 1;
+      const itemTotal = orderAmount * quantity;
+      
+      const validation = await validateCoupon(couponCode.trim(), itemTotal, [
+        {
+          productId: itemDetails?._id || '',
+          quantity: quantity,
+          price: orderAmount,
+        },
+      ]);
+
+      if (validation.valid) {
+        setCouponValidation(validation);
+        Alert.alert('Success', `Coupon applied! You saved ${formatNumber(validation.discount)} ${currency}`);
+        setShowCouponModal(false);
+      } else {
+        Alert.alert('Invalid Coupon', validation.error || 'This coupon cannot be applied');
+        setCouponValidation(null);
+      }
+    } catch (error: any) {
+      console.error('Error validating coupon:', error);
+      Alert.alert('Error', error.response?.data?.error || 'Failed to validate coupon');
+      setCouponValidation(null);
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode('');
+    setCouponValidation(null);
   };
 
   const handleKnowMore = () => {
@@ -80,9 +142,11 @@ const PlaceOrder = () => {
   };
 
   const currency = (itemDetails as any)?.currency || 'SAR';
-  const orderAmount = itemDetails?.price || 80;
+  const quantity = parseInt(selectedQty) || 1;
+  const orderAmount = (itemDetails?.price || 80) * quantity;
   const deliveryFee = 0; // Free delivery
-  const orderTotal = orderAmount + deliveryFee;
+  const couponDiscount = couponValidation?.discount || 0;
+  const orderTotal = Math.max(0, orderAmount + deliveryFee - couponDiscount);
 
   // Calculate delivery date (10 May 2025 as per design)
   const deliveryDate = '10 May 2025';
@@ -165,8 +229,23 @@ const PlaceOrder = () => {
           <View style={styles.couponIcon}>
             <SvgXml xml={coupon}  />
           </View>
-          <Text style={styles.couponText}>Apply Coupons</Text>
-          <Text style={styles.selectText}>Select</Text>
+          <View style={styles.couponTextContainer}>
+            {couponValidation?.valid ? (
+              <>
+                <Text style={styles.couponText}>Coupon Applied</Text>
+                <Text style={styles.couponCodeText}>{couponCode.toUpperCase()}</Text>
+              </>
+            ) : (
+              <Text style={styles.couponText}>Apply Coupons</Text>
+            )}
+          </View>
+          {couponValidation?.valid ? (
+            <TouchableOpacity onPress={handleRemoveCoupon}>
+              <Text style={styles.removeCouponText}>Remove</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={styles.selectText}>Select</Text>
+          )}
         </TouchableOpacity>
 
         <View style={styles.divider} />
@@ -182,6 +261,15 @@ const PlaceOrder = () => {
             </Text>
           </View>
 
+          {couponValidation?.valid && (
+            <View style={styles.paymentRow}>
+              <Text style={styles.paymentLabel}>Coupon Discount</Text>
+              <Text style={styles.discountText}>
+                -{currency} {formatNumber(couponDiscount)}
+              </Text>
+            </View>
+          )}
+          
           <View style={styles.paymentRow}>
             <View style={styles.paymentLabelContainer}>
               <Text style={styles.paymentLabel}>Convenience</Text>
@@ -189,9 +277,11 @@ const PlaceOrder = () => {
                 <Text style={styles.linkText}>Know More</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={handleApplyCoupon}>
-              <Text style={styles.linkText}>Apply Coupon</Text>
-            </TouchableOpacity>
+            {!couponValidation?.valid && (
+              <TouchableOpacity onPress={handleApplyCoupon}>
+                <Text style={styles.linkText}>Apply Coupon</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.paymentRow}>
@@ -315,6 +405,58 @@ const PlaceOrder = () => {
                 </TouchableOpacity>
               )}
             />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Coupon Modal */}
+      <Modal
+        visible={showCouponModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowCouponModal(false)}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowCouponModal(false)}>
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <Text style={styles.modalTitle}>Apply Coupon</Text>
+            <View style={styles.couponInputContainer}>
+              <TextInput
+                style={styles.couponInput}
+                placeholder="Enter coupon code"
+                placeholderTextColor="#9E9E9E"
+                value={couponCode}
+                onChangeText={setCouponCode}
+                autoCapitalize="characters"
+                autoCorrect={false}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.applyCouponButton,
+                  (!couponCode.trim() || isValidatingCoupon) && styles.applyCouponButtonDisabled,
+                ]}
+                onPress={handleValidateCoupon}
+                disabled={!couponCode.trim() || isValidatingCoupon}>
+                {isValidatingCoupon ? (
+                  <ActivityIndicator size="small" color={Colors.white} />
+                ) : (
+                  <Text style={styles.applyCouponButtonText}>Apply</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+            {couponValidation?.valid && (
+              <View style={styles.couponSuccessContainer}>
+                <Text style={styles.couponSuccessText}>
+                  ✓ Coupon applied! You saved {currency} {formatNumber(couponValidation.discount)}
+                </Text>
+              </View>
+            )}
+            <TouchableOpacity
+              style={styles.closeModalButton}
+              onPress={() => setShowCouponModal(false)}>
+              <Text style={styles.closeModalButtonText}>Close</Text>
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -463,15 +605,33 @@ const styles = StyleSheet.create({
     marginRight: Spacing[2],
     overflow: 'hidden',
   },
-  couponText: {
+  couponTextContainer: {
     flex: 1,
+    marginLeft: Spacing[2],
+  },
+  couponText: {
     fontSize: FontSizes.base,
     fontFamily: FontFamilies.mmedium,
     color: Colors.black[100],
-    marginLeft: Spacing[2],
+  },
+  couponCodeText: {
+    fontSize: FontSizes.sm,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.primary,
+    marginTop: Spacing[1],
+  },
+  removeCouponText: {
+    fontSize: FontSizes.sm,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.primary,
   },
   selectText: {
     fontSize: FontSizes.sm,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.primary,
+  },
+  discountText: {
+    fontSize: FontSizes.base,
     fontFamily: FontFamilies.msemibold,
     color: Colors.primary,
   },
@@ -601,6 +761,62 @@ const styles = StyleSheet.create({
     color: Colors.black[100],
   },
   modalItemTextSelected: {
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.primary,
+  },
+  couponInputContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing[5],
+    marginBottom: Spacing[4],
+    gap: Spacing[2],
+  },
+  couponInput: {
+    flex: 1,
+    borderWidth: r(1),
+    borderColor: Colors.gray[300] || '#D3D3D3',
+    borderRadius: r(8),
+    paddingHorizontal: Spacing[3],
+    paddingVertical: Spacing[3],
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.mregular,
+    color: Colors.black[100],
+  },
+  applyCouponButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: r(8),
+    paddingHorizontal: Spacing[4],
+    paddingVertical: Spacing[3],
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: r(80),
+  },
+  applyCouponButtonDisabled: {
+    backgroundColor: Colors.gray[400] || '#9CA3AF',
+  },
+  applyCouponButtonText: {
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.msemibold,
+    color: Colors.white,
+  },
+  couponSuccessContainer: {
+    backgroundColor: Colors.primaryLight,
+    borderRadius: r(8),
+    padding: Spacing[3],
+    marginHorizontal: Spacing[5],
+    marginBottom: Spacing[4],
+  },
+  couponSuccessText: {
+    fontSize: FontSizes.sm,
+    fontFamily: FontFamilies.mmedium,
+    color: Colors.primary,
+  },
+  closeModalButton: {
+    paddingHorizontal: Spacing[5],
+    paddingVertical: Spacing[3],
+    alignItems: 'center',
+  },
+  closeModalButtonText: {
+    fontSize: FontSizes.base,
     fontFamily: FontFamilies.msemibold,
     color: Colors.primary,
   },
