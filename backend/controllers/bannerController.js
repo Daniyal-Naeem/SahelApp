@@ -369,6 +369,48 @@ const deleteAppAd = async (req, res) => {
     }
 }
 
+/**
+ * POST /api/app-ads/:id/click
+ * Track app ad click (public)
+ */
+const trackAppAdClick = async (req, res) => {
+    try {
+        const { id } = req.params
+        const ad = await appAdModel.findByIdAndUpdate(
+            id,
+            { $inc: { clickCount: 1 } },
+            { new: true }
+        )
+        if (!ad) {
+            return res.status(404).json({ error: 'App ad not found' })
+        }
+        return res.status(200).json({ message: 'Click tracked' })
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+}
+
+/**
+ * POST /api/app-ads/:id/view
+ * Track app ad view (public)
+ */
+const trackAppAdView = async (req, res) => {
+    try {
+        const { id } = req.params
+        const ad = await appAdModel.findByIdAndUpdate(
+            id,
+            { $inc: { viewCount: 1 } },
+            { new: true }
+        )
+        if (!ad) {
+            return res.status(404).json({ error: 'App ad not found' })
+        }
+        return res.status(200).json({ message: 'View tracked' })
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+}
+
 module.exports = {
     getAllBanners,
     getBannerById,
@@ -386,7 +428,9 @@ module.exports = {
     getAppAds,
     createAppAd,
     updateAppAd,
-    deleteAppAd
+    deleteAppAd,
+    trackAppAdClick,
+    trackAppAdView
 }
 
 

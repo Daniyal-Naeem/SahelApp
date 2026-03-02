@@ -17,6 +17,19 @@ export interface Order {
   shippingAddress?: Address;
   trackingNumber?: string;
   notes?: string;
+  deliveryPerson?: {
+    name: string;
+    phone: string;
+    vehicleNumber?: string;
+  };
+  currentLocation?: {
+    address: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+    lastUpdated?: string;
+  };
   shippedAt?: string;
   deliveredAt?: string;
   createdAt?: string;
@@ -45,11 +58,13 @@ export type BackendOrderStatus =
   | 'cancelled';
 
 // Frontend display statuses (capitalized)
-export type OrderStatus = 
+export type OrderStatus =
   | 'Pending'
   | 'Confirmed'
   | 'Processing'
   | 'Shipped'
+  | 'In Transit'
+  | 'Out for Delivery'
   | 'Delivered'
   | 'Cancelled';
 
@@ -73,6 +88,8 @@ export const mapDisplayStatusToBackend = (displayStatus: OrderStatus): BackendOr
     'Confirmed': 'confirmed',
     'Processing': 'processing',
     'Shipped': 'shipped',
+    'In Transit': 'shipped',
+    'Out for Delivery': 'shipped',
     'Delivered': 'delivered',
     'Cancelled': 'cancelled',
   };

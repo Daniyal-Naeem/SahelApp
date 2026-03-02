@@ -16,6 +16,7 @@ import {useNavigation, useRoute, useFocusEffect} from '@react-navigation/native'
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteStackParamList} from '../../App';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
+import {useI18n} from '../contexts/I18nContext';
 
 type Props = {};
 
@@ -23,6 +24,7 @@ const SettingTab = (_props: Props) => {
   const navigation = useNavigation<StackNavigationProp<RouteStackParamList>>();
   const route = useRoute();
   const insets = useSafeAreaInsets();
+  const { language, setLanguage, t } = useI18n();
   const scrollViewRef = useRef<ScrollView>(null);
   const addressSectionRef = useRef<View>(null);
   const [addressSectionY, setAddressSectionY] = useState<number | null>(null);
@@ -362,6 +364,48 @@ const SettingTab = (_props: Props) => {
             borderColor="#C8C8C8"
           />
         </View>
+        <View style={styles.divider} />
+        {/* Language Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            {t('settings.appSettings')}
+          </Text>
+          <View style={styles.languageContainer}>
+            <Text style={styles.languageLabel}>
+              {t('settings.language')}
+            </Text>
+            <View style={styles.languageOptions}>
+              <TouchableOpacity
+                style={[
+                  styles.languageOption,
+                  language === 'en' && styles.languageOptionSelected,
+                ]}
+                onPress={() => setLanguage('en')}>
+                <Text
+                  style={[
+                    styles.languageText,
+                    language === 'en' && styles.languageTextSelected,
+                  ]}>
+                  {t('settings.english')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.languageOption,
+                  language === 'ar' && styles.languageOptionSelected,
+                ]}
+                onPress={() => setLanguage('ar')}>
+                <Text
+                  style={[
+                    styles.languageText,
+                    language === 'ar' && styles.languageTextSelected,
+                  ]}>
+                  {t('settings.arabic')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
         {/* save changes */}
         <CustomButton
           title="Proceed"
@@ -557,6 +601,43 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     fontFamily: FontFamilies.msemibold,
     color: Colors.white,
+  },
+  languageContainer: {
+    marginTop: Spacing[2],
+  },
+  languageLabel: {
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.mregular,
+    color: Colors.black[100],
+    marginBottom: Spacing[3],
+  },
+  languageOptions: {
+    flexDirection: 'row',
+    gap: Spacing[3],
+  },
+  languageOption: {
+    flex: 1,
+    paddingVertical: Spacing[4],
+    paddingHorizontal: Spacing[3],
+    borderRadius: r(8),
+    borderWidth: r(2),
+    borderColor: Colors.gray[200],
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  languageOptionSelected: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryLight,
+  },
+  languageText: {
+    fontSize: FontSizes.base,
+    fontFamily: FontFamilies.mregular,
+    color: Colors.gray[600],
+  },
+  languageTextSelected: {
+    color: Colors.primary,
+    fontFamily: FontFamilies.msemibold,
   },
 });
 

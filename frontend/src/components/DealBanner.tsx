@@ -6,24 +6,30 @@ import {clock} from '../assets/svgs/clock';
 import {rightArrow} from '../assets/svgs/rightArrow';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import { calender } from '../assets/svgs/calender';
+import DealCountdown from './DealCountdown';
 
 type DealBannerProps = {
   title: string;
   timeRemaining?: string;
+  endDate?: string; // For real-time countdown
   lastDate?: string;
   buttonText?: string;
   onButtonPress?: () => void;
+  useCountdown?: boolean; // Use DealCountdown component instead of static text
 };
 
 const DealBanner = ({
   title,
   timeRemaining,
+  endDate,
   lastDate,
   buttonText = 'View all',
   onButtonPress,
+  useCountdown = false,
 }: DealBannerProps) => {
   const showLastDate = !!lastDate;
-  const showTimeRemaining = !!timeRemaining;
+  const showTimeRemaining = !!timeRemaining || !!endDate;
+  const useRealTimeCountdown = useCountdown && !!endDate;
 
   return (
     <LinearGradient
@@ -35,10 +41,21 @@ const DealBanner = ({
         <Text style={styles.title}>{title}</Text>
         {showTimeRemaining && (
           <View style={styles.timeContainer}>
-            <View style={styles.clockIconContainer}>
-              <SvgXml xml={clock} width={r(20)} height={r(20)} />
-            </View>
-            <Text style={styles.timeText}>{timeRemaining}</Text>
+            {useRealTimeCountdown ? (
+              <>
+                <View style={styles.clockIconContainer}>
+                  <SvgXml xml={clock} width={r(20)} height={r(20)} />
+                </View>
+                <DealCountdown endDate={endDate!} compact={true} />
+              </>
+            ) : (
+              <>
+                <View style={styles.clockIconContainer}>
+                  <SvgXml xml={clock} width={r(20)} height={r(20)} />
+                </View>
+                <Text style={styles.timeText}>{timeRemaining}</Text>
+              </>
+            )}
           </View>
         )}
         {showLastDate && (

@@ -15,7 +15,7 @@ import FastImage from 'react-native-fast-image';
 import Carousel from 'react-native-reanimated-carousel';
 import {SvgXml} from 'react-native-svg';
 import {RouteStackParamList} from '../../App';
-import {ProductItem, CustomHeader} from '../components';
+import {ProductItem, CustomHeader, ShareButton} from '../components';
 import {DetailedProductData} from '../constants/data';
 import {Colors, Spacing, FontFamilies, r, FontSizes} from '../constants/styles';
 import {
@@ -538,6 +538,11 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
         <Text style={styles.reviewCount}>
           {formatNumber(itemDetails?.numberOfReview || 0)}
         </Text>
+        {itemDetails && (
+          <View style={styles.shareButtonContainer}>
+            <ShareButton product={itemDetails} iconSize={r(20)} />
+          </View>
+        )}
       </View>
 
       {/* Description Section */}
@@ -982,6 +987,9 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     fontFamily: FontFamilies.msemibold,
     color: Colors.black[100],
+  },
+  shareButtonContainer: {
+    marginLeft: 'auto',
   },
   ratingRow: {
     flexDirection: 'row',

@@ -20,6 +20,12 @@ import SupportScreen from './SupportScreen';
 import VIPClubScreen from './VIPClubScreen';
 import OrdersScreen from './OrdersScreen';
 import OrderDetailsScreen from './OrderDetailsScreen';
+import CreditWalletScreen from './CreditWalletScreen';
+import CreditTopupScreen from './CreditTopupScreen';
+import CreditTransferScreen from './CreditTransferScreen';
+import CreditHistoryScreen from './CreditHistoryScreen';
+import DealDetailsScreen from './DealDetailsScreen';
+import CelebrationRegistrationScreen from './CelebrationRegistrationScreen';
 export {
   CheckoutScreen,
   ForgotPasswordScreen,
@@ -43,4 +49,10 @@ export {
   SplashScreen,
   SupportScreen,
   VIPClubScreen,
+  CreditWalletScreen,
+  CreditTopupScreen,
+  CreditTransferScreen,
+  CreditHistoryScreen,
+  DealDetailsScreen,
+  CelebrationRegistrationScreen,
 };

@@ -16,7 +16,9 @@ const {
     getAppAds,
     createAppAd,
     updateAppAd,
-    deleteAppAd
+    deleteAppAd,
+    trackAppAdClick,
+    trackAppAdView
 } = require('../controllers/bannerController')
 const { authenticate, authorize } = require('../middleware/authMiddleware')
 
@@ -48,6 +50,8 @@ router.delete('/deals/:id', authenticate, authorize('admin'), deleteDeal)
 
 // App ads routes
 router.get('/app-ads', getAppAds)
+router.post('/app-ads/:id/click', trackAppAdClick) // Public tracking
+router.post('/app-ads/:id/view', trackAppAdView) // Public tracking
 router.post('/app-ads', authenticate, authorize('admin'), createAppAd)
 router.put('/app-ads/:id', authenticate, authorize('admin'), updateAppAd)
 router.delete('/app-ads/:id', authenticate, authorize('admin'), deleteAppAd)

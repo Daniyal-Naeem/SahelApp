@@ -26,6 +26,12 @@ import {
   SplashScreen,
   SupportScreen,
   VIPClubScreen,
+  CreditWalletScreen,
+  CreditTopupScreen,
+  CreditTransferScreen,
+  CreditHistoryScreen,
+  DealDetailsScreen,
+  CelebrationRegistrationScreen,
 } from './src/screens';
 import GetStartedScreen from './src/screens/GetStartedScreen';
 import {ItemDetails} from './src/constants/types';
@@ -36,6 +42,7 @@ import {ProductsProvider} from './src/context/ProductsContext';
 import {store} from './src/store/store';
 import CustomDrawerContent from './src/components/CustomDrawerContent';
 import {ToastProvider} from 'react-native-toast-notifications';
+import {I18nProvider} from './src/contexts/I18nContext';
 
 export type RouteStackParamList = {
   Onboarding: undefined;
@@ -59,6 +66,12 @@ export type RouteStackParamList = {
   Gifts: undefined;
   Orders: undefined;
   OrderDetails: {orderId?: string; order?: any} | undefined;
+  CreditWallet: undefined;
+  CreditTopup: undefined;
+  CreditTransfer: undefined;
+  CreditHistory: undefined;
+  DealDetails: {dealId?: string; dealType?: string} | undefined;
+  CelebrationRegistration: undefined;
 };
 
 const Drawer = createDrawerNavigator();
@@ -150,15 +163,16 @@ const App = () => {
 
   return (
     <SafeAreaProvider>
-      <Provider store={store}>
-        <ProductsProvider>
-          <ToastProvider
-            placement="bottom"
-            offsetBottom={50}
-            swipeEnabled={true}
-            normalColor="#333">
-            <GestureHandlerRootView style={{flex: 1}}>
-              <NavigationContainer>
+      <I18nProvider>
+        <Provider store={store}>
+          <ProductsProvider>
+            <ToastProvider
+              placement="bottom"
+              offsetBottom={50}
+              swipeEnabled={true}
+              normalColor="#333">
+              <GestureHandlerRootView style={{flex: 1}}>
+                <NavigationContainer>
               <Stack.Navigator
                 screenOptions={{headerShown: false}}
                 initialRouteName={showOnboarded ? 'Onboarding' : 'HomeScreen'}>
@@ -212,12 +226,37 @@ const App = () => {
                 name="OrderDetails"
                 component={OrderDetailsScreen}
               />
+              <Stack.Screen
+                name="CreditWallet"
+                component={CreditWalletScreen}
+              />
+              <Stack.Screen
+                name="CreditTopup"
+                component={CreditTopupScreen}
+              />
+              <Stack.Screen
+                name="CreditTransfer"
+                component={CreditTransferScreen}
+              />
+              <Stack.Screen
+                name="CreditHistory"
+                component={CreditHistoryScreen}
+              />
+              <Stack.Screen
+                name="DealDetails"
+                component={DealDetailsScreen}
+              />
+              <Stack.Screen
+                name="CelebrationRegistration"
+                component={CelebrationRegistrationScreen}
+              />
               </Stack.Navigator>
             </NavigationContainer>
           </GestureHandlerRootView>
         </ToastProvider>
       </ProductsProvider>
     </Provider>
+    </I18nProvider>
     </SafeAreaProvider>
   );
 };

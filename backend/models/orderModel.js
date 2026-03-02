@@ -95,6 +95,35 @@ const orderSchema = new Schema({
     trackingNumber: {
         type: String
     },
+    // Delivery person information
+    deliveryPerson: {
+        name: {
+            type: String
+        },
+        phone: {
+            type: String
+        },
+        vehicleNumber: {
+            type: String
+        }
+    },
+    // Current location for tracking
+    currentLocation: {
+        address: {
+            type: String
+        },
+        coordinates: {
+            latitude: {
+                type: Number
+            },
+            longitude: {
+                type: Number
+            }
+        },
+        lastUpdated: {
+            type: Date
+        }
+    },
     // Notes
     notes: {
         type: String

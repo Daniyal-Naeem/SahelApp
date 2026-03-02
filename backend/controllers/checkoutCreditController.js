@@ -5,6 +5,7 @@ const orderModel = require('../models/orderModel')
 const creditTransactionModel = require('../models/creditTransactionModel')
 const auditLogModel = require('../models/auditLogModel')
 const { syncUserWallet } = require('../utils/walletSync')
+const { checkAndAutoAssignVIP } = require('../utils/vipAutoAssignment')
 
 /**
  * Checkout Credit Controller
@@ -216,6 +217,14 @@ const completeCheckout = async (req, res) => {
                 await order.save({ session })
 
                 await session.commitTransaction()
+
+                // Auto-assign VIP membership if user qualifies
+                try {
+                    await checkAndAutoAssignVIP(userId)
+                } catch (vipError) {
+                    console.error('Error auto-assigning VIP:', vipError)
+                    // Don't fail the order if VIP assignment fails
+                }
 
                 // Log audit
                 await auditLogModel.log({

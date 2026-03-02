@@ -128,6 +128,12 @@ const Layout = ({ children }) => {
           >
             <span>📦</span> Orders
           </Link>
+          <Link 
+            to="/support" 
+            className={`nav-item ${isActive('/support') ? 'active' : ''}`}
+          >
+            <span>💬</span> Support Chat
+          </Link>
         </nav>
         <div className="sidebar-footer">
           <div className="user-info">
@@ -155,6 +161,7 @@ const Layout = ({ children }) => {
             {location.pathname.startsWith('/coupons') && 'Coupon Management'}
             {location.pathname.startsWith('/reviews') && 'Review Moderation'}
             {location.pathname.startsWith('/orders') && 'Order Management'}
+            {location.pathname.startsWith('/support') && 'Support Chat'}
           </h1>
         </header>
         <div className="content-area">

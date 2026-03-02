@@ -192,7 +192,24 @@ const updateOrderStatus = async (req, res) => {
             updateData.deliveredAt = new Date();
             updateData.paymentStatus = 'paid';
         }
+        
+        // Auto-assign VIP if payment status is being set to 'paid'
+        if (updateData.paymentStatus === 'paid' || (status === 'delivered' && updateData.paymentStatus === 'paid')) {
+            const { checkAndAutoAssignVIP } = require('../utils/vipAutoAssignment');
+            const order = await orderModel.findById(id);
+            if (order && order.user) {
+                try {
+                    await checkAndAutoAssignVIP(order.user.toString());
+                } catch (vipError) {
+                    console.error('Error auto-assigning VIP:', vipError);
+                    // Don't fail the order update if VIP assignment fails
+                }
+            }
+        }
 
+        // Get order before update to check user
+        const orderBeforeUpdate = await orderModel.findById(id);
+        
         const updatedOrder = await orderModel.findByIdAndUpdate(
             id,
             updateData,
@@ -203,6 +220,17 @@ const updateOrderStatus = async (req, res) => {
 
         if (!updatedOrder) {
             return res.status(404).json({ error: "Order not found" })
+        }
+
+        // Auto-assign VIP if payment status is being set to 'paid'
+        if (updateData.paymentStatus === 'paid' && orderBeforeUpdate && orderBeforeUpdate.user) {
+            const { checkAndAutoAssignVIP } = require('../utils/vipAutoAssignment');
+            try {
+                await checkAndAutoAssignVIP(orderBeforeUpdate.user.toString());
+            } catch (vipError) {
+                console.error('Error auto-assigning VIP:', vipError);
+                // Don't fail the order update if VIP assignment fails
+            }
         }
 
         return res.status(200).json({

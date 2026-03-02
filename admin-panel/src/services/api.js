@@ -1,6 +1,23 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+// For production on Vercel, use Vercel backend URL
+// For local development, use .env file or default to localhost
+const getApiBaseURL = () => {
+  // Check if VITE_API_URL is set (from .env or Vercel environment variables)
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  
+  // Production fallback - use Vercel backend
+  if (import.meta.env.PROD || window.location.hostname.includes('vercel.app')) {
+    return 'https://backend-4oii8uftk-daniyals-projects-a2864b3d.vercel.app/api'
+  }
+  
+  // Development fallback
+  return 'http://localhost:4000/api'
+}
+
+const API_BASE_URL = getApiBaseURL()
 
 // Create axios instance
 const api = axios.create({
@@ -181,6 +198,14 @@ export const orderAPI = {
   getOrderById: (id) => api.get(`/orders/${id}`),
   updateOrderStatus: (id, data) => api.put(`/orders/${id}/status`, data),
   cancelOrder: (id) => api.put(`/orders/${id}/cancel`),
+}
+
+// Support Chat APIs (Admin)
+export const supportAdminAPI = {
+  getAllConversations: (params) => api.get('/support/admin/conversations', { params }),
+  getConversation: (id) => api.get(`/support/admin/conversations/${id}`),
+  sendMessage: (id, text) => api.post(`/support/admin/conversations/${id}/messages`, { text }),
+  updateStatus: (id, status) => api.put(`/support/admin/conversations/${id}/status`, { status }),
 }
 
 export default api

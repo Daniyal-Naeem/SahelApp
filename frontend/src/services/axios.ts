@@ -6,8 +6,14 @@ export const getBaseURL = (): string => {
   // For iOS simulator, use localhost
   // For physical device, use your computer's local IP address
   return __DEV__ 
-    ? 'http://10.0.2.2:4000/api' // Android emulator - use 10.0.2.2 to access host machine
-    : 'https://backend-i472hxgzw-daniyals-projects-a2864b3d.vercel.app/api'; // Production - Vercel Backend
+    ? 'https://backend-4oii8uftk-daniyals-projects-a2864b3d.vercel.app/api' // Vercel Backend (for testing)
+    : 'https://backend-4oii8uftk-daniyals-projects-a2864b3d.vercel.app/api'; // Production - Vercel Backend
+};
+
+/** Server root URL (without /api) - for static assets like uploads */
+export const getServerBaseURL = (): string => {
+  const apiBase = getBaseURL();
+  return apiBase.replace(/\/api\/?$/, '') || apiBase;
 };
 
 const createAxiosInstance = (): AxiosInstance => {

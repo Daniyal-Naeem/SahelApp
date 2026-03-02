@@ -7,12 +7,12 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import React, {useMemo} from 'react';
+import React, {useMemo, useState} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
-import {ProductItem, CustomSearch} from '../components';
+import {ProductItem, CustomSearch, UnderPriceFilter} from '../components';
 import {DetailedProductData} from '../constants/data';
 import {ProductTypes} from '../constants/types';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
@@ -38,35 +38,43 @@ const CategoryTab = (_props: Props) => {
   const width = Dimensions.get('window').width;
   
   const {categoryTitle, categoryId} = route.params || {categoryTitle: 'Category'};
+  const [selectedUnderPrice, setSelectedUnderPrice] = useState<number | null>(null);
 
   // Filter products by category
   const displayProducts: ProductTypes[] = useMemo(() => {
-    if (!categoryTitle) {
-      return DetailedProductData;
+    let filtered = DetailedProductData;
+    
+    if (categoryTitle) {
+      const categoryTitleLower = categoryTitle.toLowerCase();
+      
+      // Filter products that match the category
+      filtered = DetailedProductData.filter((product) => {
+        // Check if product has a category field
+        const productCategory = (product as any).category?.toLowerCase() || '';
+        
+        // Check if any tags match the category
+        const productTags = product.tags?.map(tag => tag.toLowerCase()) || [];
+        const hasMatchingTag = productTags.some(tag => 
+          tag.includes(categoryTitleLower) || categoryTitleLower.includes(tag)
+        );
+        
+        // Match by category name, ID, or tags
+        return (
+          productCategory.includes(categoryTitleLower) ||
+          productCategory === categoryTitleLower ||
+          hasMatchingTag ||
+          (categoryId && (product as any).categoryId === categoryId)
+        );
+      });
     }
     
-    const categoryTitleLower = categoryTitle.toLowerCase();
+    // Apply under-price filter if selected
+    if (selectedUnderPrice) {
+      filtered = filtered.filter(product => product.price <= selectedUnderPrice);
+    }
     
-    // Filter products that match the category
-    return DetailedProductData.filter((product) => {
-      // Check if product has a category field
-      const productCategory = (product as any).category?.toLowerCase() || '';
-      
-      // Check if any tags match the category
-      const productTags = product.tags?.map(tag => tag.toLowerCase()) || [];
-      const hasMatchingTag = productTags.some(tag => 
-        tag.includes(categoryTitleLower) || categoryTitleLower.includes(tag)
-      );
-      
-      // Match by category name, ID, or tags
-      return (
-        productCategory.includes(categoryTitleLower) ||
-        productCategory === categoryTitleLower ||
-        hasMatchingTag ||
-        (categoryId && (product as any).categoryId === categoryId)
-      );
-    });
-  }, [categoryTitle, categoryId]);
+    return filtered;
+  }, [categoryTitle, categoryId, selectedUnderPrice]);
 
   const NavigateToProfile = () => {
     navigation.navigate('Setting');
@@ -131,6 +139,15 @@ const CategoryTab = (_props: Props) => {
             <SvgXml xml={filterIcon} width={r(16)} height={r(16)} />
           </TouchableOpacity>
         </View>
+      </View>
+
+      {/* Under Price Filter */}
+      <View style={styles.underPriceSection}>
+        <UnderPriceFilter
+          selectedValue={selectedUnderPrice}
+          onSelect={setSelectedUnderPrice}
+          currency="SAR"
+        />
       </View>
 
       {/* Products Grid */}
@@ -198,6 +215,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing[4],
+  },
+  underPriceSection: {
+    marginBottom: Spacing[5],
   },
   categoryTitle: {
     fontSize: FontSizes['2xl'],

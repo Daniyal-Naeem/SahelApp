@@ -47,7 +47,13 @@ import {
   type SupportConversation,
   type SupportMessage,
 } from '../services/supportService';
-import {getBaseURL} from '../services/axios';
+import {getBaseURL, getServerBaseURL} from '../services/axios';
+import {
+  connectSupportSocket,
+  disconnectSupportSocket,
+  isSupportSocketConnected,
+  type SupportNewMessagePayload,
+} from '../services/supportSocket';
 
 type StepType =
   | 'issue-selection'
@@ -90,7 +96,27 @@ const SupportScreen = () => {
   const [currentConversation, setCurrentConversation] = useState<SupportConversation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const pollingIntervalRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
   const MAX_MESSAGE_LENGTH = 1000;
+
+  const handleNewMessage = React.useCallback((payload: SupportNewMessagePayload) => {
+    if (currentConversation && payload.conversationId === currentConversation._id) {
+      const imageUrl = payload.message.attachments?.find(a => a.type === 'image')?.url;
+      const fullImageUrl = imageUrl && !imageUrl.startsWith('http') ? `${getServerBaseURL()}${imageUrl}` : imageUrl;
+      setSupportSessionData(prev => ({
+        ...prev,
+        messages: [
+          ...prev.messages,
+          {
+            type: 'support' as const,
+            text: payload.message.text,
+            image: fullImageUrl,
+            timestamp: new Date(payload.message.createdAt),
+          },
+        ],
+      }));
+    }
+  }, [currentConversation]);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -112,13 +138,19 @@ const SupportScreen = () => {
     };
   }, []);
 
-  // Load conversations and protect screen
+  // Load conversations, connect socket, and protect screen
   useFocusEffect(
     React.useCallback(() => {
+      let isMounted = true;
       protectScreen(
         async () => {
-          // User is authenticated, load conversations
           await loadConversations();
+          connectSupportSocket(handleNewMessage);
+          pollingIntervalRef.current = setInterval(() => {
+            if (isMounted && !isSupportSocketConnected()) {
+              loadConversations();
+            }
+          }, 15000);
         },
         navigation,
         {
@@ -131,7 +163,15 @@ const SupportScreen = () => {
           },
         }
       );
-    }, [navigation, message, selectedIssue, loadConversations])
+      return () => {
+        isMounted = false;
+        disconnectSupportSocket();
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      };
+    }, [navigation, message, selectedIssue, loadConversations, handleNewMessage])
   );
 
   // Load conversations from API
@@ -148,9 +188,8 @@ const SupportScreen = () => {
         // Convert API messages to display format
         const displayMessages = fullConversation.messages.map(msg => {
           const imageUrl = msg.attachments?.find(a => a.type === 'image')?.url;
-          // Construct full URL if relative path
           const fullImageUrl = imageUrl && !imageUrl.startsWith('http') 
-            ? `${getBaseURL()}${imageUrl}` 
+            ? `${getServerBaseURL()}${imageUrl}` 
             : imageUrl;
           
           return {
@@ -590,7 +629,6 @@ const SupportScreen = () => {
           {supportSessionData.messages.map((msg, index) => {
             if (msg.type === 'user') {
               if (msg.image) {
-                // Render image message
                 return (
                   <View key={index} style={styles.imageMessageContainer}>
                     <View style={styles.imageMessageBubble}>
@@ -611,6 +649,24 @@ const SupportScreen = () => {
                   />
                 );
               }
+            }
+            if (msg.type === 'support') {
+              return (
+                <View key={index} style={styles.supportMessageContainer}>
+                  <View style={styles.supportMessageBubble}>
+                    {msg.image ? (
+                      <FastImage
+                        source={{uri: msg.image}}
+                        style={styles.messageImage}
+                        resizeMode={FastImage.resizeMode.cover}
+                      />
+                    ) : null}
+                    {msg.text ? (
+                      <Text style={styles.supportMessageText}>{msg.text}</Text>
+                    ) : null}
+                  </View>
+                </View>
+              );
             }
             if (msg.type === 'order-card' && msg.order) {
               return <OrderCardMessage key={index} order={msg.order} />;
@@ -1075,6 +1131,23 @@ const styles = StyleSheet.create({
   },
   ordersScrollContent: {
     paddingBottom: Spacing[2],
+  },
+  supportMessageContainer: {
+    alignItems: 'flex-start',
+    marginBottom: Spacing[2],
+    paddingLeft: Spacing[5],
+  },
+  supportMessageBubble: {
+    backgroundColor: Colors.primaryLight,
+    borderRadius: r(12),
+    padding: Spacing[3],
+    maxWidth: '80%',
+  },
+  supportMessageText: {
+    fontSize: FontSizes.sm,
+    fontFamily: FontFamilies.mmedium,
+    color: Colors.black[100],
+    lineHeight: r(18),
   },
   imageMessageContainer: {
     alignItems: 'flex-end',

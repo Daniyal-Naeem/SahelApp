@@ -25,6 +25,9 @@ import { logout } from '../assets/svgs/logout';
 import { orderIcon } from '../assets/svgs/orderIcon';
 import {checkAuthStatus} from '../utils/authGuard';
 import {getItem} from '../utils/AsyncStorage';
+import {getVIPStatus, type VIPMembership} from '../services/vipService';
+import VIPBadge from './VIPBadge';
+import {useI18n} from '../contexts/I18nContext';
 
 interface MenuItem {
   id: string;
@@ -35,9 +38,11 @@ interface MenuItem {
 }
 
 const CustomDrawerContent = (props: any) => {
+  const { t } = useI18n();
   const [activeMenuItemId, setActiveMenuItemId] = useState<string>('1'); // Default to first item
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userInfo, setUserInfo] = useState<{name?: string; email?: string} | null>(null);
+  const [vipMembership, setVipMembership] = useState<VIPMembership | null>(null);
 
   // Check authentication status when drawer opens
   useFocusEffect(
@@ -57,11 +62,20 @@ const CustomDrawerContent = (props: any) => {
                 email: user.email || '',
               });
             }
+            // Load VIP status
+            try {
+              const vipStatus = await getVIPStatus();
+              setVipMembership(vipStatus);
+            } catch (error) {
+              console.error('Error loading VIP status:', error);
+              setVipMembership(null);
+            }
           } catch (error) {
             console.error('Error loading user info:', error);
           }
         } else {
           setUserInfo(null);
+          setVipMembership(null);
         }
       };
       
@@ -70,14 +84,16 @@ const CustomDrawerContent = (props: any) => {
   );
 
   const menuItems: MenuItem[] = [
-    {id: '1', label: 'Join VIP Club', icon: VIPIcon, route: 'VIPClub'},
-    {id: '2', label: 'My Orders', icon: orderIcon, route: 'Orders'},
-    {id: '3', label: 'Wishlist', icon: wishlist, route: 'Wishlist'},
-    {id: '4', label: 'Notifications', icon: notification, route: 'Notifications'},
-    {id: '5', label: 'Send/Redeem Gifts', icon: sendGifts, route: 'Gifts'},
-    {id: '6', label: 'Support', icon: support, route: 'Support'},
-    {id: '7', label: 'Language', icon: language, route: 'Language'},
-    {id: '8', label: 'Settings', icon: settings, route: 'Profile'},
+    {id: '1', label: t('vip.joinVip'), icon: VIPIcon, route: 'VIPClub'},
+    {id: '2', label: t('navigation.cart'), icon: sendGifts, route: 'CreditWallet'},
+    {id: '3', label: t('navigation.orders'), icon: orderIcon, route: 'Orders'},
+    {id: '4', label: t('navigation.wishlist'), icon: wishlist, route: 'Wishlist'},
+    {id: '5', label: t('navigation.notifications'), icon: notification, route: 'Notifications'},
+    {id: '6', label: t('gifts.sendGift'), icon: sendGifts, route: 'Gifts'},
+    {id: '7', label: t('celebrations.registerCelebration'), icon: sendGifts, route: 'CelebrationRegistration'},
+    {id: '8', label: t('navigation.support'), icon: support, route: 'Support'},
+    {id: '9', label: t('navigation.language'), icon: language, route: 'Language'},
+    {id: '10', label: t('navigation.settings'), icon: settings, route: 'Profile'},
   ];
 
   const handleMenuItemPress = (item: MenuItem) => {
@@ -157,9 +173,14 @@ const CustomDrawerContent = (props: any) => {
             resizeMode={FastImage.resizeMode.cover}
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>
-              {isAuthenticated && userInfo?.name ? userInfo.name.toUpperCase() : 'GUEST USER'}
-            </Text>
+            <View style={styles.profileNameContainer}>
+              <Text style={styles.profileName}>
+                {isAuthenticated && userInfo?.name ? userInfo.name.toUpperCase() : 'GUEST USER'}
+              </Text>
+              {isAuthenticated && vipMembership && (
+                <VIPBadge membership={vipMembership} size="small" />
+              )}
+            </View>
             <Text style={styles.profileEmail}>
               {isAuthenticated && userInfo?.email ? userInfo.email : 'Not logged in'}
             </Text>
@@ -207,7 +228,7 @@ const CustomDrawerContent = (props: any) => {
               height={r(24)}
               style={styles.menuIcon}
             />
-            <Text style={styles.logoutText}>Logout</Text>
+            <Text style={styles.logoutText}>{t('auth.logout')}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -244,11 +265,17 @@ const styles = StyleSheet.create({
   profileInfo: {
     flex: 1,
   },
+  profileNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing[2],
+    marginBottom: Spacing[1],
+    flexWrap: 'wrap',
+  },
   profileName: {
     fontSize: FontSizes.base,
     fontFamily: FontFamilies.mbold,
     color: Colors.black[100],
-    marginBottom: Spacing[1],
   },
   profileEmail: {
     fontSize: FontSizes.sm,

@@ -30,6 +30,7 @@ import CouponsPage from './pages/CouponsPage'
 import ReviewsPage from './pages/ReviewsPage'
 import OrdersPage from './pages/OrdersPage'
 import OrderDetailPage from './pages/OrderDetailPage'
+import SupportChatPage from './pages/SupportChatPage'
 
 function App() {
   return (
@@ -307,6 +308,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <OrderDetailPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/support"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <SupportChatPage />
               </Layout>
             </ProtectedRoute>
           }

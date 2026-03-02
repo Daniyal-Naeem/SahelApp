@@ -19,8 +19,11 @@ const couponRoute = require('./routes/couponRoute')
 const reviewRoute = require('./routes/reviewRoute')
 const vipRoute = require('./routes/vipRoute')
 const supportRoute = require('./routes/supportRoute')
+const supportAdminRoute = require('./routes/supportAdminRoute')
 const adminRoute = require('./routes/adminRoute')
 const debugRoute = require('./routes/debugRoute')
+const celebrationRoute = require('./routes/celebrationRoute')
+const deliveryRoute = require('./routes/deliveryRoute')
 
 // initialize a new express application instance
 const app = express();
@@ -77,7 +80,10 @@ app.use("/api/", giftCardRoute); // Gift card management
 app.use("/api/", couponRoute); // Coupon management
 app.use("/api/", reviewRoute); // Review approval & moderation
 app.use("/api/vip/", vipRoute); // VIP Club management
-app.use("/api/support/", supportRoute); // Support/Chat system
+app.use("/api/support/", supportRoute); // Support/Chat system (user)
+app.use("/api/support/admin/", supportAdminRoute); // Support/Chat admin (admin panel)
+app.use("/api/celebrations/", celebrationRoute); // Celebration events & campaigns
+app.use("/api/delivery/", deliveryRoute); // Delivery tracking
 app.use("/api/admin/", adminRoute);
 app.use("/api/", debugRoute); // Debug endpoint
 
@@ -101,33 +107,84 @@ app.get('/health', (req, res) => {
 
 // connect to DataBase (MONGODB)
 
-const PORT = process.env.PORT // http://localhost:4000/api/products/ -> POST
+const http = require('http');
+const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
+const { setSocketIO } = require('./services/socketService');
+
+const PORT = process.env.PORT || 4000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
 // MongoDB connection options for better serverless support
 const mongooseOptions = {
-  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-  socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
 }
 
-// For Vercel serverless deployment
+// For Vercel serverless deployment - no Socket.io (serverless doesn't support WebSockets)
 if (process.env.VERCEL) {
-  // Connect to MongoDB without listening (Vercel handles requests)
-  // Use cached connection if available (for serverless)
   if (mongoose.connection.readyState === 0) {
     mongoose.connect(MONGODB_URI, mongooseOptions)
       .then(() => console.log('Connected to MongoDB for Vercel deployment'))
       .catch((error) => console.error(`MongoDB connection error:`, error.message));
   }
+  module.exports = app;
 } else {
-  // For local development
-  mongoose.connect(MONGODB_URI, mongooseOptions)
-    .then(() => app.listen(PORT, () => console.log(`Connected to DB, and running on http://localhost:${PORT}/`)))
-    .catch((error) => console.log(`Error:`, error.message));
-}
+  // Local development - HTTP server + Socket.io for real-time support chat
+  const server = http.createServer(app);
 
-// Export for Vercel
-module.exports = app;
+  const io = new Server(server, {
+    cors: {
+      origin: [
+        'http://localhost:3000',
+        'http://localhost:8081',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:8081',
+        'http://10.0.2.2:8081',
+      ],
+      credentials: true
+    },
+    path: '/socket.io',
+    transports: ['websocket', 'polling']
+  });
+
+  io.use((socket, next) => {
+    const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+    if (!token) {
+      return next(new Error('Authentication required'));
+    }
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production');
+      socket.userId = decoded.userId;
+      socket.role = decoded.role;
+      next();
+    } catch (err) {
+      next(new Error('Invalid token'));
+    }
+  });
+
+  io.on('connection', (socket) => {
+    if (socket.role === 'admin') {
+      socket.join('admin');
+    } else {
+      socket.join(`user:${socket.userId}`);
+    }
+    socket.on('disconnect', () => {});
+  });
+
+  setSocketIO(io);
+
+  mongoose.connect(MONGODB_URI, mongooseOptions)
+    .then(() => {
+      server.listen(PORT, () => {
+        console.log(`Connected to DB, and running on http://localhost:${PORT}/`);
+        console.log(`Socket.io enabled for real-time support chat`);
+      });
+    })
+    .catch((error) => console.log(`Error:`, error.message));
+
+  module.exports = app;
+}
 
 
 

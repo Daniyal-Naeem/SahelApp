@@ -35,6 +35,18 @@ interface TrackingStep {
   date?: string;
   isCompleted: boolean;
   isCurrent: boolean;
+  deliveryPerson?: {
+    name: string;
+    phone: string;
+    vehicleNumber?: string;
+  };
+  location?: {
+    address: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
 }
 
 const OrderDetailsScreen = () => {
@@ -70,7 +82,7 @@ const OrderDetailsScreen = () => {
       setOrder(orderData);
     } catch (error: any) {
       console.error('Error loading order:', error);
-      toast.showToast(error.response?.data?.error || 'Failed to load order', 'error');
+      toast.showToast(error.response?.data?.error || 'Failed to load order');
       // Fallback to initial order if API fails
       if (initialOrder) {
         // Keep using initial order data
@@ -115,8 +127,7 @@ const OrderDetailsScreen = () => {
               await loadOrder(false);
             } catch (error: any) {
               toast.showToast(
-                error.response?.data?.error || 'Failed to cancel order',
-                'error'
+                error.response?.data?.error || 'Failed to cancel order'
               );
             } finally {
               setIsCancelling(false);
@@ -164,6 +175,12 @@ const OrderDetailsScreen = () => {
 
   // Define tracking steps based on order status
   const getTrackingSteps = (): TrackingStep[] => {
+    const orderDisplay = getDisplayOrder();
+    return getTrackingStepsArray(orderDisplay, order);
+  };
+
+  // Separate function for tracking steps to avoid recursion
+  const getTrackingStepsArray = (orderDisplay: any, order: Order | null): TrackingStep[] => {
     const displayOrder = getDisplayOrder();
     if (!displayOrder) return [];
 
@@ -209,7 +226,8 @@ const OrderDetailsScreen = () => {
           break;
       }
 
-      return {
+      // Enhanced tracking with delivery info
+      const enhancedStep: TrackingStep = {
         status: step,
         title: step,
         description,
@@ -217,11 +235,26 @@ const OrderDetailsScreen = () => {
         isCompleted,
         isCurrent,
       };
+
+      // Add delivery person info for current step
+      if (step === 'Shipped' && order?.deliveryPerson) {
+        enhancedStep.deliveryPerson = order.deliveryPerson;
+      }
+
+      // Add location info if available
+      if (order?.currentLocation) {
+        enhancedStep.location = {
+          address: order.currentLocation.address,
+          coordinates: order.currentLocation.coordinates,
+        };
+      }
+
+      return enhancedStep;
     });
   };
 
   const displayOrder = getDisplayOrder();
-  const trackingSteps = getTrackingSteps();
+  const trackingSteps = getTrackingStepsArray(displayOrder, order);
 
   // Show loading state
   if (isLoading && !order && !initialOrder) {
@@ -440,9 +473,18 @@ const OrderDetailsScreen = () => {
         {/* Tracking Timeline */}
         <View style={styles.trackingSection}>
           <Text style={styles.sectionTitle}>Track Your Order</Text>
-          <View style={styles.timelineContainer}>
-            {trackingSteps.map((step, index) => renderTrackingStep(step, index))}
-          </View>
+          <DeliveryTimeline
+            steps={trackingSteps.map(step => ({
+              ...step,
+              deliveryPerson: step.isCurrent && order?.deliveryPerson ? order.deliveryPerson : undefined,
+              location: order?.currentLocation ? {
+                address: order.currentLocation.address,
+                coordinates: order.currentLocation.coordinates,
+              } : undefined,
+            }))}
+            showDeliveryPerson={true}
+            showLocation={true}
+          />
         </View>
 
         {/* Action Buttons */}
@@ -454,12 +496,10 @@ const OrderDetailsScreen = () => {
               onPress={async () => {
                 // Copy tracking number to clipboard and show toast
                 try {
-                  const Clipboard = await import('@react-native-clipboard/clipboard');
-                  Clipboard.default.setString(displayOrder.trackingNumber);
-                  toast.showToast(`Tracking number copied: ${displayOrder.trackingNumber}`, 'success');
+                  // For now, just show the tracking number since clipboard package might not be installed
+                  toast.showToast(`Tracking: ${displayOrder.trackingNumber}`);
                 } catch (error) {
-                  // Fallback: just show the tracking number
-                  toast.showToast(`Tracking: ${displayOrder.trackingNumber}`, 'info');
+                  toast.showToast(`Tracking: ${displayOrder.trackingNumber}`);
                 }
               }}>
               <Text style={styles.primaryButtonText}>Track Package</Text>

@@ -7,16 +7,17 @@ import {
   ImageSourcePropType,
   StyleSheet,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import Carousel from 'react-native-reanimated-carousel';
 import {icons, images} from '../constants';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
-import {ProductItem, DealBanner, SummerSaleBanner, SponsoredSection} from '../components';
+import {ProductItem, DealBanner, SummerSaleBanner, SponsoredSection, UnderPriceFilter, DealCard, DealCountdown, CelebrationCard, AppAdSlider} from '../components';
 import {CategoriesData, DetailedProductData} from '../constants/data';
 import {ProductTypes} from '../constants/types';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
@@ -27,8 +28,11 @@ import {sortIcon} from '../assets/svgs/sortIcon';
 import {getAllProducts} from '../services/productService';
 import {getProductImage} from '../utils/productHelpers';
 import {getAllBanners, trackBannerClick, Banner} from '../services/bannerService';
-import {getAllDeals, Deal, getTimeRemaining} from '../services/dealService';
+import {getAllDeals, getDealsByType, Deal, getTimeRemaining, formatDealDiscount, getDealTypeLabel} from '../services/dealService';
 import {getPinnedProducts, PinnedProduct} from '../services/pinnedProductService';
+import {getCelebrationCampaigns, type CelebrationCampaign} from '../services/celebrationService';
+import {getAppAds, type AppAd} from '../services/appAdService';
+import {useI18n} from '../contexts/I18nContext';
 
 type Props = {};
 
@@ -37,6 +41,7 @@ const HomeTab = (_props: Props) => {
     StackNavigationProp<RootStackParamList> & DrawerNavigationProp<any>
   >();
   const insets = useSafeAreaInsets();
+  const { t } = useI18n();
   const width = Dimensions.get('window').width;
   // Calculate carousel dimensions for dummy images
   const carouselWidth = width - Spacing[5] * 2;
@@ -57,6 +62,8 @@ const HomeTab = (_props: Props) => {
   const [pinnedProducts, setPinnedProducts] = useState<PinnedProduct[]>([]);
   const [isLoadingBanners, setIsLoadingBanners] = useState(false);
   const [isLoadingDeals, setIsLoadingDeals] = useState(false);
+  const [selectedDealType, setSelectedDealType] = useState<string | null>(null);
+  const [filteredDeals, setFilteredDeals] = useState<Deal[]>([]);
   type RootStackParamList = {
     Setting: undefined;
   };
@@ -64,6 +71,14 @@ const HomeTab = (_props: Props) => {
   // State for products from API
   const [products, setProducts] = useState<ProductTypes[]>(DetailedProductData);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [isRefreshingProducts, setIsRefreshingProducts] = useState(false);
+  const [selectedUnderPrice, setSelectedUnderPrice] = useState<number | null>(null);
+  const [underPriceProducts, setUnderPriceProducts] = useState<ProductTypes[]>([]);
+  const [isLoadingUnderPrice, setIsLoadingUnderPrice] = useState(false);
+  const [celebrationCampaigns, setCelebrationCampaigns] = useState<CelebrationCampaign[]>([]);
+  const [isLoadingCelebrations, setIsLoadingCelebrations] = useState(false);
+  const [appAds, setAppAds] = useState<AppAd[]>([]);
+  const [isLoadingAppAds, setIsLoadingAppAds] = useState(false);
 
   // Load banners from API
   useEffect(() => {
@@ -104,6 +119,8 @@ const HomeTab = (_props: Props) => {
         const dealsData = await getAllDeals();
         if (dealsData && dealsData.length > 0) {
           setDeals(dealsData);
+          // Set filtered deals initially to all deals
+          setFilteredDeals(dealsData);
         }
       } catch (error) {
         console.error('Error loading deals:', error);
@@ -114,6 +131,26 @@ const HomeTab = (_props: Props) => {
 
     loadDeals();
   }, []);
+
+  // Filter deals by type
+  useEffect(() => {
+    if (selectedDealType) {
+      const filtered = deals.filter(deal => deal.type === selectedDealType);
+      setFilteredDeals(filtered);
+    } else {
+      setFilteredDeals(deals);
+    }
+  }, [selectedDealType, deals]);
+
+  // Handle deal type filter
+  const handleDealTypeFilter = (type: string | null) => {
+    setSelectedDealType(type);
+  };
+
+  // Navigate to deal details
+  const handleDealPress = (deal: Deal) => {
+    navigation.navigate('DealDetails', {dealId: deal._id});
+  };
 
   // Load pinned products from API
   useEffect(() => {
@@ -131,86 +168,196 @@ const HomeTab = (_props: Props) => {
     loadPinnedProducts();
   }, []);
 
-  // Load products from API on component mount
+  // Load celebration campaigns from API
   useEffect(() => {
-    const loadProducts = async () => {
-      setIsLoadingProducts(true);
+    const loadCelebrationCampaigns = async () => {
+      setIsLoadingCelebrations(true);
       try {
-        const productsData = await getAllProducts({
-          limit: 20, // Load first 20 products
-          sortBy: 'createdAt',
-          sortOrder: 'desc',
-        });
-        
-        // Backend returns array directly when products exist
-        // Backend returns {message: " No Products Found "} when no products (404)
-        // Handle both array response and object with products property
-        let productsArray: any[] = [];
-        
-        if (Array.isArray(productsData)) {
-          // Backend returns array directly when products exist
-          productsArray = productsData;
-        } else if (productsData && productsData.products && Array.isArray(productsData.products)) {
-          // Backend returns object with products property
-          productsArray = productsData.products;
-        } else if (productsData && Array.isArray(productsData.data)) {
-          // Backend returns object with data property
-          productsArray = productsData.data;
-        } else if (productsData && productsData.message) {
-          // Backend returns {message: " No Products Found "} when no products
-          console.log('Backend message:', productsData.message);
-          // Keep dummy data if no products in database
-          return; // Exit early, keep dummy data
+        const campaigns = await getCelebrationCampaigns();
+        if (campaigns && campaigns.length > 0) {
+          setCelebrationCampaigns(campaigns);
         }
-        
-        if (productsArray && productsArray.length > 0) {
-          // Map backend products to frontend ProductTypes format
-          const mappedProducts = productsArray.map((product: any) => ({
-            _id: product._id,
-            title: product.title || product.name || 'Untitled Product', // Backend uses 'title'
-            description: product.description || '',
-            price: product.price || 0,
-            priceBeforeDeal: product.priceBeforeDeal || product.originalPrice || product.price || 0,
-            priceOff: product.priceOff || (product.priceBeforeDeal && product.price 
-              ? `${Math.round(((product.priceBeforeDeal - product.price) / product.priceBeforeDeal) * 100)}%`
-              : '0%'),
-            stars: product.stars || product.rating || 0,
-            numberOfReview: product.numberOfReview || product.reviewsCount || 0,
-            image: product.image || product.images || [],
-            tags: product.tags || [],
-            createdAt: product.createdAt || '',
-            updatedAt: product.updatedAt || '',
-            __v: product.__v || 0,
-            variations: product.variations || [],
-            colorOptions: product.colors || [],
-            deliveryOptions: [],
-          }));
-          setProducts(mappedProducts);
-          console.log(`Loaded ${mappedProducts.length} products from API`);
-        } else {
-          console.log('No products found in API response - using dummy data');
-          // Keep dummy data if no products returned
-        }
-      } catch (error: any) {
-        console.error('Error loading products:', error);
-        console.error('Error status:', error.response?.status);
-        console.error('Error details:', error.response?.data || error.message);
-        
-        // Handle 404 specifically (no products found)
-        if (error.response?.status === 404) {
-          console.log('No products found (404) - using dummy data');
-          // Keep dummy data
-        } else {
-          // Other errors - keep dummy data as fallback
-          console.log('API error - using dummy data as fallback');
-        }
+      } catch (error) {
+        console.error('Error loading celebration campaigns:', error);
       } finally {
-        setIsLoadingProducts(false);
+        setIsLoadingCelebrations(false);
       }
     };
 
+    loadCelebrationCampaigns();
+  }, []);
+
+  // Load app ads from API
+  useEffect(() => {
+    const loadAppAds = async () => {
+      setIsLoadingAppAds(true);
+      try {
+        const ads = await getAppAds('homepage');
+        if (ads && ads.length > 0) {
+          setAppAds(ads);
+        }
+      } catch (error) {
+        console.error('Error loading app ads:', error);
+      } finally {
+        setIsLoadingAppAds(false);
+      }
+    };
+
+    loadAppAds();
+  }, []);
+
+  // Load products under specific price
+  const loadUnderPriceProducts = async (maxPrice: number) => {
+    setIsLoadingUnderPrice(true);
+    try {
+      const filteredProducts = await getAllProducts({
+        maxPrice,
+        limit: 20,
+        sortBy: 'price',
+        sortOrder: 'asc',
+      });
+      
+      // Map backend products to frontend format
+      const mappedProducts = filteredProducts.map((product: any) => ({
+        _id: product._id,
+        title: product.title || product.name || 'Untitled Product',
+        description: product.description || '',
+        price: product.price || 0,
+        priceBeforeDeal: product.priceBeforeDeal || product.originalPrice || product.price || 0,
+        priceOff: product.priceOff || (product.priceBeforeDeal && product.price 
+          ? `${Math.round(((product.priceBeforeDeal - product.price) / product.priceBeforeDeal) * 100)}%`
+          : '0%'),
+        stars: product.stars || product.rating || 0,
+        numberOfReview: product.numberOfReview || product.reviewsCount || 0,
+        image: product.image || product.images || [],
+        tags: product.tags || [],
+        createdAt: product.createdAt || '',
+        updatedAt: product.updatedAt || '',
+        __v: product.__v || 0,
+        variations: product.variations || [],
+        colorOptions: product.colors || [],
+        deliveryOptions: [],
+      }));
+      
+      setUnderPriceProducts(mappedProducts);
+    } catch (error: any) {
+      console.error('Error loading under-price products:', error);
+      // Filter local products as fallback
+      const filtered = products.filter(p => p.price <= maxPrice);
+      setUnderPriceProducts(filtered.slice(0, 20));
+    } finally {
+      setIsLoadingUnderPrice(false);
+    }
+  };
+
+  // Handle under-price filter selection
+  const handleUnderPriceSelect = (value: number | null) => {
+    setSelectedUnderPrice(value);
+    if (value) {
+      loadUnderPriceProducts(value);
+    } else {
+      setUnderPriceProducts([]);
+    }
+  };
+
+  // Load products from API
+  const loadProducts = async (isRefresh = false) => {
+    if (isRefresh) {
+      setIsRefreshingProducts(true);
+    } else {
+      setIsLoadingProducts(true);
+    }
+    
+    try {
+      // Backend doesn't support query parameters, so just call /products
+      const productsData = await getAllProducts();
+      
+      // Backend returns array directly when products exist
+      // Backend returns {message: " No Products Found "} when no products (404)
+      // Handle both array response and object with products property
+      let productsArray: any[] = [];
+      
+      if (Array.isArray(productsData)) {
+        // Backend returns array directly when products exist
+        productsArray = productsData;
+      } else if (productsData && productsData.products && Array.isArray(productsData.products)) {
+        // Backend returns object with products property
+        productsArray = productsData.products;
+      } else if (productsData && Array.isArray(productsData.data)) {
+        // Backend returns object with data property
+        productsArray = productsData.data;
+      } else if (productsData && productsData.message) {
+        // Backend returns {message: " No Products Found "} when no products
+        console.log('Backend message:', productsData.message);
+        // Keep dummy data if no products in database
+        return; // Exit early, keep dummy data
+      }
+      
+      if (productsArray && productsArray.length > 0) {
+        // Map backend products to frontend ProductTypes format
+        const mappedProducts = productsArray.map((product: any) => ({
+          _id: product._id,
+          title: product.title || product.name || 'Untitled Product', // Backend uses 'title'
+          description: product.description || '',
+          price: product.price || 0,
+          priceBeforeDeal: product.priceBeforeDeal || product.originalPrice || product.price || 0,
+          priceOff: product.priceOff || (product.priceBeforeDeal && product.price 
+            ? `${Math.round(((product.priceBeforeDeal - product.price) / product.priceBeforeDeal) * 100)}%`
+            : '0%'),
+          stars: product.stars || product.rating || 0,
+          numberOfReview: product.numberOfReview || product.reviewsCount || 0,
+          image: product.image || product.images || [],
+          tags: product.tags || [],
+          createdAt: product.createdAt || '',
+          updatedAt: product.updatedAt || '',
+          __v: product.__v || 0,
+          variations: product.variations || [],
+          colorOptions: product.colors || [],
+          deliveryOptions: [],
+        }));
+        setProducts(mappedProducts);
+        console.log(`✅ Loaded ${mappedProducts.length} products from API`);
+      } else {
+        console.log('No products found in API response - using dummy data');
+        // Keep dummy data if no products returned
+      }
+    } catch (error: any) {
+      console.error('❌ Error loading products:', error);
+      console.error('Error status:', error.response?.status);
+      console.error('Error details:', error.response?.data || error.message);
+      console.error('API URL:', error.config?.url || 'Unknown');
+      
+      // Handle 404 specifically (no products found)
+      if (error.response?.status === 404) {
+        console.log('No products found (404) - using dummy data');
+        // Keep dummy data
+      } else {
+        // Other errors - keep dummy data as fallback
+        console.log('API error - using dummy data as fallback');
+      }
+    } finally {
+      setIsLoadingProducts(false);
+      setIsRefreshingProducts(false);
+    }
+  };
+
+  // Load products on component mount
+  useEffect(() => {
     loadProducts();
   }, []);
+
+  // Reload products when screen is focused (to get new products added via admin panel)
+  useFocusEffect(
+    React.useCallback(() => {
+      // Reload products when screen comes into focus
+      loadProducts();
+    }, [])
+  );
+
+  // Handle pull to refresh
+  const handleRefresh = () => {
+    loadProducts(true);
+  };
 
   // Handle banner click
   const handleBannerPress = async (banner: Banner | {id?: string}) => {
@@ -298,7 +445,15 @@ const HomeTab = (_props: Props) => {
   return (
     <ScrollView
       style={styles.scrollView}
-      contentContainerStyle={styles.scrollViewContent}>
+      contentContainerStyle={styles.scrollViewContent}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshingProducts}
+          onRefresh={handleRefresh}
+          colors={[Colors.primary]}
+          tintColor={Colors.primary}
+        />
+      }>
       {/* header */}
       <View style={[styles.header, {paddingTop: insets.top}]}>
         <TouchableOpacity onPress={handleOpenDrawer}>
@@ -461,11 +616,59 @@ const HomeTab = (_props: Props) => {
           )}
         </View>
       </View>
+      {/* Deal Type Filters */}
+      {deals.length > 0 && (
+        <View style={styles.dealFiltersContainer}>
+          <Text style={styles.dealFiltersTitle}>{t('home.deals')}</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.dealFiltersContent}>
+            <TouchableOpacity
+              style={[
+                styles.dealFilterButton,
+                !selectedDealType && styles.dealFilterButtonActive,
+              ]}
+              onPress={() => handleDealTypeFilter(null)}>
+              <Text
+                style={[
+                  styles.dealFilterText,
+                  !selectedDealType && styles.dealFilterTextActive,
+                ]}>
+                All Deals
+              </Text>
+            </TouchableOpacity>
+            {['daily', 'weekly', 'monthly', 'flash'].map(type => {
+              const dealTypeExists = deals.some(d => d.type === type);
+              if (!dealTypeExists) return null;
+              return (
+                <TouchableOpacity
+                  key={type}
+                  style={[
+                    styles.dealFilterButton,
+                    selectedDealType === type && styles.dealFilterButtonActive,
+                  ]}
+                  onPress={() => handleDealTypeFilter(type)}>
+                  <Text
+                    style={[
+                      styles.dealFilterText,
+                      selectedDealType === type && styles.dealFilterTextActive,
+                    ]}>
+                    {getDealTypeLabel(type)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+
       {/* deal of the day */}
       {deals.length > 0 && deals[0] ? (
         <DealBanner
           title={deals[0].title || "Deal of the Day"}
-          timeRemaining={getTimeRemaining(deals[0].endDate)}
+          endDate={deals[0].endDate}
+          useCountdown={true}
           buttonText="View all"
           onButtonPress={handleDealOfTheDayPress}
         />
@@ -477,6 +680,86 @@ const HomeTab = (_props: Props) => {
           onButtonPress={handleDealOfTheDayPress}
         />
       )}
+
+      {/* Deals List */}
+      {filteredDeals.length > 0 && (
+        <View style={styles.dealsListContainer}>
+          <Text style={styles.sectionTitle}>
+            {selectedDealType ? getDealTypeLabel(selectedDealType) : 'All Deals'}
+          </Text>
+          <FlatList
+            data={filteredDeals.slice(0, 5)} // Show first 5 deals
+            renderItem={({item}) => (
+              <DealCard
+                deal={item}
+                onPress={() => handleDealPress(item)}
+                showCountdown={true}
+              />
+            )}
+            keyExtractor={item => item._id}
+            scrollEnabled={false}
+          />
+          {filteredDeals.length > 5 && (
+            <TouchableOpacity
+              style={styles.viewAllDealsButton}
+              onPress={() => navigation.navigate('DealDetails', {dealType: selectedDealType})}>
+              <Text style={styles.viewAllDealsText}>
+                View All {selectedDealType ? getDealTypeLabel(selectedDealType) : 'Deals'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {/* App Ads Slider */}
+      {appAds.length > 0 && (
+        <AppAdSlider
+          ads={appAds}
+          position="homepage"
+          height={r(150)}
+          autoPlay={true}
+          autoPlayInterval={4000}
+          showPagination={true}
+        />
+      )}
+
+      {/* Celebration Campaigns */}
+      {celebrationCampaigns.length > 0 && (
+        <View style={styles.celebrationSection}>
+          <View style={styles.celebrationHeader}>
+            <Text style={styles.sectionTitle}>🎉 {t('celebrations.celebrationDeals')}</Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('CelebrationRegistration')}>
+              <Text style={styles.registerCelebrationLink}>
+                {t('celebrations.registerCelebration')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={celebrationCampaigns.slice(0, 3)} // Show first 3 campaigns
+            renderItem={({item}) => (
+              <CelebrationCard
+                campaign={item}
+                onPress={() => {
+                  navigation.navigate('DealDetails', {dealType: item.type});
+                }}
+              />
+            )}
+            keyExtractor={item => item._id}
+            scrollEnabled={false}
+          />
+          {celebrationCampaigns.length > 3 && (
+            <TouchableOpacity
+              style={styles.viewAllButton}
+              onPress={() => navigation.navigate('CelebrationRegistration')}>
+              <Text style={styles.viewAllButtonText}>
+                View All Celebration Deals
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
       {/* Products */}
       <View style={styles.productsContainer}>
         <FlatList
@@ -499,6 +782,40 @@ const HomeTab = (_props: Props) => {
           ItemSeparatorComponent={() => <View style={styles.separator} />}
         />
       </View>
+      {/* Under Price Filter */}
+      <View style={styles.underPriceSection}>
+        <UnderPriceFilter
+          selectedValue={selectedUnderPrice}
+          onSelect={handleUnderPriceSelect}
+          currency="SAR"
+        />
+        {selectedUnderPrice && underPriceProducts.length > 0 && (
+          <View style={styles.productsContainer}>
+            <Text style={styles.sectionTitle}>
+              Products Under SAR {selectedUnderPrice}
+            </Text>
+            <FlatList
+              data={underPriceProducts}
+              renderItem={({item}) => (
+                <ProductItem
+                  image={getProductImage(item)}
+                  title={item.title}
+                  description={item.description}
+                  price={item.price}
+                  priceBeforeDeal={item.priceBeforeDeal}
+                  priceOff={item.priceOff}
+                  stars={item.stars}
+                  numberOfReview={item.numberOfReview}
+                  itemDetails={item}
+                />
+              )}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              ItemSeparatorComponent={() => <View style={styles.separator} />}
+            />
+          </View>
+        )}
+      </View>
       {/* Under Price Deal */}
       {deals.find(deal => deal.type === 'under_price') ? (
         (() => {
@@ -508,7 +825,10 @@ const HomeTab = (_props: Props) => {
               title={underPriceDeal.title || "Under SAR 20"}
               lastDate={new Date(underPriceDeal.endDate).toLocaleDateString('en-GB')}
               buttonText="View all"
-              onButtonPress={() => {}}
+              onButtonPress={() => {
+                // Navigate to category with price filter
+                handleSelectCategory('Under Price');
+              }}
             />
           );
         })()
@@ -517,7 +837,10 @@ const HomeTab = (_props: Props) => {
           title="Under SAR 20"
           lastDate="29/02/22"
           buttonText="View all"
-          onButtonPress={() => {}}
+          onButtonPress={() => {
+            // Navigate to category with price filter
+            handleSelectCategory('Under Price');
+          }}
         />
       )}
       {/* Products */}
@@ -681,9 +1004,100 @@ const styles = StyleSheet.create({
     height: r(10),
     borderRadius: r(5),
   },
+  underPriceSection: {
+    marginBottom: Spacing[5],
+    paddingHorizontal: Spacing[5],
+  },
+  sectionTitle: {
+    fontSize: FontSizes.lg,
+    color: Colors.black[100],
+    fontFamily: FontFamilies.mbold,
+    marginBottom: Spacing[4],
+    marginTop: Spacing[4],
+  },
   productsContainer: {
     marginTop: Spacing[1],
     marginBottom: Spacing[5],
+  },
+  dealFiltersContainer: {
+    marginBottom: Spacing[5],
+    paddingHorizontal: Spacing[5],
+  },
+  dealFiltersTitle: {
+    fontSize: FontSizes.lg,
+    color: Colors.black[100],
+    fontFamily: FontFamilies.mbold,
+    marginBottom: Spacing[4],
+  },
+  dealFiltersContent: {
+    gap: Spacing[3],
+  },
+  dealFilterButton: {
+    paddingHorizontal: Spacing[4],
+    paddingVertical: Spacing[3],
+    borderRadius: r(20),
+    backgroundColor: Colors.white,
+    borderWidth: r(1.5),
+    borderColor: Colors.gray[300],
+    marginRight: Spacing[2],
+  },
+  dealFilterButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  dealFilterText: {
+    fontSize: FontSizes.sm,
+    color: Colors.gray[600],
+    fontFamily: FontFamilies.msemibold,
+  },
+  dealFilterTextActive: {
+    color: Colors.white,
+  },
+  dealsListContainer: {
+    marginBottom: Spacing[5],
+    paddingHorizontal: Spacing[5],
+  },
+  viewAllDealsButton: {
+    marginTop: Spacing[4],
+    paddingVertical: Spacing[3],
+    alignItems: 'center',
+    borderTopWidth: r(1),
+    borderTopColor: Colors.gray[200],
+    paddingTop: Spacing[4],
+  },
+  viewAllDealsText: {
+    fontSize: FontSizes.base,
+    color: Colors.primary,
+    fontFamily: FontFamilies.mbold,
+  },
+  celebrationSection: {
+    marginBottom: Spacing[5],
+    paddingHorizontal: Spacing[5],
+  },
+  celebrationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing[4],
+  },
+  registerCelebrationLink: {
+    fontSize: FontSizes.sm,
+    color: Colors.primary,
+    fontFamily: FontFamilies.msemibold,
+    textDecorationLine: 'underline',
+  },
+  viewAllButton: {
+    marginTop: Spacing[4],
+    paddingVertical: Spacing[3],
+    alignItems: 'center',
+    borderTopWidth: r(1),
+    borderTopColor: Colors.gray[200],
+    paddingTop: Spacing[4],
+  },
+  viewAllButtonText: {
+    fontSize: FontSizes.base,
+    color: Colors.primary,
+    fontFamily: FontFamilies.mbold,
   },
 });
 

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const supportConversationModel = require('../models/supportConversationModel')
 const multer = require('multer')
+const { getSocketIO } = require('../services/socketService')
 const path = require('path')
 const fs = require('fs')
 
@@ -125,6 +126,27 @@ const createConversation = async (req, res) => {
 
         await conversation.populate('user', 'name email')
 
+        const firstMessage = conversation.messages[0]
+        const messagePayload = {
+            _id: firstMessage._id,
+            conversationId: conversation._id,
+            sender: 'user',
+            text: firstMessage.text,
+            attachments: firstMessage.attachments || [],
+            createdAt: firstMessage.createdAt
+        }
+
+        // Emit real-time event to admin room
+        const io = getSocketIO()
+        if (io) {
+            io.to('admin').emit('support:user_message', {
+                conversationId: conversation._id.toString(),
+                userId: String(conversation.user._id || conversation.user),
+                message: messagePayload,
+                isNewConversation: true
+            })
+        }
+
         return res.status(201).json({
             message: "Conversation created successfully",
             conversation
@@ -147,8 +169,9 @@ const sendMessage = async (req, res) => {
             return res.status(400).json({ error: "Invalid conversation ID" })
         }
 
-        if (!text || text.trim() === '') {
-            return res.status(400).json({ error: "Message text is required" })
+        const hasAttachments = req.files && req.files.length > 0
+        if ((!text || text.trim() === '') && !hasAttachments) {
+            return res.status(400).json({ error: "Message text or attachment is required" })
         }
 
         const conversation = await supportConversationModel.findOne({
@@ -178,9 +201,10 @@ const sendMessage = async (req, res) => {
         }
 
         // Add message
+        const messageText = (text && typeof text === 'string') ? text.trim() : ''
         conversation.messages.push({
             sender: 'user',
-            text: text.trim(),
+            text: messageText || undefined,
             attachments: attachments.length > 0 ? attachments : undefined,
             isRead: false
         })
@@ -189,6 +213,26 @@ const sendMessage = async (req, res) => {
         conversation.status = 'open' // Reopen if closed
 
         await conversation.save()
+
+        const savedMessage = conversation.messages[conversation.messages.length - 1]
+        const messagePayload = {
+            _id: savedMessage._id,
+            conversationId: conversation._id,
+            sender: 'user',
+            text: savedMessage.text,
+            attachments: savedMessage.attachments || [],
+            createdAt: savedMessage.createdAt
+        }
+
+        // Emit real-time event to admin room
+        const io = getSocketIO()
+        if (io) {
+            io.to('admin').emit('support:user_message', {
+                conversationId: conversation._id.toString(),
+                userId: conversation.user.toString(),
+                message: messagePayload
+            })
+        }
 
         return res.status(200).json({
             message: "Message sent successfully",
