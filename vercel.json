@@ -3,6 +3,14 @@
   "buildCommand": "cd admin-panel && npm install --include=dev && npm run build",
   "outputDirectory": "admin-panel/dist",
   "framework": null,
+  "headers": [
+    {
+      "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
