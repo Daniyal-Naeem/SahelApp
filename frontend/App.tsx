@@ -42,7 +42,7 @@ import {ProductsProvider} from './src/context/ProductsContext';
 import {store} from './src/store/store';
 import CustomDrawerContent from './src/components/CustomDrawerContent';
 import {ToastProvider} from 'react-native-toast-notifications';
-import {I18nProvider} from './src/contexts/I18nContext';
+import {I18nProvider, useI18n} from './src/contexts/I18nContext';
 
 export type RouteStackParamList = {
   Onboarding: undefined;
@@ -122,6 +122,59 @@ const DrawerNavigator = () => (
   </Drawer.Navigator>
 );
 
+const RootNavigator = ({
+  showOnboarded,
+  Stack,
+}: {
+  showOnboarded: boolean;
+  Stack: ReturnType<typeof createNativeStackNavigator<RouteStackParamList>>;
+}) => {
+  const {direction} = useI18n();
+  return (
+    <NavigationContainer direction={direction}>
+      <Stack.Navigator
+        screenOptions={{headerShown: false}}
+        initialRouteName={showOnboarded ? 'Onboarding' : 'HomeScreen'}>
+        <Stack.Screen name="HomeScreen" component={DrawerNavigator} />
+        <Stack.Screen name="GetStarted" component={GetStartedScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        <Stack.Screen name="OTP" component={OTPScreen} />
+        <Stack.Screen name="PlaceOrder" component={PlaceOrder} />
+        <Stack.Screen name="Payment" component={PaymentScreen} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+        <Stack.Screen name="Signup" component={SignupScreen} />
+        <Stack.Screen name="Checkout" component={CheckoutScreen} />
+        <Stack.Screen
+          name="ProductDetails"
+          component={ProductsDetailsScreen}
+        />
+        <Stack.Screen name="Reviews" component={ReviewsScreen} />
+        <Stack.Screen
+          name="ForgotPassword"
+          component={ForgotPasswordScreen}
+        />
+        <Stack.Screen name="VIPClub" component={VIPClubScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="Support" component={SupportScreen} />
+        <Stack.Screen name="Language" component={LanguageScreen} />
+        <Stack.Screen name="Gifts" component={GiftScreen} />
+        <Stack.Screen name="Orders" component={OrdersScreen} />
+        <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
+        <Stack.Screen name="CreditWallet" component={CreditWalletScreen} />
+        <Stack.Screen name="CreditTopup" component={CreditTopupScreen} />
+        <Stack.Screen name="CreditTransfer" component={CreditTransferScreen} />
+        <Stack.Screen name="CreditHistory" component={CreditHistoryScreen} />
+        <Stack.Screen name="DealDetails" component={DealDetailsScreen} />
+        <Stack.Screen
+          name="CelebrationRegistration"
+          component={CelebrationRegistrationScreen}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+};
+
 const App = () => {
   const Stack = createNativeStackNavigator<RouteStackParamList>();
   const [showOnboarded, setShowOnboarded] = useState<boolean | null>(null);
@@ -172,87 +225,8 @@ const App = () => {
               swipeEnabled={true}
               normalColor="#333">
               <GestureHandlerRootView style={{flex: 1}}>
-                <NavigationContainer>
-              <Stack.Navigator
-                screenOptions={{headerShown: false}}
-                initialRouteName={showOnboarded ? 'Onboarding' : 'HomeScreen'}>
-                <Stack.Screen name="HomeScreen" component={DrawerNavigator} />
-              <Stack.Screen name="GetStarted" component={GetStartedScreen} />
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-              <Stack.Screen name="OTP" component={OTPScreen} />
-              <Stack.Screen name="PlaceOrder" component={PlaceOrder} />
-              <Stack.Screen name="Payment" component={PaymentScreen} />
-              <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-              <Stack.Screen name="Signup" component={SignupScreen} />
-              <Stack.Screen name="Checkout" component={CheckoutScreen} />
-              <Stack.Screen
-                name="ProductDetails"
-                component={ProductsDetailsScreen}
-              />
-              <Stack.Screen
-                name="Reviews"
-                component={ReviewsScreen}
-              />
-              <Stack.Screen
-                name="ForgotPassword"
-                component={ForgotPasswordScreen}
-              />
-              <Stack.Screen
-                name="VIPClub"
-                component={VIPClubScreen}
-              />
-              <Stack.Screen
-                name="Notifications"
-                component={NotificationsScreen}
-              />
-              <Stack.Screen
-                name="Support"
-                component={SupportScreen}
-              />
-              <Stack.Screen
-                name="Language"
-                component={LanguageScreen}
-              />
-              <Stack.Screen
-                name="Gifts"
-                component={GiftScreen}
-              />
-              <Stack.Screen
-                name="Orders"
-                component={OrdersScreen}
-              />
-              <Stack.Screen
-                name="OrderDetails"
-                component={OrderDetailsScreen}
-              />
-              <Stack.Screen
-                name="CreditWallet"
-                component={CreditWalletScreen}
-              />
-              <Stack.Screen
-                name="CreditTopup"
-                component={CreditTopupScreen}
-              />
-              <Stack.Screen
-                name="CreditTransfer"
-                component={CreditTransferScreen}
-              />
-              <Stack.Screen
-                name="CreditHistory"
-                component={CreditHistoryScreen}
-              />
-              <Stack.Screen
-                name="DealDetails"
-                component={DealDetailsScreen}
-              />
-              <Stack.Screen
-                name="CelebrationRegistration"
-                component={CelebrationRegistrationScreen}
-              />
-              </Stack.Navigator>
-            </NavigationContainer>
-          </GestureHandlerRootView>
+                <RootNavigator showOnboarded={showOnboarded} Stack={Stack} />
+              </GestureHandlerRootView>
         </ToastProvider>
       </ProductsProvider>
     </Provider>

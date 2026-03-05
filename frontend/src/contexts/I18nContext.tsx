@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { I18nManager } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { locales, LocaleKey } from '../constants/locales';
 
@@ -45,21 +44,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
     loadLanguage();
   }, []);
 
-  // Update RTL layout when language changes
-  useEffect(() => {
-    const updateRTL = async () => {
-      const currentRTL = I18nManager.isRTL;
-      const shouldBeRTL = isRTL;
-
-      if (currentRTL !== shouldBeRTL) {
-        I18nManager.forceRTL(shouldBeRTL);
-        // Note: In a real app, you might want to restart the app or show a restart prompt
-        // For now, we'll just update the layout direction
-      }
-    };
-
-    updateRTL();
-  }, [isRTL]);
+  // RTL direction is applied via NavigationContainer's direction prop (no app restart needed)
 
   // Translation function
   const t = (key: string, defaultValue?: string): string => {

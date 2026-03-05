@@ -1,5 +1,5 @@
 import {RouteProp, useNavigation} from '@react-navigation/native';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {
   FlatList,
   ScrollView,
@@ -41,6 +41,8 @@ import {VIPIconNew} from '../assets/svgs/VIPIconNew';
 import {sendGift} from '../assets/svgs/sendGift';
 import {addtoCard} from '../assets/svgs/addtoCard';
 import {buyNow} from '../assets/svgs/buyNow';
+import {useI18n} from '../contexts/I18nContext';
+import {getLocalizedProduct} from '../utils/productTranslations';
 
 type ScreenRouteProps = RouteProp<RouteStackParamList, 'ProductDetails'> | any;
 
@@ -51,6 +53,12 @@ type ProductDetailsProps = {
 const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   const {itemDetails} = route.params || {};
   const navigation = useNavigation<any>();
+  const {language} = useI18n();
+  const localizedItemDetails = useMemo(
+    () => (itemDetails ? getLocalizedProduct(itemDetails, language) : null),
+    [itemDetails, language],
+  );
+  const displayItemDetails = localizedItemDetails || itemDetails;
   const dispatch = useAppDispatch();
   const cartItemCount = useAppSelector((state) => state.cart.itemCount);
   const toast = useToast();
@@ -521,7 +529,7 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
       </View>
 
       {/* Product Name and Subtitle */}
-      <Text style={styles.productName}>{itemDetails?.title}</Text>
+      <Text style={styles.productName}>{displayItemDetails?.title}</Text>
       <Text style={styles.subtitle}>{itemDetails?.subtitle}</Text>
       {itemDetails?.vendor && (
         <View style={styles.vendorContainer}>
@@ -551,7 +559,7 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
         <Text
           style={styles.descriptionText}
           numberOfLines={isDescriptionExpanded ? undefined : 3}>
-          {itemDetails?.description}
+          {displayItemDetails?.description}
         </Text>
         <TouchableOpacity
           onPress={() => setIsDescriptionExpanded(!isDescriptionExpanded)}>

@@ -25,6 +25,8 @@ const CreateProductPage = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    titleAr: '',
+    descriptionAr: '',
     price: '',
     priceBeforeDeal: '',
     priceOff: '',
@@ -372,6 +374,8 @@ const CreateProductPage = () => {
       const productData = {
         title: formData.title,
         description: formData.description,
+        ...(formData.titleAr && { titleTranslations: { en: formData.title, ar: formData.titleAr } }),
+        ...(formData.descriptionAr && { descriptionTranslations: { en: formData.description, ar: formData.descriptionAr } }),
         price: parseFloat(formData.price),
         priceBeforeDeal: parseFloat(formData.priceBeforeDeal),
         priceOff: parseFloat(formData.priceOff),
@@ -434,6 +438,35 @@ const CreateProductPage = () => {
               onChange={handleChange}
               required
               placeholder="Enter product description"
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group full-width">
+            <label htmlFor="titleAr">Arabic Title (Optional)</label>
+            <input
+              type="text"
+              id="titleAr"
+              name="titleAr"
+              value={formData.titleAr}
+              onChange={handleChange}
+              placeholder="عنوان المنتج بالعربية"
+              dir="rtl"
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group full-width">
+            <label htmlFor="descriptionAr">Arabic Description (Optional)</label>
+            <textarea
+              id="descriptionAr"
+              name="descriptionAr"
+              value={formData.descriptionAr}
+              onChange={handleChange}
+              placeholder="وصف المنتج بالعربية"
+              dir="rtl"
             />
           </div>
         </div>

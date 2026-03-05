@@ -57,6 +57,9 @@ type ProductTypes = {
   title: string;
   subtitle?: string; // e.g., "Vision Alta Women's Kurta Size (All Colours)"
   description: string;
+  /** Optional translations for multi-language (en, ar) */
+  titleTranslations?: {en?: string; ar?: string};
+  descriptionTranslations?: {en?: string; ar?: string};
   price: number;
   priceBeforeDeal: number;
   priceOff: string;

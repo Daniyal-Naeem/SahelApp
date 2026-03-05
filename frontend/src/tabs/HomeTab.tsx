@@ -9,7 +9,7 @@ import {
   Dimensions,
   RefreshControl,
 } from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import Carousel from 'react-native-reanimated-carousel';
@@ -27,6 +27,7 @@ import {filterIcon} from '../assets/svgs/filter';
 import {sortIcon} from '../assets/svgs/sortIcon';
 import {getAllProducts} from '../services/productService';
 import {getProductImage} from '../utils/productHelpers';
+import {getLocalizedProducts} from '../utils/productTranslations';
 import {getAllBanners, trackBannerClick, Banner} from '../services/bannerService';
 import {getAllDeals, getDealsByType, Deal, getTimeRemaining, formatDealDiscount, getDealTypeLabel} from '../services/dealService';
 import {getPinnedProducts, PinnedProduct} from '../services/pinnedProductService';
@@ -41,7 +42,7 @@ const HomeTab = (_props: Props) => {
     StackNavigationProp<RootStackParamList> & DrawerNavigationProp<any>
   >();
   const insets = useSafeAreaInsets();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const width = Dimensions.get('window').width;
   // Calculate carousel dimensions for dummy images
   const carouselWidth = width - Spacing[5] * 2;
@@ -217,11 +218,13 @@ const HomeTab = (_props: Props) => {
         sortOrder: 'asc',
       });
       
-      // Map backend products to frontend format
-      const mappedProducts = filteredProducts.map((product: any) => ({
+      // Map backend products to frontend format (preserve translations)
+      const mappedProducts = (Array.isArray(filteredProducts) ? filteredProducts : []).map((product: any) => ({
         _id: product._id,
         title: product.title || product.name || 'Untitled Product',
         description: product.description || '',
+        titleTranslations: product.titleTranslations,
+        descriptionTranslations: product.descriptionTranslations,
         price: product.price || 0,
         priceBeforeDeal: product.priceBeforeDeal || product.originalPrice || product.price || 0,
         priceOff: product.priceOff || (product.priceBeforeDeal && product.price 
@@ -294,11 +297,13 @@ const HomeTab = (_props: Props) => {
       }
       
       if (productsArray && productsArray.length > 0) {
-        // Map backend products to frontend ProductTypes format
+        // Map backend products to frontend ProductTypes format (preserve translations)
         const mappedProducts = productsArray.map((product: any) => ({
           _id: product._id,
-          title: product.title || product.name || 'Untitled Product', // Backend uses 'title'
+          title: product.title || product.name || 'Untitled Product',
           description: product.description || '',
+          titleTranslations: product.titleTranslations,
+          descriptionTranslations: product.descriptionTranslations,
           price: product.price || 0,
           priceBeforeDeal: product.priceBeforeDeal || product.originalPrice || product.price || 0,
           priceOff: product.priceOff || (product.priceBeforeDeal && product.price 
@@ -308,6 +313,9 @@ const HomeTab = (_props: Props) => {
           numberOfReview: product.numberOfReview || product.reviewsCount || 0,
           image: product.image || product.images || [],
           tags: product.tags || [],
+          status: product.status,
+          category: product.category,
+          vendor: product.vendor,
           createdAt: product.createdAt || '',
           updatedAt: product.updatedAt || '',
           __v: product.__v || 0,
@@ -341,10 +349,23 @@ const HomeTab = (_props: Props) => {
     }
   };
 
-  // Load products on component mount
+  // Localize products based on current language
+  const localizedProducts = useMemo(
+    () => getLocalizedProducts(products, language),
+    [products, language],
+  );
+  const localizedUnderPriceProducts = useMemo(
+    () => getLocalizedProducts(underPriceProducts, language),
+    [underPriceProducts, language],
+  );
+
+  // Load products on mount and when language changes (backend returns localized content via Accept-Language header)
   useEffect(() => {
     loadProducts();
-  }, []);
+    if (selectedUnderPrice) {
+      loadUnderPriceProducts(selectedUnderPrice);
+    }
+  }, [language, selectedUnderPrice]);
 
   // Reload products when screen is focused (to get new products added via admin panel)
   useFocusEffect(
@@ -763,7 +784,7 @@ const HomeTab = (_props: Props) => {
       {/* Products */}
       <View style={styles.productsContainer}>
         <FlatList
-          data={products}
+          data={localizedProducts}
           renderItem={({item}) => (
             <ProductItem
               image={getProductImage(item)}
@@ -789,13 +810,13 @@ const HomeTab = (_props: Props) => {
           onSelect={handleUnderPriceSelect}
           currency="SAR"
         />
-        {selectedUnderPrice && underPriceProducts.length > 0 && (
+        {selectedUnderPrice && localizedUnderPriceProducts.length > 0 && (
           <View style={styles.productsContainer}>
             <Text style={styles.sectionTitle}>
               Products Under SAR {selectedUnderPrice}
             </Text>
             <FlatList
-              data={underPriceProducts}
+              data={localizedUnderPriceProducts}
               renderItem={({item}) => (
                 <ProductItem
                   image={getProductImage(item)}
@@ -846,7 +867,7 @@ const HomeTab = (_props: Props) => {
       {/* Products */}
       <View style={styles.productsContainer}>
         <FlatList
-          data={products}
+          data={localizedProducts}
           renderItem={({item}) => (
             <ProductItem
               image={getProductImage(item)}

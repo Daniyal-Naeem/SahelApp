@@ -167,6 +167,11 @@ export const en = {
     celebrationDeals: 'Celebration Deals',
   },
 
+  // Language Screen
+  languageScreen: {
+    description: 'Choose your preferred language for the app interface.',
+  },
+
   // Settings
   settings: {
     appSettings: 'App Settings',

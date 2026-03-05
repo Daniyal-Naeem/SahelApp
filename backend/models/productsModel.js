@@ -12,6 +12,15 @@ const productSchema = new Schema({
         type: String,
         required: [true, "Description is required"],
     },
+    // Optional translations for multi-language support (en, ar)
+    titleTranslations: {
+        en: { type: String },
+        ar: { type: String },
+    },
+    descriptionTranslations: {
+        en: { type: String },
+        ar: { type: String },
+    },
     price: {
         type: Number,
         required: [true, "Price is required"],

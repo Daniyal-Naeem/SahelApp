@@ -1,5 +1,8 @@
 import axios, {AxiosInstance, InternalAxiosRequestConfig} from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getItem} from '../utils/AsyncStorage';
+
+const LANGUAGE_STORAGE_KEY = '@app_language';
 
 export const getBaseURL = (): string => {
   // For Android emulator, use 10.0.2.2 instead of localhost
@@ -31,6 +34,11 @@ const createAxiosInstance = (): AxiosInstance => {
         const token = await getItem('token');
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
+        }
+        // Add locale for backend product translations (future use)
+        const locale = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
+        if (locale && config.headers) {
+          config.headers['Accept-Language'] = locale;
         }
       } catch (error: any) {
       }

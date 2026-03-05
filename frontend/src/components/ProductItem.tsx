@@ -1,8 +1,10 @@
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import FastImage from 'react-native-fast-image';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {ItemDetails} from '../constants/types';
 import {useNavigation} from '@react-navigation/native';
+import {useI18n} from '../contexts/I18nContext';
+import {getLocalizedProduct} from '../utils/productTranslations';
 import {Colors, Spacing, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
 import {favoriteIcon} from '../assets/svgs/favoriteIcon';
@@ -46,6 +48,13 @@ const ProductItem = ({
   forceFavoriteActive = false, // Default to false
 }: ProductItemProps) => {
   const navigation = useNavigation<any>();
+  const {language} = useI18n();
+  const localizedProduct = useMemo(
+    () => (itemDetails ? getLocalizedProduct(itemDetails, language) : null),
+    [itemDetails, language],
+  );
+  const displayTitle = localizedProduct?.title ?? title;
+  const displayDescription = localizedProduct?.description ?? description;
   const dispatch = useAppDispatch();
   const [isInWishlistAPI, setIsInWishlistAPI] = useState(false);
   const [isCheckingWishlist, setIsCheckingWishlist] = useState(false);
@@ -84,7 +93,9 @@ const ProductItem = ({
       rootNavigator = rootNavigator.getParent() as any;
     }
 
-    (rootNavigator as any).navigate('ProductDetails', {itemDetails});
+    (rootNavigator as any).navigate('ProductDetails', {
+      itemDetails: localizedProduct || itemDetails,
+    });
   };
 
   const handleFavoritePress = async (e: any) => {
@@ -193,10 +204,10 @@ const ProductItem = ({
       </View>
       <View style={styles.content}>
         <Text style={styles.title}>
-          {title}
+          {displayTitle}
         </Text>
         <Text style={styles.description}>
-          {description}
+          {displayDescription}
         </Text>
         <View style={styles.priceRow}>
           <Text style={styles.price}>

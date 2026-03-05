@@ -167,6 +167,11 @@ export const ar = {
     celebrationDeals: 'عروض المناسبات',
   },
 
+  // Language Screen
+  languageScreen: {
+    description: 'اختر اللغة المفضلة لواجهة التطبيق.',
+  },
+
   // Settings
   settings: {
     appSettings: 'إعدادات التطبيق',

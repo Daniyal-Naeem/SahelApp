@@ -1,5 +1,5 @@
 import {useNavigation} from '@react-navigation/native';
-import React, {useState} from 'react';
+import React from 'react';
 import {
   ScrollView,
   Text,
@@ -9,17 +9,19 @@ import {
 } from 'react-native';
 import {CustomHeader} from '../components';
 import {Colors, Spacing, FontFamilies, r, FontSizes} from '../constants/styles';
+import {useI18n} from '../contexts/I18nContext';
+import type {LocaleKey} from '../constants/locales';
 
 type Language = {
   id: string;
   name: string;
-  code: string;
+  code: LocaleKey;
   nativeName: string;
 };
 
 const LanguageScreen = () => {
   const navigation = useNavigation<any>();
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const {language, setLanguage, t} = useI18n();
 
   const GoBack = () => {
     navigation.goBack();
@@ -30,14 +32,14 @@ const LanguageScreen = () => {
     {id: 'ar', name: 'Arabic', code: 'ar', nativeName: 'العربية'},
   ];
 
-  const handleLanguageSelect = (code: string) => {
-    setSelectedLanguage(code);
+  const handleLanguageSelect = async (code: LocaleKey) => {
+    await setLanguage(code);
   };
 
   return (
     <View style={styles.container}>
       <CustomHeader
-        title="Language"
+        title={t('navigation.language')}
         onBackPress={GoBack}
         showBorder={true}
       />
@@ -47,25 +49,25 @@ const LanguageScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <Text style={styles.title}>Select Language</Text>
+          <Text style={styles.title}>{t('settings.language')}</Text>
           <Text style={styles.description}>
-            Choose your preferred language for the app interface.
+            {t('languageScreen.description')}
           </Text>
 
           <View style={styles.languagesContainer}>
-            {languages.map((language) => (
+            {languages.map((lang) => (
               <TouchableOpacity
-                key={language.id}
+                key={lang.id}
                 style={[
                   styles.languageItem,
-                  selectedLanguage === language.code && styles.languageItemSelected,
+                  language === lang.code && styles.languageItemSelected,
                 ]}
-                onPress={() => handleLanguageSelect(language.code)}>
+                onPress={() => handleLanguageSelect(lang.code)}>
                 <View style={styles.languageContent}>
-                  <Text style={styles.languageName}>{language.name}</Text>
-                  <Text style={styles.languageNativeName}>{language.nativeName}</Text>
+                  <Text style={styles.languageName}>{lang.name}</Text>
+                  <Text style={styles.languageNativeName}>{lang.nativeName}</Text>
                 </View>
-                {selectedLanguage === language.code && (
+                {language === lang.code && (
                   <View style={styles.checkmark}>
                     <Text style={styles.checkmarkText}>✓</Text>
                   </View>

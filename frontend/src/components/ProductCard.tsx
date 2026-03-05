@@ -1,8 +1,10 @@
-import React, {useState} from 'react';
+import React, {useState, useMemo} from 'react';
 import {Text, TouchableOpacity, View, StyleSheet} from 'react-native';
 import FastImage from 'react-native-fast-image';
 import {SvgXml} from 'react-native-svg';
 import {ItemDetails, VariationType} from '../constants/types';
+import {useI18n} from '../contexts/I18nContext';
+import {getLocalizedProduct} from '../utils/productTranslations';
 import {Colors, Spacing, FontFamilies, r, FontSizes} from '../constants/styles';
 import {activeStar} from '../assets/svgs/activeStar';
 import {EmptyStar} from '../assets/svgs/emptyStar';
@@ -15,6 +17,11 @@ type ProductCardProps = {
 };
 
 const ProductCard = ({itemDetails, showTotalItem = false, totalItems = 1}: ProductCardProps) => {
+  const {language} = useI18n();
+  const localizedProduct = useMemo(
+    () => (itemDetails ? getLocalizedProduct(itemDetails, language) : null),
+    [itemDetails, language],
+  );
   const formatNumber = (num: number): string => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
@@ -80,7 +87,7 @@ const ProductCard = ({itemDetails, showTotalItem = false, totalItems = 1}: Produ
 
   const currency = (itemDetails as any)?.currency || 'SAR';
   const productImage = itemDetails?.image?.[0] || '';
-  const productTitle = itemDetails?.title || 'Product';
+  const productTitle = localizedProduct?.title || itemDetails?.title || 'Product';
   const productVendor = itemDetails?.vendor || '';
   const rating = itemDetails?.stars || 0;
   const price = itemDetails?.price || 0;

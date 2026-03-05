@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const productsModel = require('../models/productsModel')
+const { getLocaleFromRequest, localizeProduct, localizeProducts } = require('../utils/productLocalization')
 
 
 /**
@@ -14,6 +15,7 @@ const productsModel = require('../models/productsModel')
 // get all products
 const getAllProducts = async (req, res) => {
     try {
+        const locale = getLocaleFromRequest(req)
         const products = await productsModel.find({})
             .populate('category', 'name description icon')
             .populate('vendor', 'name email businessName')
@@ -22,8 +24,8 @@ const getAllProducts = async (req, res) => {
         if (products.length === 0) {
             return res.status(404).json({ message: " No Products Found " })
         }
-        // if there is return it
-        return res.status(200).json(products)
+        const localizedProducts = localizeProducts(products, locale)
+        return res.status(200).json(localizedProducts)
     } catch (error) {
         res.status(500).json({ error: error.message })
     }
@@ -31,6 +33,7 @@ const getAllProducts = async (req, res) => {
 // get single product with its ID
 const getSingleProduct = async (req, res) => {
     try {
+        const locale = getLocaleFromRequest(req)
         // get its id
         const { id } = req.params;
         // validate the id
@@ -45,8 +48,8 @@ const getSingleProduct = async (req, res) => {
         if (!Product) {
             return res.status(404).json({ error: "Not Valid Product" })
         }
-        // if it's ok return it
-        return res.status(200).json(Product)
+        const localizedProduct = localizeProduct(Product, locale)
+        return res.status(200).json(localizedProduct)
 
     } catch (error) {
         res.status(500).json({ error: error.message })
@@ -58,7 +61,7 @@ const createNewProduct = async (req, res) => {
     try {
         // get the input fields
         const { image, title, description, price, priceBeforeDeal, priceOff, stars, numberOfReview, ukSide,
-            tags, status, category, vendor } = req.body;
+            tags, status, category, vendor, titleTranslations, descriptionTranslations } = req.body;
         // destructure status to icon, and name
         const { icon, name } = status;
 
@@ -67,7 +70,9 @@ const createNewProduct = async (req, res) => {
             image, title, description, price, priceBeforeDeal, priceOff, stars, numberOfReview, ukSide,
             tags, status: { icon, name },
             ...(category && { category }),
-            ...(vendor && { vendor })
+            ...(vendor && { vendor }),
+            ...(titleTranslations && { titleTranslations }),
+            ...(descriptionTranslations && { descriptionTranslations })
         })
         // return it
         return res.status(200).json(newProduct)
@@ -207,9 +212,12 @@ const searchProducts = async (req, res) => {
         const total = await productsModel.countDocuments(query);
         const totalPages = Math.ceil(total / limitNum);
 
+        const locale = getLocaleFromRequest(req);
+        const localizedProducts = localizeProducts(products, locale);
+
         // Return results
         return res.status(200).json({
-            products,
+            products: localizedProducts,
             pagination: {
                 currentPage: pageNum,
                 totalPages,
