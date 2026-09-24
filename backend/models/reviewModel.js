@@ -101,7 +101,6 @@ const reviewSchema = new Schema({
 reviewSchema.index({ product: 1, status: 1, createdAt: -1 })
 reviewSchema.index({ user: 1, product: 1 }, { unique: true }) // One review per user per product
 reviewSchema.index({ status: 1, flagged: 1, createdAt: -1 })
-reviewSchema.index({ rating: 1 })
 
 module.exports = mongoose.model("reviewModel", reviewSchema)
 

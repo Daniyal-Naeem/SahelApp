@@ -16,6 +16,7 @@ import {ProductTypes} from '../constants/types';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
 import {searchTrashIcon} from '../assets/svgs/searchTrashIcon';
+import {api} from '../services/api';
 
 type RootStackParamList = {
   Search: {query: string} | undefined;
@@ -36,12 +37,19 @@ const SearchTab = ({route}: SearchProps) => {
   
   // Search query state
   const [searchQuery, setSearchQuery] = useState<string>(routeQuery || '');
+  const [allProducts, setAllProducts] = useState<ProductTypes[]>(DetailedProductData);
   
   // Track if query came from recommendation (to show tag)
   const [isFromRecommendation, setIsFromRecommendation] = useState<boolean>(false);
   
   // Search history state - starts empty, populated as user searches
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+
+  useEffect(() => {
+    api.getProducts().then(prods => {
+      if (prods.length) setAllProducts(prods);
+    });
+  }, []);
 
   // Recommendations
   const recommendations = [
@@ -55,7 +63,7 @@ const SearchTab = ({route}: SearchProps) => {
   ];
 
   // Products for Discover section
-  const discoverProducts: ProductTypes[] = DetailedProductData.slice(0, 5);
+  const discoverProducts: ProductTypes[] = allProducts.slice(0, 5);
 
   // Filter products based on search query
   const filteredProducts = useMemo(() => {
@@ -63,13 +71,13 @@ const SearchTab = ({route}: SearchProps) => {
       return [];
     }
     const query = searchQuery.toLowerCase().trim();
-    return DetailedProductData.filter(
+    return allProducts.filter(
       (product) =>
         product.title.toLowerCase().includes(query) ||
         product.description.toLowerCase().includes(query) ||
         (product as any).category?.toLowerCase().includes(query)
     );
-  }, [searchQuery]);
+  }, [searchQuery, allProducts]);
 
   // Calculate item width for 2-column grid
   const itemWidth = (width - Spacing[5] * 2 - Spacing[2]) / 2;

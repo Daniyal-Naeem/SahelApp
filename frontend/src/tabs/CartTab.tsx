@@ -17,58 +17,76 @@ import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
 import {plusIcon} from '../assets/svgs/plusIcon';
 import {trashIcon} from '../assets/svgs/trashIcon';
-import {ItemDetails} from '../constants/types';
+import {
+  updateCartItem,
+  removeCartItem,
+} from '../services/cartService';
+import {useAppSelector} from '../store';
+import {requireCheckoutAuth} from '../utils/requireCheckoutAuth';
 
 type NavigationProp = StackNavigationProp<RouteStackParamList>;
 
 const CartTab = () => {
   const navigation = useNavigation<NavigationProp>();
   const dispatch = useDispatch();
+  const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const cartTotal = useSelector((state: RootState) => state.cart.total);
   const itemCount = useSelector((state: RootState) => state.cart.itemCount);
 
   const handleGoBack = () => {
-    // Navigate to Home tab
     (navigation as any).navigate('Home');
   };
 
-  const handleIncreaseQuantity = (itemId: string, currentQuantity: number) => {
-    dispatch(updateCartItemQuantity({id: itemId, quantity: currentQuantity + 1}));
-  };
-
-  const handleDecreaseQuantity = (itemId: string, currentQuantity: number) => {
-    if (currentQuantity > 1) {
-      dispatch(updateCartItemQuantity({id: itemId, quantity: currentQuantity - 1}));
+  const handleIncreaseQuantity = async (
+    itemId: string,
+    currentQuantity: number,
+    cartItemId?: string,
+  ) => {
+    const next = currentQuantity + 1;
+    dispatch(updateCartItemQuantity({id: itemId, quantity: next}));
+    if (cartItemId && isAuthenticated) {
+      try {
+        await updateCartItem(cartItemId, next);
+      } catch {
+        // keep local
+      }
     }
   };
 
-  const handleRemoveItem = (itemId: string) => {
+  const handleDecreaseQuantity = async (
+    itemId: string,
+    currentQuantity: number,
+    cartItemId?: string,
+  ) => {
+    if (currentQuantity <= 1) return;
+    const next = currentQuantity - 1;
+    dispatch(updateCartItemQuantity({id: itemId, quantity: next}));
+    if (cartItemId && isAuthenticated) {
+      try {
+        await updateCartItem(cartItemId, next);
+      } catch {
+        // keep local
+      }
+    }
+  };
+
+  const handleRemoveItem = async (itemId: string, cartItemId?: string) => {
     dispatch(removeFromCart(itemId));
+    if (cartItemId && isAuthenticated) {
+      try {
+        await removeCartItem(cartItemId);
+      } catch {
+        // keep local
+      }
+    }
   };
 
   const handleProceedToCheckout = () => {
     if (cartItems.length === 0) return;
-
-    const firstItem = cartItems[0];
-    const itemDetails: ItemDetails = {
-      _id: firstItem._id,
-      title: firstItem.title,
-      description: firstItem.description,
-      price: firstItem.price,
-      priceBeforeDeal: firstItem.priceBeforeDeal,
-      priceOff: firstItem.priceOff || '',
-      stars: firstItem.stars || 0,
-      numberOfReview: firstItem.numberOfReview || 0,
-      image: firstItem.image,
-      tags: firstItem.tags || [],
-      createdAt: firstItem.createdAt || '',
-      updatedAt: firstItem.updatedAt || '',
-      __v: firstItem.__v || 0,
-      variations: firstItem.variations,
-    };
-    
-    navigation.navigate('Checkout', {itemDetails});
+    if (!requireCheckoutAuth(isAuthenticated, navigation)) return;
+    // Use Redux cart on Checkout — do not pass heavy item payloads via navigation.
+    navigation.navigate('Checkout');
   };
 
   const formatNumber = (num: number): string => {
@@ -80,299 +98,117 @@ const CartTab = () => {
 
   return (
     <View style={styles.container}>
-      <CustomHeader
-        title="Shopping Cart"
-        onBackPress={handleGoBack}
-        showBorder={true}
-      />
-
-      {cartItems.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Your cart is empty</Text>
-          <Text style={styles.emptySubtext}>
-            Add items to your cart to get started
-          </Text>
-        </View>
-      ) : (
-        <>
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollViewContent}
-            showsVerticalScrollIndicator={false}>
-            {cartItems.map((item) => {
-              const itemDetails: ItemDetails = {
-                _id: item._id,
-                title: item.title,
-                description: item.description,
-                price: item.price,
-                priceBeforeDeal: item.priceBeforeDeal,
-                priceOff: item.priceOff || '',
-                stars: item.stars || 0,
-                numberOfReview: item.numberOfReview || 0,
-                image: item.image,
-                tags: item.tags || [],
-                createdAt: item.createdAt || '',
-                updatedAt: item.updatedAt || '',
-                __v: item.__v || 0,
-                variations: item.variations,
-              };
-
-              return (
-                <View key={item._id} style={styles.cartItemContainer}>
-                  <ProductCard
-                    itemDetails={itemDetails}
-                    showTotalItem={false}
-                  />
-                  
-                  {/* Quantity Controls and Remove Button */}
-                  <View style={styles.quantityContainer}>
-                    <View style={styles.quantityControls}>
-                      <TouchableOpacity
-                        style={styles.quantityButton}
-                        onPress={() =>
-                          handleDecreaseQuantity(item._id, item.quantity)
-                        }>
-                        <Text style={styles.quantityButtonText}>−</Text>
-                      </TouchableOpacity>
-                      
-                      <Text style={styles.quantityText}>{item.quantity}</Text>
-                      
-                      <TouchableOpacity
-                        style={styles.quantityButton}
-                        onPress={() =>
-                          handleIncreaseQuantity(item._id, item.quantity)
-                        }>
-                        <SvgXml xml={plusIcon} width={r(16)} height={r(16)} />
-                      </TouchableOpacity>
-                    </View>
-                    
-                    <TouchableOpacity
-                      style={styles.removeButton}
-                      onPress={() => handleRemoveItem(item._id)}>
-                      <SvgXml xml={trashIcon} width={r(20)} height={r(20)} />
-                    </TouchableOpacity>
-                  </View>
-                  
-                  {/* Item Total */}
-                  <View style={styles.itemTotalContainer}>
-                    <Text style={styles.itemTotalLabel}>Item Total:</Text>
-                    <Text style={styles.itemTotalPrice}>
-                      SAR {formatNumber(item.price * item.quantity)}
-                    </Text>
-                  </View>
-                </View>
-              );
-            })}
-
-            {/* Order Summary */}
-            <View style={styles.summaryContainer}>
-              <Text style={styles.summaryTitle}>Order Summary</Text>
-              
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Subtotal ({itemCount} items):</Text>
-                <Text style={styles.summaryValue}>
-                  SAR {formatNumber(cartTotal)}
-                </Text>
-              </View>
-              
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Shipping Fee:</Text>
-                <Text style={styles.summaryValue}>
-                  SAR {formatNumber(shippingFee)}
-                </Text>
-              </View>
-              
-              <View style={[styles.summaryRow, styles.totalRow]}>
-                <Text style={styles.totalLabel}>Total:</Text>
-                <Text style={styles.totalValue}>
-                  SAR {formatNumber(finalTotal)}
-                </Text>
-              </View>
-            </View>
-          </ScrollView>
-
-          {/* Proceed to Checkout Button */}
-          <View style={styles.bottomButtonContainer}>
+      <CustomHeader title="Shopping Bag" onBackPress={handleGoBack} showBorder />
+      <ScrollView contentContainerStyle={styles.content}>
+        {cartItems.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>Your cart is empty</Text>
             <CustomButton
-              title={`Proceed to Checkout (${itemCount} items)`}
+              title="Continue Shopping"
+              handlePress={() => (navigation as any).navigate('Home')}
+            />
+          </View>
+        ) : (
+          <>
+            {cartItems.map(item => (
+              <View key={item.cartItemId || item._id} style={styles.row}>
+                <ProductCard itemDetails={item} showTotalItem totalItems={item.quantity} />
+                <View style={styles.qtyRow}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      handleDecreaseQuantity(
+                        item._id,
+                        item.quantity,
+                        item.cartItemId,
+                      )
+                    }>
+                    <Text style={styles.qtyBtn}>-</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.qty}>{item.quantity}</Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      handleIncreaseQuantity(
+                        item._id,
+                        item.quantity,
+                        item.cartItemId,
+                      )
+                    }>
+                    <SvgXml xml={plusIcon} width={r(18)} height={r(18)} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() =>
+                      handleRemoveItem(item._id, item.cartItemId)
+                    }
+                    style={styles.trash}>
+                    <SvgXml xml={trashIcon} width={r(18)} height={r(18)} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+
+            <View style={styles.summary}>
+              <Text style={styles.summaryText}>
+                Items ({itemCount}): SAR {formatNumber(cartTotal)}
+              </Text>
+              <Text style={styles.summaryText}>
+                Shipping: SAR {formatNumber(shippingFee)}
+              </Text>
+              <Text style={styles.total}>
+                Total: SAR {formatNumber(finalTotal)}
+              </Text>
+            </View>
+
+            <CustomButton
+              title="Proceed to Checkout"
               handlePress={handleProceedToCheckout}
               containerStyle={styles.checkoutButton}
             />
-          </View>
-        </>
-      )}
+          </>
+        )}
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    paddingHorizontal: Spacing[5],
-    paddingTop: Spacing[4],
-    paddingBottom: Spacing[8],
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Spacing[5],
-  },
+  container: {flex: 1, backgroundColor: Colors.white},
+  content: {padding: Spacing[5], paddingBottom: Spacing[12]},
+  empty: {alignItems: 'center', marginTop: Spacing[16], gap: Spacing[4]},
   emptyText: {
-    fontSize: FontSizes.xl,
-    fontFamily: FontFamilies.msemibold,
-    color: Colors.black[100],
-    marginBottom: Spacing[2],
-  },
-  emptySubtext: {
-    fontSize: FontSizes.base,
-    fontFamily: FontFamilies.mregular,
-    color: Colors.gray[600] || '#4B5563',
-    textAlign: 'center',
-  },
-  cartItemContainer: {
-    backgroundColor: Colors.white,
-    borderRadius: r(12),
-    padding: Spacing[4],
+    fontFamily: FontFamilies.mmedium,
+    color: Colors.gray[500],
     marginBottom: Spacing[4],
-    borderWidth: r(1),
-    borderColor: Colors.gray[200] || '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  quantityContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: Spacing[3],
-    paddingTop: Spacing[3],
-    borderTopWidth: r(1),
-    borderTopColor: Colors.gray[200] || '#E5E7EB',
+  row: {
+    marginBottom: Spacing[5],
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray[200],
+    paddingBottom: Spacing[4],
   },
-  quantityControls: {
+  qtyRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing[3],
-  },
-  quantityButton: {
-    width: r(32),
-    height: r(32),
-    borderRadius: r(8),
-    backgroundColor: Colors.gray[100] || '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: r(1),
-    borderColor: Colors.gray[300] || '#D1D5DB',
-  },
-  quantityButtonText: {
-    fontSize: FontSizes.xl,
-    fontFamily: FontFamilies.msemibold,
-    color: Colors.black[100],
-  },
-  quantityText: {
-    fontSize: FontSizes.base,
-    fontFamily: FontFamilies.msemibold,
-    color: Colors.black[100],
-    minWidth: r(30),
-    textAlign: 'center',
-  },
-  removeButton: {
-    padding: Spacing[2],
-  },
-  itemTotalContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginTop: Spacing[2],
-    paddingTop: Spacing[2],
   },
-  itemTotalLabel: {
-    fontSize: FontSizes.base,
-    fontFamily: FontFamilies.mregular,
-    color: Colors.gray[600] || '#4B5563',
-  },
-  itemTotalPrice: {
-    fontSize: FontSizes.base,
-    fontFamily: FontFamilies.msemibold,
-    color: Colors.black[100],
-  },
-  summaryContainer: {
-    backgroundColor: Colors.white,
-    borderRadius: r(12),
-    padding: Spacing[4],
+  qtyBtn: {fontSize: FontSizes.xl, paddingHorizontal: Spacing[2]},
+  qty: {fontFamily: FontFamilies.mbold, minWidth: 24, textAlign: 'center'},
+  trash: {marginLeft: 'auto'},
+  summary: {
     marginTop: Spacing[4],
-    borderWidth: r(1),
-    borderColor: Colors.gray[200] || '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: Spacing[6],
+    gap: Spacing[2],
   },
-  summaryTitle: {
-    fontSize: FontSizes.xl,
-    fontFamily: FontFamilies.msemibold,
-    color: Colors.black[100],
-    marginBottom: Spacing[3],
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing[2],
-  },
-  summaryLabel: {
-    fontSize: FontSizes.base,
+  summaryText: {
     fontFamily: FontFamilies.mregular,
-    color: Colors.gray[600] || '#4B5563',
+    color: Colors.gray[600],
   },
-  summaryValue: {
-    fontSize: FontSizes.base,
-    fontFamily: FontFamilies.msemibold,
-    color: Colors.black[100],
-  },
-  totalRow: {
+  total: {
+    fontFamily: FontFamilies.mbold,
+    fontSize: FontSizes.lg,
     marginTop: Spacing[2],
-    paddingTop: Spacing[3],
-    borderTopWidth: r(1),
-    borderTopColor: Colors.gray[200] || '#E5E7EB',
   },
-  totalLabel: {
-    fontSize: FontSizes.lg,
-    fontFamily: FontFamilies.msemibold,
-    color: Colors.black[100],
-  },
-  totalValue: {
-    fontSize: FontSizes.lg,
-    fontFamily: FontFamilies.msemibold,
-    color: Colors.primary,
-  },
-  bottomButtonContainer: {
-    paddingHorizontal: Spacing[5],
-    paddingTop: Spacing[4],
-    paddingBottom: Spacing[6],
-    borderTopWidth: r(1),
-    borderTopColor: Colors.gray[200] || '#E5E7EB',
-    backgroundColor: Colors.white,
-  },
-  checkoutButton: {
-    marginTop: 0,
-  },
+  checkoutButton: {marginTop: Spacing[2]},
 });
 
 export default CartTab;

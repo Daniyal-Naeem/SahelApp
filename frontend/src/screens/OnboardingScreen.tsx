@@ -11,7 +11,7 @@ import React, {useState, useRef} from 'react';
 import {SplashData} from '../constants/data';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {setItem, getItem} from '../utils/AsyncStorage';
+import {setItem} from '../utils/AsyncStorage';
 import {RouteStackParamList} from '../../App';
 
 type Props = {};
@@ -28,15 +28,8 @@ const OnboardingScreen = (_props: Props) => {
 
   const handleDone = async () => {
     await setItem('onboarded', 200);
-    // Check if user has a token
-    const token = await getItem('token');
-    if (token) {
-      // User is authenticated, go to HomeScreen
-      navigation.navigate('HomeScreen');
-    } else {
-      // No token, go to LoginScreen
-      navigation.navigate('Login');
-    }
+    // Guests browse freely; signup/login is required only at checkout.
+    navigation.navigate('HomeScreen');
   };
 
   const handleNext = () => {

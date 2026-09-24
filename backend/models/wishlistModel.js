@@ -30,8 +30,6 @@ wishlistSchema.pre('save', function(next) {
     next()
 })
 
-// Index for faster lookups
-wishlistSchema.index({ user: 1 })
 wishlistSchema.index({ products: 1 })
 
 module.exports = mongoose.model("wishlistModel", wishlistSchema)

@@ -151,17 +151,15 @@ const confirmTopup = async (req, res) => {
             return res.status(404).json({ error: 'Transaction not found' })
         }
 
-        // Verify amount matches (security check)
-        if (amount && parseFloat(amount) !== transaction.amount) {
-            console.error(`Amount mismatch for payment ${paymentIntentId}: expected ${transaction.amount}, got ${amount}`)
-            // Log but don't fail - might be a rounding issue
+        // Verify amount matches (security check). A mismatch means the callback does
+        // not describe the transaction we are about to credit - never guess, reject.
+        if (amount !== undefined && amount !== null) {
+            const confirmedAmount = parseFloat(amount)
+            if (Number.isNaN(confirmedAmount) || Math.abs(confirmedAmount - transaction.amount) > 0.001) {
+                console.error(`Amount mismatch for payment ${paymentIntentId}: expected ${transaction.amount}, got ${amount}`)
+                return res.status(400).json({ error: 'Confirmed amount does not match the pending transaction' })
+            }
         }
-
-        // In production, verify webhook signature here
-        // const isValid = verifyWebhookSignature(req.headers, req.body, process.env.WEBHOOK_SECRET)
-        // if (!isValid) {
-        //     return res.status(401).json({ error: 'Invalid webhook signature' })
-        // }
 
         if (status === 'succeeded' || status === 'paid') {
             // Get or create wallet

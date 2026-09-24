@@ -4,6 +4,7 @@ export {useAppDispatch, useAppSelector} from './hooks';
 export * from './productsSlice';
 export * from './cartSlice';
 export * from './wishlistSlice';
+export * from './authSlice';
 export {
   addToWishlist,
   removeFromWishlist,

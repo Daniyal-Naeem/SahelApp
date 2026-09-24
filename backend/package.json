@@ -12,7 +12,8 @@
     "create-sample-products": "node scripts/createSampleProducts.js",
     "sync-wallets": "node scripts/syncWallets.js",
     "create-dummy-data": "node scripts/createDummyData.js",
-    "migrate-frontend-data": "node scripts/migrateFrontendData.js"
+    "migrate-frontend-data": "node scripts/migrateFrontendData.js",
+    "seed-demo": "node scripts/seedDemoAccounts.js"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +25,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.4",
     "nodemon": "^3.1.4",

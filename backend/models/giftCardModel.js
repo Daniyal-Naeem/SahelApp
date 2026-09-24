@@ -98,9 +98,7 @@ const giftCardSchema = new Schema({
 }, { timestamps: true })
 
 // Indexes
-giftCardSchema.index({ code: 1 })
 giftCardSchema.index({ status: 1, expiresAt: 1 })
-giftCardSchema.index({ assignedTo: 1 })
 giftCardSchema.index({ purchasedBy: 1 })
 
 // Generate unique code before saving

@@ -79,20 +79,33 @@ const ProductCard = ({itemDetails, showTotalItem = false, totalItems = 1}: Produ
   };
 
   const currency = (itemDetails as any)?.currency || 'SAR';
-  const productImage = itemDetails?.image?.[0] || '';
+  const productImage =
+    (Array.isArray(itemDetails?.image) && itemDetails.image[0]) ||
+    (typeof (itemDetails as any)?.image === 'string'
+      ? (itemDetails as any).image
+      : '') ||
+    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
   const productTitle = itemDetails?.title || 'Product';
-  const productVendor = itemDetails?.vendor || '';
-  const rating = itemDetails?.stars || 0;
-  const price = itemDetails?.price || 0;
-  const priceBeforeDeal = itemDetails?.priceBeforeDeal || 0;
-  const priceOff = itemDetails?.priceOff || '';
-  
-  // Calculate discount percentage if priceOff is not provided
-  const discountPercentage = priceOff 
-    ? (priceOff.includes('%') ? priceOff : `${priceOff}%`)
-    : (priceBeforeDeal > price 
+  // Vendor may be a populated object from the API — Text cannot render objects.
+  const rawVendor = (itemDetails as any)?.vendor;
+  const productVendor =
+    typeof rawVendor === 'string'
+      ? rawVendor
+      : rawVendor?.businessName || rawVendor?.name || '';
+  const rating = Number(itemDetails?.stars) || 0;
+  const price = Number(itemDetails?.price) || 0;
+  const priceBeforeDeal = Number(itemDetails?.priceBeforeDeal) || 0;
+  const priceOffRaw = itemDetails?.priceOff;
+  const priceOffStr =
+    priceOffRaw === undefined || priceOffRaw === null ? '' : String(priceOffRaw);
+
+  const discountPercentage = priceOffStr
+    ? priceOffStr.includes('%')
+      ? priceOffStr
+      : `${priceOffStr}%`
+    : priceBeforeDeal > price
       ? `${Math.round(((priceBeforeDeal - price) / priceBeforeDeal) * 100)}%`
-      : '');
+      : '';
 
   return (
     <View style={styles.productCard}>
@@ -104,7 +117,7 @@ const ProductCard = ({itemDetails, showTotalItem = false, totalItems = 1}: Produ
         />
         <View style={styles.productInfo}>
           <Text style={styles.productTitle}>{productTitle}</Text>
-          {productVendor && (
+          {!!productVendor && (
             <View style={styles.vendorContainer}>
               <Text style={styles.vendorPrefix}>by </Text>
               <Text style={styles.vendorName}>{productVendor}</Text>

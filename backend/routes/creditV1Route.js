@@ -9,6 +9,7 @@ const {
     getTransferLimits
 } = require('../controllers/creditTransferController')
 const { authenticate, authorize } = require('../middleware/authMiddleware')
+const { verifyTopupWebhook } = require('../middleware/webhookMiddleware')
 
 const router = express.Router()
 
@@ -21,9 +22,9 @@ const router = express.Router()
 router.post('/topup', authenticate, initiateTopup)
 router.get('/topup/:paymentIntentId', authenticate, getTopupStatus)
 
-// Webhook endpoint (should be secured with webhook signature verification)
-// In production, this should be a separate endpoint with different auth
-router.post('/topup/confirm', confirmTopup)
+// Webhook endpoint - authenticated by HMAC signature from the payment gateway,
+// not by a user JWT.
+router.post('/topup/confirm', verifyTopupWebhook, confirmTopup)
 
 // Transfer routes
 router.post('/transfer', authenticate, transferCredits)

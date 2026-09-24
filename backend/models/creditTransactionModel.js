@@ -149,8 +149,6 @@ creditTransactionSchema.index({ type: 1, createdAt: -1 })
 creditTransactionSchema.index({ status: 1, createdAt: -1 })
 creditTransactionSchema.index({ receiverId: 1, createdAt: -1 })
 creditTransactionSchema.index({ senderId: 1, createdAt: -1 })
-creditTransactionSchema.index({ paymentIntentId: 1 })
-creditTransactionSchema.index({ txId: 1 })
 
 // Generate unique transaction ID
 creditTransactionSchema.pre('save', async function(next) {

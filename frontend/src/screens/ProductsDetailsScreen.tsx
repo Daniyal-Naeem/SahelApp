@@ -1,6 +1,7 @@
-import {RouteProp, useNavigation} from '@react-navigation/native';
-import React, {useState} from 'react';
+import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   ScrollView,
   Text,
@@ -21,9 +22,12 @@ import {
   VariationType,
   SpecificationType,
   DeliveryOptionType,
+  ItemDetails,
 } from '../constants/types';
 import {useAppDispatch, useAppSelector} from '../store';
 import {addToCart} from '../store/cartSlice';
+import {requireCheckoutAuth} from '../utils/requireCheckoutAuth';
+import {getProductById} from '../services/productService';
 import {activeStar} from '../assets/svgs/activeStar';
 import {inactiveStar} from '../assets/svgs/inactiveStar';
 import {halfStar} from '../assets/svgs/halfstar';
@@ -37,52 +41,113 @@ import {sendGift} from '../assets/svgs/sendGift';
 import {addtoCard} from '../assets/svgs/addtoCard';
 import {buyNow} from '../assets/svgs/buyNow';
 
-type ScreenRouteProps = RouteProp<RouteStackParamList, 'ProductDetails'> | any;
+const PLACEHOLDER_IMAGE =
+  'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500';
 
-type ProductDetailsProps = {
-  route: ScreenRouteProps;
+const normalizeProduct = (raw: any): ItemDetails => {
+  const vendor =
+    typeof raw?.vendor === 'string'
+      ? raw.vendor
+      : raw?.vendor?.businessName || raw?.vendor?.name || '';
+  const images = Array.isArray(raw?.image)
+    ? raw.image.filter((img: unknown) => typeof img === 'string' && img.length > 0)
+    : [];
+  return {
+    ...raw,
+    vendor,
+    image: images.length > 0 ? images : [PLACEHOLDER_IMAGE],
+    title: raw?.title || 'Product',
+    description: raw?.description || '',
+    price: Number(raw?.price) || 0,
+    priceBeforeDeal: Number(raw?.priceBeforeDeal) || Number(raw?.price) || 0,
+    priceOff: raw?.priceOff ?? '',
+    stars: Number(raw?.stars) || 0,
+    numberOfReview: Number(raw?.numberOfReview) || 0,
+  } as ItemDetails;
 };
 
-const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
-  const {itemDetails} = route.params || {};
+type ScreenRouteProps = RouteProp<RouteStackParamList, 'ProductDetails'>;
+
+const ProductsDetailsScreen = () => {
+  const route = useRoute<ScreenRouteProps>();
+  const productId =
+    route.params?.productId || route.params?.itemDetails?._id || '';
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
-  const cartItemCount = useAppSelector((state) => state.cart.itemCount);
+  const cartItemCount = useAppSelector(state => state.cart.itemCount);
+  const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
   const toast = useToast();
+
+  const [itemDetails, setItemDetails] = useState<ItemDetails | null>(
+    route.params?.itemDetails
+      ? normalizeProduct(route.params.itemDetails)
+      : null,
+  );
+  const [loadingProduct, setLoadingProduct] = useState(!route.params?.itemDetails);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [selectedVariationIndex, setSelectedVariationIndex] = useState<
     number | null
-  >(() => {
-    if (itemDetails?.variations && itemDetails.variations.length > 0) {
-      const firstVariation = itemDetails.variations[0];
-      if (firstVariation?.options && firstVariation.options.length > 0) {
-        return 0;
-      }
-    }
-    return null;
-  });
-
-  const [selectedDeliveryIndex, setSelectedDeliveryIndex] = useState<number>(
-    itemDetails?.deliveryOptions && itemDetails.deliveryOptions.length > 0
-      ? 0
-      : -1,
-  );
+  >(null);
+  const [selectedDeliveryIndex, setSelectedDeliveryIndex] = useState<number>(-1);
   const [selectedColorIndex, setSelectedColorIndex] = useState<number | null>(
-    () => {
-      const index =
-        itemDetails?.colorOptions?.findIndex(
-          (opt: {isSelected?: boolean}) => opt.isSelected,
-        ) ?? -1;
-      return index >= 0
-        ? index
-        : itemDetails?.colorOptions && itemDetails.colorOptions.length > 0
-        ? 0
-        : null;
-    },
+    null,
   );
 
-  const baseProductImages = itemDetails?.image || [];
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      if (!productId) {
+        setLoadError('Product not found');
+        setLoadingProduct(false);
+        return;
+      }
+      setLoadingProduct(true);
+      setLoadError(null);
+      try {
+        const raw = await getProductById(productId);
+        if (cancelled) return;
+        const normalized = normalizeProduct(raw);
+        setItemDetails(normalized);
+        if (normalized.variations?.length && normalized.variations[0]?.options?.length) {
+          setSelectedVariationIndex(0);
+        }
+        if (normalized.deliveryOptions?.length) {
+          setSelectedDeliveryIndex(0);
+        }
+        if (normalized.colorOptions?.length) {
+          const idx =
+            normalized.colorOptions.findIndex(
+              (opt: {isSelected?: boolean}) => opt.isSelected,
+            ) ?? -1;
+          setSelectedColorIndex(idx >= 0 ? idx : 0);
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          setLoadError(err?.response?.data?.error || 'Failed to load product');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingProduct(false);
+        }
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [productId]);
+
+  const baseProductImages = useMemo(() => {
+    const images = itemDetails?.image;
+    if (Array.isArray(images) && images.length > 0) {
+      return images;
+    }
+    return [PLACEHOLDER_IMAGE];
+  }, [itemDetails?.image]);
+
   const currency = (itemDetails as any)?.currency || 'SAR';
   const screenWidth = Dimensions.get('window').width;
   const carouselWidth = screenWidth - Spacing[5] * 2;
@@ -92,7 +157,7 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     navigation.goBack();
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!itemDetails) return;
 
     const allVariationOptions =
@@ -125,17 +190,71 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
       selectedDelivery = selectedDeliveryOption.type || `${selectedDeliveryOption.duration} - ${selectedDeliveryOption.price}`;
     }
 
+    const rawVendor = (itemDetails as any)?.vendor;
+    const vendorLabel =
+      typeof rawVendor === 'string'
+        ? rawVendor
+        : rawVendor?.businessName || rawVendor?.name || '';
+
+    // Keep cart payloads light — avoid storing huge base64 blobs / nested objects.
+    const images = Array.isArray(itemDetails.image)
+      ? itemDetails.image
+          .filter((img: unknown) => typeof img === 'string' && img.length > 0)
+          .slice(0, 1)
+          .map((img: string) =>
+            img.startsWith('data:') && img.length > 200_000
+              ? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'
+              : img,
+          )
+      : [];
+
     const cartItem = {
-      ...itemDetails,
+      _id: itemDetails._id,
+      title: itemDetails.title || 'Product',
+      description: itemDetails.description || '',
+      image: images.length
+        ? images
+        : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'],
+      price: Number(itemDetails.price) || 0,
+      priceBeforeDeal:
+        Number(itemDetails.priceBeforeDeal) || Number(itemDetails.price) || 0,
+      priceOff: String(itemDetails.priceOff ?? '0'),
+      stars: Number(itemDetails.stars) || 0,
+      numberOfReview: Number(itemDetails.numberOfReview) || 0,
+      tags: itemDetails.tags || [],
+      createdAt: itemDetails.createdAt || '',
+      updatedAt: itemDetails.updatedAt || '',
+      __v: itemDetails.__v || 0,
+      vendor: vendorLabel,
       quantity: 1,
       selectedVariation,
       selectedColor,
       selectedDelivery,
     };
 
-    dispatch(addToCart(cartItem));
-
+    dispatch(addToCart(cartItem as any));
     toast.showToast(`${itemDetails.title} has been added to your cart`);
+
+    try {
+      const {getItem} = await import('../utils/AsyncStorage');
+      const token = await getItem('token');
+      // Guests keep a local cart; sync to server only when signed in.
+      if (!token) {
+        return;
+      }
+      const {addCartItem} = await import('../services/cartService');
+      await addCartItem({
+        productId: itemDetails._id,
+        quantity: 1,
+        selectedVariation,
+        selectedColor,
+        selectedDelivery,
+      });
+    } catch (error: any) {
+      toast.showToast(
+        error?.response?.data?.error || 'Saved locally — sync when online',
+      );
+    }
   };
 
   const navigateToCartTab = () => {
@@ -148,6 +267,9 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
   };
 
   const NavigateToCheckout = () => {
+    if (!requireCheckoutAuth(isAuthenticated, navigation)) {
+      return;
+    }
     navigation.navigate('Checkout', {itemDetails: itemDetails!});
   };
 
@@ -259,7 +381,15 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
     return baseProductImages;
   };
 
-  const productImages = getProductImages();
+  const productImages = (() => {
+    const images = getProductImages();
+    if (Array.isArray(images) && images.length > 0) {
+      return images.filter(
+        (img): img is string => typeof img === 'string' && img.length > 0,
+      );
+    }
+    return [PLACEHOLDER_IMAGE];
+  })();
 
   const getAllVariationImagesWithInfo = () => {
     const imagesWithInfo: Array<{
@@ -341,6 +471,28 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
 
   const handleViewAllVariations = () => {
   };
+
+  if (loadingProduct) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <CustomHeader showLogo onBackPress={GoBack} showBorder />
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={styles.statusText}>Loading product…</Text>
+      </View>
+    );
+  }
+
+  if (loadError || !itemDetails) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <CustomHeader showLogo onBackPress={GoBack} showBorder />
+        <Text style={styles.statusText}>{loadError || 'Product not found'}</Text>
+        <TouchableOpacity onPress={GoBack} style={styles.retryButton}>
+          <Text style={styles.retryText}>Go back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -427,7 +579,13 @@ const ProductsDetailsScreen = ({route}: ProductDetailsProps) => {
       {itemDetails?.vendor && (
         <View style={styles.vendorContainer}>
           <Text style={styles.vendorPrefix}>by </Text>
-          <Text style={styles.vendorName}>{itemDetails.vendor}</Text>
+          <Text style={styles.vendorName}>
+            {typeof itemDetails.vendor === 'string'
+              ? itemDetails.vendor
+              : (itemDetails.vendor as any)?.businessName ||
+                (itemDetails.vendor as any)?.name ||
+                ''}
+          </Text>
         </View>
       )}
 
@@ -779,6 +937,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
     paddingHorizontal: Spacing[5],
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing[3],
+  },
+  statusText: {
+    marginTop: Spacing[4],
+    color: Colors.gray?.[500] || '#666',
+    fontFamily: FontFamilies.mregular,
+    textAlign: 'center',
+    paddingHorizontal: Spacing[4],
+  },
+  retryButton: {
+    marginTop: Spacing[3],
+    paddingHorizontal: Spacing[5],
+    paddingVertical: Spacing[3],
+    backgroundColor: Colors.primary,
+    borderRadius: r(8),
+  },
+  retryText: {
+    color: Colors.white,
+    fontFamily: FontFamilies.mmedium,
   },
   carouselContainer: {
     marginTop: Spacing[3],

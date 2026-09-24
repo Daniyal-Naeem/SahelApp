@@ -74,8 +74,5 @@ cartSchema.pre('save', function(next) {
     next()
 })
 
-// Index for faster lookups
-cartSchema.index({ user: 1 })
-
 module.exports = mongoose.model("cartModel", cartSchema)
 

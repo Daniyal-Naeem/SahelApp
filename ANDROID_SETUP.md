@@ -1,37 +1,60 @@
 # Android Emulator Setup & Commands
 
-## Quick Start Commands
+## Quick Start Commands (Windows)
 
-### Option 1: Start Emulator Manually First (Recommended)
+### One-time Android Studio setup
+
+1. Open **Android Studio > More Actions > SDK Manager** and install **Android SDK Platform-Tools**, **Android Emulator**, and an **x86_64** system image.
+2. Open **Device Manager**, create a phone AVD, and start it once. Any AVD name is supported; this project no longer assumes `Pixel_8_Pro`.
+3. Ensure virtualization is enabled in Windows and that the Android SDK is installed at `%LOCALAPPDATA%\Android\Sdk` (or set `ANDROID_HOME`).
+
+### Start the app
+
+From the repository's `frontend` directory:
+
+```powershell
+npm run android:windows
+```
+
+The script automatically selects the first available AVD, starts it with software graphics and without loading a possibly corrupt snapshot, waits for Android to boot, sets `adb reverse`, installs the debug app, and grants the app's declared development permissions.
+
+To recreate the AVD data when Android Studio reports that the emulator process terminated:
+
+```powershell
+npm run android:windows -- -WipeData
+```
+
+To choose a specific AVD:
+
+```powershell
+npm run android:windows -- -AvdName "Your AVD Name"
+```
+
+### Manual fallback
 
 **Terminal 1: Start Emulator**
 ```bash
-# Start the emulator
-emulator -avd Pixel_8_Pro &
-
-# OR if emulator command not found:
-/Users/daniyalnaeem/Library/Android/sdk/emulator/emulator -avd Pixel_8_Pro &
+emulator -list-avds
+emulator -avd YOUR_AVD_NAME -gpu swiftshader_indirect -no-snapshot-load
 ```
 
 **Wait for:** Emulator to fully boot (you'll see the Android home screen)
 
 **Terminal 2: Setup Port Forwarding**
-```bash
+```powershell
 cd frontend
 adb reverse tcp:8081 tcp:8081
 ```
 
 **Terminal 3: Start Metro Bundler**
-```bash
+```powershell
 cd frontend
-nvm use 20.19.4
 npm start
 ```
 
 **Terminal 4: Build and Install App**
-```bash
+```powershell
 cd frontend
-nvm use 20.19.4
 npm run android
 ```
 

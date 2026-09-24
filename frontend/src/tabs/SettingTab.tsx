@@ -5,10 +5,11 @@ import {
   ScrollView,
   StyleSheet,
   Modal,
+  Alert,
 } from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
 import FastImage from 'react-native-fast-image';
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {icons} from '../constants';
 import {CustomButton, CustomWrapper, FormField, ConfirmationModal} from '../components';
@@ -16,6 +17,9 @@ import {useNavigation, useRoute, useFocusEffect} from '@react-navigation/native'
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteStackParamList} from '../../App';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
+import {useAppDispatch, useAppSelector} from '../store';
+import {getMe, updateProfile, getCreditBalance} from '../services/authService';
+import {setUser} from '../store/authSlice';
 
 type Props = {};
 
@@ -23,27 +27,33 @@ const SettingTab = (_props: Props) => {
   const navigation = useNavigation<StackNavigationProp<RouteStackParamList>>();
   const route = useRoute();
   const insets = useSafeAreaInsets();
+  const dispatch = useAppDispatch();
+  const authUser = useAppSelector(state => state.auth.user);
+  const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
   const scrollViewRef = useRef<ScrollView>(null);
   const addressSectionRef = useRef<View>(null);
   const [addressSectionY, setAddressSectionY] = useState<number | null>(null);
-  const [isSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [credits, setCredits] = useState<number>(0);
 
   const [showImagePickerModal, setShowImagePickerModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const [form, setForm] = useState({
-    email: 'aashifa@gmail.com',
+    name: '',
+    email: '',
+    phone: '',
     password: '***********',
-    pincode: '450116',
-    address: "216 St Paul's Rd,",
-    city: 'London',
-    state: 'N1 2LL,',
-    country: 'United Kingdom',
-    bankAccountNumber: '204356XXXXXXX',
-    accountHolderName: 'Abhiraj Sisodiya',
-    ifscCode: 'SBIN00428',
+    pincode: '',
+    address: '',
+    city: '',
+    state: '',
+    country: '',
+    bankAccountNumber: '',
+    accountHolderName: '',
+    ifscCode: '',
   });
 
   // Error states
@@ -57,6 +67,43 @@ const SettingTab = (_props: Props) => {
   const [bankAccountError, setBankAccountError] = useState('');
   const [accountHolderError, setAccountHolderError] = useState('');
   const [ifscError, setIfscError] = useState('');
+
+  useEffect(() => {
+    // Guests can open Profile; prompt sign-in in-place instead of forcing Login.
+    if (!isAuthenticated) {
+      return;
+    }
+    const load = async () => {
+      try {
+        const user = await getMe();
+        dispatch(setUser(user));
+        setForm(prev => ({
+          ...prev,
+          name: user.name || '',
+          email: user.email || '',
+          phone: user.phone || '',
+          address: (user as any).address?.street || '',
+          city: (user as any).address?.city || '',
+          state: (user as any).address?.state || '',
+          country: (user as any).address?.country || '',
+          pincode: (user as any).address?.zipCode || '',
+        }));
+        if ((user as any).avatar) setProfileImage((user as any).avatar);
+        const bal = await getCreditBalance();
+        setCredits(bal);
+      } catch {
+        if (authUser) {
+          setForm(prev => ({
+            ...prev,
+            name: authUser.name || '',
+            email: authUser.email || '',
+            phone: authUser.phone || '',
+          }));
+        }
+      }
+    };
+    load();
+  }, [isAuthenticated]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -142,6 +189,33 @@ const SettingTab = (_props: Props) => {
   const handleChangePassword = () => {
     navigation.navigate('ForgotPassword' as any);
   };
+
+  if (!isAuthenticated) {
+    return (
+      <CustomWrapper>
+        <View style={[styles.guestContainer, {paddingTop: insets.top + Spacing[6]}]}>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <Text style={styles.guestSubtitle}>
+            Browse products freely. Sign in when you are ready to checkout or manage your account.
+          </Text>
+          <CustomButton
+            title="Sign In"
+            handlePress={() => navigation.navigate('Login')}
+            containerStyle={styles.guestButton}
+          />
+          <CustomButton
+            title="Create Account"
+            handlePress={() => navigation.navigate('Signup')}
+            containerStyle={styles.guestButtonSecondary}
+          />
+          <TouchableOpacity onPress={handleGoBack} style={styles.guestLink}>
+            <Text style={styles.guestLinkText}>Continue shopping</Text>
+          </TouchableOpacity>
+        </View>
+      </CustomWrapper>
+    );
+  }
+
   return (
     <CustomWrapper>
       <ScrollView 
@@ -157,7 +231,7 @@ const SettingTab = (_props: Props) => {
               resizeMode={FastImage.resizeMode.contain}
             />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Checkout</Text>
+          <Text style={styles.headerTitle}>Profile</Text>
           <View style={styles.headerRight} />
         </View>
 
@@ -179,6 +253,20 @@ const SettingTab = (_props: Props) => {
           <Text style={styles.sectionTitle}>
             Personal Details
           </Text>
+          <Text style={styles.creditsLine}>Wallet: SAR {credits.toFixed(2)}</Text>
+          <FormField
+            title="Name"
+            value={form.name}
+            placeholder="Full Name"
+            handleChangeText={(text: string) => {
+              setForm({...form, name: text});
+            }}
+            setError={() => {}}
+            error=""
+            otherStyles={styles.formField}
+            backgroundColor="#FFFFFF"
+            borderColor="#C8C8C8"
+          />
           <FormField
             title="Email"
             value={form.email}
@@ -189,6 +277,19 @@ const SettingTab = (_props: Props) => {
             }}
             setError={setEmailError}
             error={emailError}
+            otherStyles={styles.formField}
+            backgroundColor="#FFFFFF"
+            borderColor="#C8C8C8"
+          />
+          <FormField
+            title="Phone"
+            value={form.phone}
+            placeholder="Phone"
+            handleChangeText={(text: string) => {
+              setForm({...form, phone: text});
+            }}
+            setError={() => {}}
+            error=""
             otherStyles={styles.formField}
             backgroundColor="#FFFFFF"
             borderColor="#C8C8C8"
@@ -348,8 +449,38 @@ const SettingTab = (_props: Props) => {
         </View>
         {/* save changes */}
         <CustomButton
-          title="Proceed"
-          handlePress={() => {}}
+          title="Save Profile"
+          handlePress={async () => {
+            if (!authUser?._id) {
+              navigation.navigate('Login');
+              return;
+            }
+            setIsSubmitting(true);
+            try {
+              const updated = await updateProfile(authUser._id, {
+                name: form.name,
+                email: form.email,
+                phone: form.phone,
+                address: {
+                  street: form.address,
+                  city: form.city,
+                  state: form.state,
+                  country: form.country,
+                  zipCode: form.pincode,
+                } as any,
+                avatar: profileImage || undefined,
+              } as any);
+              dispatch(setUser(updated));
+              Alert.alert('Saved', 'Profile updated successfully');
+            } catch (error: any) {
+              Alert.alert(
+                'Update failed',
+                error?.response?.data?.error || error?.message || 'Try again',
+              );
+            } finally {
+              setIsSubmitting(false);
+            }
+          }}
           isLoading={isSubmitting}
           containerStyle={styles.buttonContainer}
         />
@@ -400,6 +531,36 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     backgroundColor: Colors.white,
+  },
+  guestContainer: {
+    flex: 1,
+    paddingHorizontal: Spacing[5],
+    justifyContent: 'center',
+  },
+  guestSubtitle: {
+    marginTop: Spacing[4],
+    marginBottom: Spacing[6],
+    color: Colors.black[100],
+    fontFamily: FontFamilies.mregular,
+    fontSize: FontSizes.sm,
+    lineHeight: r(22),
+  },
+  guestButton: {
+    marginBottom: Spacing[3],
+  },
+  guestButtonSecondary: {
+    marginBottom: Spacing[4],
+    backgroundColor: Colors.black[100],
+  },
+  guestLink: {
+    alignItems: 'center',
+    paddingVertical: Spacing[3],
+  },
+  guestLinkText: {
+    color: Colors.primary,
+    fontFamily: FontFamilies.mmedium,
+    fontSize: FontSizes.sm,
+    textDecorationLine: 'underline',
   },
   scrollViewContent: {
     paddingHorizontal: Spacing[5],
@@ -465,7 +626,12 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.lg,
     fontFamily: FontFamilies.msemibold,
     color: Colors.black[100],
-    marginBottom: Spacing[4],
+    marginBottom: Spacing[3],
+  },
+  creditsLine: {
+    fontFamily: FontFamilies.mmedium,
+    color: Colors.primary,
+    marginBottom: Spacing[3],
   },
   section: {
     marginTop: Spacing[6],

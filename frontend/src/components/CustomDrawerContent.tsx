@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {
   View,
   Text,
@@ -12,95 +12,86 @@ import {
 import {CommonActions} from '@react-navigation/native';
 import {icons} from '../constants';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
-import { SvgXml } from 'react-native-svg';
-import { drawerLogo } from '../assets/svgs/drawerHome';
-import { VIPIcon } from '../assets/svgs/VIPIcon';
-import { wishlist } from '../assets/svgs/wishlist';
-import { notification } from '../assets/svgs/notification';
-import { sendGifts } from '../assets/svgs/sendGifts';
-import { support } from '../assets/svgs/support';
-import { language } from '../assets/svgs/languauge';
-import { settings } from '../assets/svgs/settings';
-import { logout } from '../assets/svgs/logout';
-import { orderIcon } from '../assets/svgs/orderIcon';
+import {SvgXml} from 'react-native-svg';
+import {drawerLogo} from '../assets/svgs/drawerHome';
+import {VIPIcon} from '../assets/svgs/VIPIcon';
+import {wishlist} from '../assets/svgs/wishlist';
+import {notification} from '../assets/svgs/notification';
+import {sendGifts} from '../assets/svgs/sendGifts';
+import {support} from '../assets/svgs/support';
+import {language} from '../assets/svgs/languauge';
+import {settings} from '../assets/svgs/settings';
+import {logout} from '../assets/svgs/logout';
+import {orderIcon} from '../assets/svgs/orderIcon';
+import {useAppDispatch, useAppSelector} from '../store';
+import {performLogout} from '../services/session';
 
 interface MenuItem {
   id: string;
   label: string;
   icon: string;
   route?: string;
-  isActive?: boolean;
 }
 
 const CustomDrawerContent = (props: any) => {
-  const [activeMenuItemId, setActiveMenuItemId] = useState<string>('1'); // Default to first item
+  const dispatch = useAppDispatch();
+  const user = useAppSelector(state => state.auth.user);
+  const [activeMenuItemId, setActiveMenuItemId] = useState<string>('1');
 
-  const menuItems: MenuItem[] = [
-    {id: '1', label: 'Join VIP Club', icon: VIPIcon, route: 'VIPClub'},
-    {id: '2', label: 'My Orders', icon: orderIcon, route: 'Orders'},
-    {id: '3', label: 'Wishlist', icon: wishlist, route: 'Wishlist'},
-    {id: '4', label: 'Notifications', icon: notification, route: 'Notifications'},
-    {id: '5', label: 'Send/Redeem Gifts', icon: sendGifts, route: 'Gifts'},
-    {id: '6', label: 'Support', icon: support, route: 'Support'},
-    {id: '7', label: 'Language', icon: language, route: 'Language'},
-    {id: '8', label: 'Settings', icon: settings, route: 'Profile'},
-  ];
+  const menuItems: MenuItem[] = useMemo(() => {
+    const items: MenuItem[] = [
+      {id: '1', label: 'Join VIP Club', icon: VIPIcon, route: 'VIPClub'},
+      {id: '2', label: 'My Orders', icon: orderIcon, route: 'Orders'},
+      {id: '3', label: 'Wishlist', icon: wishlist, route: 'Wishlist'},
+      {id: '4', label: 'Notifications', icon: notification, route: 'Notifications'},
+      {id: '5', label: 'Send/Redeem Gifts', icon: sendGifts, route: 'Gifts'},
+      {id: '6', label: 'Support', icon: support, route: 'Support'},
+      {id: '7', label: 'Language', icon: language, route: 'Language'},
+      {id: '8', label: 'Settings', icon: settings, route: 'Profile'},
+    ];
+
+    if (user?.role === 'vendor') {
+      items.splice(2, 0,
+        {id: 'v1', label: 'My Products', icon: orderIcon, route: 'VendorProducts'},
+        {id: 'v2', label: 'Add Product', icon: sendGifts, route: 'VendorAddProduct'},
+      );
+    }
+
+    return items;
+  }, [user?.role]);
 
   const handleMenuItemPress = (item: MenuItem) => {
     setActiveMenuItemId(item.id);
-
-    // Close drawer first
     props.navigation.closeDrawer();
-    
-    if (item.route) {
-      // Use setTimeout to ensure drawer is closed before navigation
-      setTimeout(() => {
-        try {
-          // For tabs that are in the bottom tab navigator (Wishlist, Profile)
-          if (item.route === 'Wishlist' || item.route === 'Profile') {
-            // Navigate to Dashboard with screen param to open the specific tab
-            props.navigation.navigate('Dashboard', {
-              screen: item.route,
-            });
-          } else {
-            // For other screens (VIPClub, Orders, Notifications, Support, Language, Gifts), navigate directly
-            props.navigation.navigate(item.route as any);
-          }
-        } catch  {
-          try {
-            if (item.route === 'Wishlist' || item.route === 'Profile') {
-              props.navigation.navigate('Dashboard', {
-                initialTab: item.route,
-              });
-            } else {
-              props.navigation.navigate(item.route as any);
-            }
-          } catch  {
-            // Navigation failed
-          }
+
+    if (!item.route) return;
+
+    setTimeout(() => {
+      try {
+        if (item.route === 'Wishlist' || item.route === 'Profile') {
+          props.navigation.navigate('Dashboard', {screen: item.route});
+        } else {
+          props.navigation.navigate(item.route as any);
         }
-      }, 200);
-    }
+      } catch {
+        // ignore
+      }
+    }, 200);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     props.navigation.closeDrawer();
-    
+    await performLogout(dispatch);
     const parentNavigator = props.navigation.getParent();
+    // Stay in the app as a guest — do not force the Login screen.
+    const resetAction = CommonActions.reset({
+      index: 0,
+      routes: [{name: 'HomeScreen'}],
+    });
     if (parentNavigator) {
-      parentNavigator.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{name: 'Login'}],
-        }),
-      );
+      parentNavigator.dispatch(resetAction);
     } else {
-      props.navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{name: 'Login'}],
-        }),
-      );
+      props.navigation.dispatch(resetAction);
     }
   };
 
@@ -110,12 +101,10 @@ const CustomDrawerContent = (props: any) => {
         {...props}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
-        {/* Header/Branding Section */}
         <View style={styles.header}>
           <SvgXml xml={drawerLogo} />
         </View>
 
-        {/* User Profile Section */}
         <View style={styles.profileSection}>
           <FastImage
             source={icons.profileIcon}
@@ -123,22 +112,27 @@ const CustomDrawerContent = (props: any) => {
             resizeMode={FastImage.resizeMode.cover}
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>SAM KAMERON</Text>
-            <Text style={styles.profileEmail}>samkam@gmail.com</Text>
+            <Text style={styles.profileName}>
+              {user?.name || 'Guest User'}
+            </Text>
+            <Text style={styles.profileEmail}>
+              {user?.email || 'Sign in to continue'}
+            </Text>
+            {user?.role === 'vendor' && (
+              <Text style={styles.roleBadge}>
+                Vendor · {user.vendorStatus || 'pending'}
+              </Text>
+            )}
           </View>
         </View>
 
-        {/* Main Menu Items */}
         <View style={styles.menuContainer}>
-          {menuItems.map((item) => {
+          {menuItems.map(item => {
             const isActive = activeMenuItemId === item.id;
             return (
               <TouchableOpacity
                 key={item.id}
-                style={[
-                  styles.menuItem,
-                  isActive && styles.menuItemActive,
-                ]}
+                style={[styles.menuItem, isActive && styles.menuItemActive]}
                 onPress={() => handleMenuItemPress(item)}>
                 <SvgXml
                   xml={item.icon}
@@ -147,10 +141,7 @@ const CustomDrawerContent = (props: any) => {
                   style={styles.menuIcon}
                 />
                 <Text
-                  style={[
-                    styles.menuText,
-                    isActive && styles.menuTextActive,
-                  ]}>
+                  style={[styles.menuText, isActive && styles.menuTextActive]}>
                   {item.label}
                 </Text>
               </TouchableOpacity>
@@ -159,17 +150,28 @@ const CustomDrawerContent = (props: any) => {
         </View>
       </DrawerContentScrollView>
 
-      {/* Logout Button - Fixed at bottom */}
       <View style={styles.logoutContainer}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <SvgXml
-            xml={logout}
-            width={r(24)}
-            height={r(24)}
-            style={styles.menuIcon}
-          />
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        {user ? (
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <SvgXml
+              xml={logout}
+              width={r(24)}
+              height={r(24)}
+              style={styles.menuIcon}
+            />
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={() => {
+              props.navigation.closeDrawer();
+              const parent = props.navigation.getParent();
+              (parent || props.navigation).navigate('Login');
+            }}>
+            <Text style={styles.logoutText}>Sign In</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -215,6 +217,13 @@ const styles = StyleSheet.create({
     fontFamily: FontFamilies.mregular,
     color: Colors.gray[500],
   },
+  roleBadge: {
+    marginTop: Spacing[1],
+    fontSize: FontSizes.xs,
+    color: Colors.primary,
+    fontFamily: FontFamilies.mmedium,
+    textTransform: 'capitalize',
+  },
   menuContainer: {
     paddingHorizontal: Spacing[5],
   },
@@ -227,16 +236,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing[2],
     backgroundColor: Colors.white,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
   menuItemActive: {
-    backgroundColor: '#56E5E8', // Active menu item background
+    backgroundColor: '#56E5E8',
   },
   menuIcon: {
     marginRight: Spacing[4],
@@ -261,7 +267,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing[4],
     paddingHorizontal: Spacing[4],
     borderRadius: r(12),
-    backgroundColor: '#FFF0F0', // Light pink background
+    backgroundColor: '#FFF0F0',
     borderWidth: 1,
     borderColor: Colors.red[500],
   },

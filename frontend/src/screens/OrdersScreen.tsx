@@ -1,5 +1,5 @@
-import {useNavigation} from '@react-navigation/native';
-import React, {useState} from 'react';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import React, {useCallback, useState} from 'react';
 import {
   ScrollView,
   Text,
@@ -7,22 +7,94 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import {CustomHeader, OrderCard} from '../components';
 import {Colors, Spacing, FontFamilies, r, FontSizes} from '../constants/styles';
-import {orders} from '../constants/data';
 import type {OrderData} from '../components/OrderCard';
+import {getMyOrders} from '../services/orderService';
+import {useAppSelector} from '../store';
+
+const statusMap = (status?: string): OrderData['status'] => {
+  const s = (status || 'pending').toLowerCase();
+  if (s === 'confirmed' || s === 'processing') return 'Processing';
+  if (s === 'shipped') return 'Shipped';
+  if (s === 'delivered') return 'Delivered';
+  if (s === 'cancelled') return 'Cancelled';
+  if (s === 'out_for_delivery') return 'Out for Delivery';
+  return 'Pending';
+};
+
+const mapOrder = (order: any): OrderData => {
+  const images = (order.items || [])
+    .flatMap((item: any) => {
+      const imgs = item.product?.image;
+      if (Array.isArray(imgs)) return imgs;
+      return imgs ? [imgs] : [];
+    })
+    .filter(Boolean);
+
+  return {
+    id: String(order._id),
+    orderNumber: order.orderNumber || String(order._id).slice(-6),
+    deliveryType: order.shippingAddress?.city
+      ? `Ship to ${order.shippingAddress.city}`
+      : 'Standard Delivery',
+    itemCount: (order.items || []).reduce(
+      (sum: number, i: any) => sum + (i.quantity || 1),
+      0,
+    ),
+    status: statusMap(order.status),
+    images: images.length ? images : ['https://via.placeholder.com/100'],
+    orderDate: order.createdAt,
+    estimatedDelivery: order.estimatedDelivery,
+    trackingNumber: order.trackingNumber,
+    totalAmount: order.totalAmount || order.total,
+  };
+};
 
 const OrdersScreen = () => {
   const navigation = useNavigation<any>();
+  const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
   const [selectedFilter, setSelectedFilter] = useState<string>('All');
+  const [orders, setOrders] = useState<OrderData[]>([]);
+  const [rawOrders, setRawOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const GoBack = () => {
-    navigation.goBack();
-  };
+  const load = useCallback(async () => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      navigation.navigate('Login');
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await getMyOrders();
+      const list = Array.isArray(data) ? data : data?.orders || [];
+      setRawOrders(list);
+      setOrders(list.map(mapOrder));
+    } catch (error: any) {
+      Alert.alert(
+        'Orders',
+        error?.response?.data?.error || 'Could not load orders',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated, navigation]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+
+  const GoBack = () => navigation.goBack();
 
   const handleOrderPress = (order: OrderData) => {
-    navigation.navigate('OrderDetails', {order});
+    const full = rawOrders.find(o => String(o._id) === order.id);
+    navigation.navigate('OrderDetails', {order: full || order});
   };
 
   const filterOptions = ['All', 'Pending', 'Processing', 'Shipped', 'Delivered'];
@@ -44,13 +116,8 @@ const OrdersScreen = () => {
 
   return (
     <View style={styles.container}>
-      <CustomHeader
-        title="My Orders"
-        onBackPress={GoBack}
-        showBorder={true}
-      />
+      <CustomHeader title="My Orders" onBackPress={GoBack} showBorder />
 
-      {/* Filter Tabs */}
       <View style={styles.filterContainer}>
         <ScrollView
           horizontal
@@ -77,38 +144,29 @@ const OrdersScreen = () => {
         </ScrollView>
       </View>
 
-      {/* Orders List */}
-      {filteredOrders.length > 0 ? (
+      {loading ? (
+        <ActivityIndicator style={{marginTop: 40}} color={Colors.primary} />
+      ) : (
         <FlatList
           data={filteredOrders}
-          renderItem={renderOrderItem}
           keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
+          renderItem={renderOrderItem}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <Text style={styles.empty}>No orders yet</Text>
+          }
         />
-      ) : (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No orders found</Text>
-          <Text style={styles.emptySubtext}>
-            {selectedFilter === 'All'
-              ? 'You haven\'t placed any orders yet'
-              : `No ${selectedFilter.toLowerCase()} orders`}
-          </Text>
-        </View>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
+  container: {flex: 1, backgroundColor: Colors.white},
   filterContainer: {
-    borderBottomWidth: r(1),
-    borderBottomColor: Colors.gray[200] || '#E5E7EB',
     paddingVertical: Spacing[3],
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray[200],
   },
   filterScrollContent: {
     paddingHorizontal: Spacing[5],
@@ -118,48 +176,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing[4],
     paddingVertical: Spacing[2],
     borderRadius: r(20),
-    backgroundColor: Colors.gray[100] || '#F3F4F6',
+    backgroundColor: Colors.gray[100],
     marginRight: Spacing[2],
   },
-  filterButtonActive: {
-    backgroundColor: Colors.primary,
-  },
+  filterButtonActive: {backgroundColor: Colors.primary},
   filterText: {
-    fontSize: FontSizes.sm,
     fontFamily: FontFamilies.mmedium,
-    color: Colors.gray[600] || '#4B5563',
+    color: Colors.gray[600],
+    fontSize: FontSizes.sm,
   },
-  filterTextActive: {
-    color: Colors.white,
-    fontFamily: FontFamilies.msemibold,
-  },
-  listContent: {
-    paddingHorizontal: Spacing[5],
-    paddingTop: Spacing[4],
-    paddingBottom: Spacing[8],
-  },
-  orderCardWrapper: {
-    marginBottom: Spacing[3],
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Spacing[5],
-  },
-  emptyText: {
-    fontSize: FontSizes.xl,
-    fontFamily: FontFamilies.msemibold,
-    color: Colors.black[100],
-    marginBottom: Spacing[2],
-  },
-  emptySubtext: {
-    fontSize: FontSizes.base,
-    fontFamily: FontFamilies.mregular,
-    color: Colors.gray[500] || '#6B7280',
+  filterTextActive: {color: Colors.white},
+  list: {padding: Spacing[5], paddingBottom: Spacing[12]},
+  orderCardWrapper: {marginBottom: Spacing[4]},
+  empty: {
     textAlign: 'center',
+    marginTop: Spacing[10],
+    color: Colors.gray[500],
+    fontFamily: FontFamilies.mregular,
   },
 });
 
 export default OrdersScreen;
-

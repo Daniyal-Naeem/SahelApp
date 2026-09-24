@@ -9,15 +9,18 @@ const {
     searchProducts
 } = require('../controllers/productsController')
 
+const { authenticate, authorize, optionalAuthenticate } = require('../middleware/authMiddleware')
+
 const router = express.Router()
 
 // Search products (must be before /:id route)
 router.get('/search', searchProducts)
 
-router.get('/', getAllProducts)
+// optionalAuthenticate so ?vendor=me can resolve the caller
+router.get('/', optionalAuthenticate, getAllProducts)
 router.get('/:id', getSingleProduct)
-router.post('/', createNewProduct)
-router.put('/:id', updateProduct)
-router.delete('/:id', deleteProduct)
+router.post('/', authenticate, authorize('admin', 'vendor'), createNewProduct)
+router.put('/:id', authenticate, authorize('admin', 'vendor'), updateProduct)
+router.delete('/:id', authenticate, authorize('admin'), deleteProduct)
 
 module.exports = router;

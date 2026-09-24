@@ -166,12 +166,20 @@ const completeCheckout = async (req, res) => {
 
         if (!reservationTx) {
             // No credit reservation, order can still proceed
+            order.paymentStatus = paymentStatus === 'paid' || paymentStatus === 'success'
+                ? 'paid'
+                : order.paymentStatus
+            await order.save()
+            const currentWallet = await walletModel.findOne({ userId })
             return res.status(200).json({
                 message: 'Checkout completed (no credit reservation)',
                 order: {
+                    _id: order._id,
                     orderNumber: order.orderNumber,
-                    total: order.total
-                }
+                    total: order.total,
+                    paymentStatus: order.paymentStatus
+                },
+                balance: currentWallet ? currentWallet.balance : 0
             })
         }
 
@@ -181,43 +189,37 @@ const completeCheckout = async (req, res) => {
             return res.status(500).json({ error: 'Wallet not found' })
         }
 
-        // Use MongoDB transaction for atomicity
-        const session = await mongoose.startSession()
-        session.startTransaction()
-
+        // Standalone MongoDB (local demo) does not support multi-doc transactions.
+        // Keep the debit atomic enough for demo by sequential writes.
         try {
             if (paymentStatus === 'paid' || paymentStatus === 'success') {
-                // Consume reserved credits
+                if (wallet.balance < reservationTx.amount) {
+                    return res.status(400).json({
+                        error: 'Insufficient credits',
+                        available: wallet.balance,
+                        requested: reservationTx.amount
+                    })
+                }
+
                 wallet.balance -= reservationTx.amount
                 wallet.lastTransactionAt = new Date()
                 wallet.totalSpent = (wallet.totalSpent || 0) + reservationTx.amount
-                await wallet.save({ session })
+                await wallet.save()
 
-                // Update user.credits for backward compatibility
-                await userModel.findByIdAndUpdate(
-                    userId,
-                    { $set: { credits: wallet.balance } },
-                    { session }
-                )
+                await userModel.findByIdAndUpdate(userId, {
+                    $set: { credits: wallet.balance }
+                })
 
-                // Update reservation transaction
                 reservationTx.status = 'completed'
                 reservationTx.balanceAfter = wallet.balance
                 reservationTx.completedAt = new Date()
-                await reservationTx.save({ session })
+                await reservationTx.save()
 
-                // Update order with credit information
                 order.paymentMethod = paymentMethod || order.paymentMethod
                 order.paymentStatus = 'paid'
-                // Store credit amount in order (add field if needed)
-                if (!order.creditUsed) {
-                    order.creditUsed = reservationTx.amount
-                }
-                await order.save({ session })
+                order.creditUsed = reservationTx.amount
+                await order.save()
 
-                await session.commitTransaction()
-
-                // Log audit
                 await auditLogModel.log({
                     action: 'credit_consume',
                     userId: userId,
@@ -241,6 +243,7 @@ const completeCheckout = async (req, res) => {
                 return res.status(200).json({
                     message: 'Checkout completed successfully',
                     order: {
+                        _id: order._id,
                         orderNumber: order.orderNumber,
                         total: order.total,
                         creditUsed: reservationTx.amount,
@@ -251,17 +254,14 @@ const completeCheckout = async (req, res) => {
                         amount: reservationTx.amount,
                         status: 'completed',
                         balanceAfter: wallet.balance
-                    }
+                    },
+                    balance: wallet.balance
                 })
             } else if (paymentStatus === 'failed' || paymentStatus === 'cancelled') {
-                // Release reserved credits
                 reservationTx.status = 'cancelled'
                 reservationTx.cancelledAt = new Date()
-                await reservationTx.save({ session })
+                await reservationTx.save()
 
-                await session.commitTransaction()
-
-                // Log audit
                 await auditLogModel.log({
                     action: 'credit_consume',
                     userId: userId,
@@ -291,17 +291,14 @@ const completeCheckout = async (req, res) => {
                     transaction: {
                         txId: reservationTx.txId,
                         status: 'cancelled'
-                    }
+                    },
+                    balance: wallet.balance
                 })
-            } else {
-                await session.abortTransaction()
-                return res.status(400).json({ error: `Unknown payment status: ${paymentStatus}` })
             }
+
+            return res.status(400).json({ error: `Unknown payment status: ${paymentStatus}` })
         } catch (error) {
-            await session.abortTransaction()
             throw error
-        } finally {
-            session.endSession()
         }
     } catch (error) {
         console.error('Error completing checkout:', error)

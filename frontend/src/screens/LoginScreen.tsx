@@ -1,51 +1,102 @@
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
+import {CommonActions} from '@react-navigation/native';
 import React, {useState} from 'react';
-import {Text, TouchableOpacity, View, StyleSheet} from 'react-native';
+import {Text, TouchableOpacity, View, StyleSheet, Alert} from 'react-native';
 import {SvgXml} from 'react-native-svg';
 import {CustomButton, FormField} from '../components';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {googleIcon} from '../assets/svgs/googleIcon';
 import AppleIcon from '../assets/svgs/Apple.svg';
 import FacebookIcon from '../assets/svgs/Facebook.svg';
+import {login} from '../services/authService';
+import {useAppDispatch} from '../store';
+import {setCredentials} from '../store/authSlice';
+import {RouteStackParamList} from '../../App';
 
 type Props = {};
+type LoginRoute = RouteProp<RouteStackParamList, 'Login'>;
 
 const LoginScreen = (_props: Props) => {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<StackNavigationProp<RouteStackParamList>>();
+  const route = useRoute<LoginRoute>();
+  const dispatch = useAppDispatch();
+  const redirect = route.params?.redirect;
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [isSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
     email: '',
-    username: '',
     password: '',
   });
-  type RootStackParamList = {
-    ForgotPassword: undefined;
-    Signup: undefined;
-    HomeScreen: undefined;
-  };
+
   const handleForgotPassword = () => {
     navigation.navigate('ForgotPassword');
   };
 
-  const handleLogin = () => {
-    navigation.navigate('HomeScreen');
+  const goAfterAuth = () => {
+    if (redirect === 'Checkout') {
+      navigation.replace('Checkout');
+      return;
+    }
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{name: 'HomeScreen'}],
+      }),
+    );
   };
-  const handleSignInWithProvider = () => {};
+
+  const handleLogin = async () => {
+    setEmailError('');
+    setPasswordError('');
+    if (!form.email.trim()) {
+      setEmailError('Email is required');
+      return;
+    }
+    if (!form.password) {
+      setPasswordError('Password is required');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const result = await login({
+        email: form.email.trim(),
+        password: form.password,
+      });
+      dispatch(setCredentials({token: result.token, user: result.user}));
+      goAfterAuth();
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.error ||
+        error?.message ||
+        'Login failed. Please try again.';
+      Alert.alert('Login failed', message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSignInWithProvider = () => {
+    Alert.alert(
+      'Coming soon',
+      'Social login is not available in this demo. Please use email and password.',
+    );
+  };
+
   const handleNavigateToSignUp = () => {
-    navigation.navigate('Signup');
+    navigation.navigate('Signup', redirect ? {redirect} : undefined);
   };
+
   return (
     <View style={styles.container}>
       <Text style={[styles.title, {fontFamily: FontFamilies.msemibold}]}>
         Welcome back
       </Text>
       <View>
-        {/* text input */}
         <FormField
-          title="Username or Email"
+          title="Email"
           value={form.email}
           setError={setEmailError}
           error={emailError}
@@ -53,7 +104,7 @@ const LoginScreen = (_props: Props) => {
             setEmailError('');
             setForm({...form, email: e});
           }}
-          placeholder="Username or Email"
+          placeholder="Email"
           otherStyles={styles.formField}
         />
         <View>
@@ -81,28 +132,30 @@ const LoginScreen = (_props: Props) => {
             </Text>
           </TouchableOpacity>
         </View>
-        {/* submit btn */}
         <CustomButton
           title="Login"
           handlePress={handleLogin}
           isLoading={isSubmitting}
           containerStyle={styles.buttonContainer}
         />
-        {/* or continue with  */}
         <View style={styles.centerContainer}>
           <View style={styles.dividerContainer}>
-       
             <Text style={styles.dividerText}>- OR Continue with -</Text>
-          
           </View>
           <View style={styles.socialContainer}>
-            <TouchableOpacity onPress={handleSignInWithProvider} style={styles.socialButton}>
+            <TouchableOpacity
+              onPress={handleSignInWithProvider}
+              style={styles.socialButton}>
               <SvgXml xml={googleIcon} width={r(24)} height={r(24)} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleSignInWithProvider} style={styles.socialButton}>
+            <TouchableOpacity
+              onPress={handleSignInWithProvider}
+              style={styles.socialButton}>
               <AppleIcon width={r(24)} height={r(24)} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleSignInWithProvider} style={styles.socialButton}>
+            <TouchableOpacity
+              onPress={handleSignInWithProvider}
+              style={styles.socialButton}>
               <FacebookIcon width={r(24)} height={r(24)} />
             </TouchableOpacity>
           </View>
@@ -158,11 +211,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing[5],
-  },
-  divider: {
-    flex: 1,
-    height: r(1),
-    backgroundColor: Colors.gray[300],
   },
   dividerText: {
     color: '#575757',

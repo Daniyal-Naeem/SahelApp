@@ -85,7 +85,8 @@ android {
         versionCode 1
         versionName "1.0"
         manifestPlaceholders = [
-                usesCleartextTraffic: false,
+                // true so release test APKs can reach the local HTTP backend on LAN
+                usesCleartextTraffic: true,
         ]
     }
     signingConfigs {

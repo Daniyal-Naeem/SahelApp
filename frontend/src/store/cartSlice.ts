@@ -3,6 +3,7 @@ import {ProductTypes} from '../constants/types';
 
 interface CartItem extends ProductTypes {
   quantity: number;
+  cartItemId?: string;
   selectedVariation?: string;
   selectedColor?: string;
   selectedDelivery?: string;
@@ -42,6 +43,9 @@ const cartSlice = createSlice({
 
       if (existingItem) {
         existingItem.quantity += action.payload.quantity || 1;
+        if (action.payload.cartItemId) {
+          existingItem.cartItemId = action.payload.cartItemId;
+        }
       } else {
         state.items.push({
           ...action.payload,
@@ -53,7 +57,10 @@ const cartSlice = createSlice({
       state.itemCount = calculateItemCount(state.items);
     },
     removeFromCart: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter(item => item._id !== action.payload);
+      state.items = state.items.filter(
+        item =>
+          item._id !== action.payload && item.cartItemId !== action.payload,
+      );
       state.total = calculateTotal(state.items);
       state.itemCount = calculateItemCount(state.items);
     },
@@ -61,12 +68,21 @@ const cartSlice = createSlice({
       state,
       action: PayloadAction<{id: string; quantity: number}>,
     ) => {
-      const item = state.items.find(item => item._id === action.payload.id);
+      const item = state.items.find(
+        item =>
+          item._id === action.payload.id ||
+          item.cartItemId === action.payload.id,
+      );
       if (item) {
         item.quantity = Math.max(1, action.payload.quantity);
         state.total = calculateTotal(state.items);
         state.itemCount = calculateItemCount(state.items);
       }
+    },
+    setCartItems: (state, action: PayloadAction<CartItem[]>) => {
+      state.items = action.payload;
+      state.total = calculateTotal(state.items);
+      state.itemCount = calculateItemCount(state.items);
     },
     clearCart: state => {
       state.items = [];
@@ -80,9 +96,9 @@ export const {
   addToCart,
   removeFromCart,
   updateCartItemQuantity,
+  setCartItems,
   clearCart,
 } = cartSlice.actions;
 
 export type {CartItem};
 export default cartSlice.reducer;
-

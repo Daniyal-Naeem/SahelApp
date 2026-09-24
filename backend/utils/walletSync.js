@@ -3,8 +3,13 @@ const walletModel = require('../models/walletModel')
 
 /**
  * Wallet Sync Utility
- * Syncs user.credits to wallet collection for backward compatibility
- * This ensures wallets exist for all users
+ *
+ * walletModel is the single source of truth for a balance. `user.credits` is a
+ * read-only mirror kept only for backward compatibility with the legacy API.
+ *
+ * The mirror is therefore only ever written FROM the wallet. The one exception
+ * is the very first sync for a user who has no wallet document yet: there the
+ * legacy `user.credits` value is all we have, so it seeds the new wallet.
  */
 const syncUserWallet = async (userId) => {
     try {
@@ -14,22 +19,18 @@ const syncUserWallet = async (userId) => {
         }
 
         let wallet = await walletModel.findOne({ userId })
-        
+
         if (!wallet) {
-            // Create wallet with user's current credits
+            // First migration for this user: seed the wallet from the legacy field.
             wallet = await walletModel.create({
                 userId,
                 balance: user.credits || 0
             })
             console.log(`Created wallet for user ${userId} with balance ${wallet.balance}`)
-        } else {
-            // Sync balance if user.credits is different (for backward compatibility)
-            if (user.credits !== wallet.balance) {
-                const oldBalance = wallet.balance
-                wallet.balance = user.credits || 0
-                await wallet.save()
-                console.log(`Synced wallet for user ${userId}: ${oldBalance} -> ${wallet.balance}`)
-            }
+        } else if (user.credits !== wallet.balance) {
+            // Wallet wins - refresh the legacy mirror, never the other way around.
+            await userModel.findByIdAndUpdate(userId, { $set: { credits: wallet.balance } })
+            console.log(`Refreshed user.credits for ${userId}: ${user.credits} -> ${wallet.balance}`)
         }
 
         return wallet
@@ -59,8 +60,8 @@ const syncAllWallets = async () => {
                 })
                 created++
             } else if (user.credits !== wallet.balance) {
-                wallet.balance = user.credits || 0
-                await wallet.save()
+                // Wallet is authoritative; bring the legacy mirror back in line.
+                await userModel.findByIdAndUpdate(user._id, { $set: { credits: wallet.balance } })
                 synced++
             }
         }

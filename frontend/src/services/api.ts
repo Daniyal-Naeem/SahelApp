@@ -1,11 +1,8 @@
 // API Service for Mobile App
-// Base URL - Update this to match your backend server
-// For Android emulator, use 10.0.2.2 instead of localhost
-// For iOS simulator, use localhost
-// For physical device, use your computer's local IP address
-const BASE_URL = __DEV__ 
-  ? 'http://10.0.2.2:4000/api' // Android emulator - use 10.0.2.2 to access host machine
-  : 'https://sahal-backend.onrender.com/api'; // Production - UPDATE THIS after deploying backend
+// Base URL is resolved once in src/config/api.ts - change it there, not here.
+import {API_BASE_URL} from '../config/api';
+
+const BASE_URL = API_BASE_URL;
 
 // Helper function to handle API calls
 const apiCall = async (endpoint: string, options: RequestInit = {}) => {

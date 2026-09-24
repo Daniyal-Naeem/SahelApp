@@ -46,7 +46,6 @@ const pinnedProductSchema = new Schema({
 
 // Indexes
 pinnedProductSchema.index({ section: 1, isActive: 1, order: 1 })
-pinnedProductSchema.index({ product: 1 })
 
 module.exports = mongoose.model("pinnedProductModel", pinnedProductSchema)
 

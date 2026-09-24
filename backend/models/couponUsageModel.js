@@ -39,7 +39,6 @@ const couponUsageSchema = new Schema({
 // Index to prevent duplicate usage per order
 couponUsageSchema.index({ coupon: 1, order: 1 }, { unique: true })
 couponUsageSchema.index({ user: 1, coupon: 1 })
-couponUsageSchema.index({ order: 1 })
 
 module.exports = mongoose.model("couponUsageModel", couponUsageSchema)
 

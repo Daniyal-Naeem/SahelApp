@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,8 @@ import {deliveritIcon} from '../assets/svgs/deliveritIcon';
 import { plusIcon } from '../assets/svgs/plusIcon';
 import { editIcon } from '../assets/svgs/editIcon';
 import {trashIcon} from '../assets/svgs/trashIcon';
+import {useAppSelector} from '../store';
+import {requireCheckoutAuth} from '../utils/requireCheckoutAuth';
 
 type ScreenRouteProps = RouteProp<RouteStackParamList, 'Checkout'>;
 type ScreenNavigationProps = StackNavigationProp<
@@ -36,8 +38,13 @@ const CheckoutScreen = () => {
   const navigation = useNavigation<ScreenNavigationProps>();
   const route = useRoute<ScreenRouteProps>();
   const toast = useToast();
+  const reduxCart = useAppSelector(state => state.cart.items);
+  const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
 
-  const itemDetails: ItemDetails | undefined = route.params?.itemDetails;
+  const cartItems = route.params?.cartItems?.length
+    ? route.params.cartItems
+    : reduxCart;
+  const itemDetails = route.params?.itemDetails || cartItems[0];
 
   const [addresses, setAddresses] = useState<Address[]>([
     {
@@ -49,6 +56,16 @@ const CheckoutScreen = () => {
 
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
   const [newAddress, setNewAddress] = useState('');
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      return;
+    }
+    // Soft-gate: prompt and leave checkout until they sign in.
+    requireCheckoutAuth(false, navigation);
+    navigation.goBack();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleGoBack = () => {
     navigation.goBack();
@@ -120,10 +137,25 @@ const CheckoutScreen = () => {
   };
 
   const handleProceed = () => {
-    navigation.navigate('PlaceOrder', {itemDetails: itemDetails!});
+    if (!requireCheckoutAuth(isAuthenticated, navigation)) {
+      return;
+    }
+    const selected = addresses.find(a => a.isSelected) || addresses[0];
+    const shippingAddress = {
+      street: selected?.address || '',
+      city: 'London',
+      country: 'UK',
+      zipCode: 'N1 2LL',
+    };
+    // Skip PlaceOrder chrome for demo — go straight to payment with full cart
+    navigation.navigate('Payment', {
+      cartItems: cartItems.length ? cartItems : itemDetails ? [{...itemDetails, quantity: 1}] as any : [],
+      itemDetails,
+      shippingAddress,
+    });
   };
 
-  const totalItems = 1;
+  const totalItems = cartItems.reduce((sum, i) => sum + (i.quantity || 1), 0) || 1;
 
   return (
     <View style={styles.container}>

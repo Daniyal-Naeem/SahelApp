@@ -1,4 +1,4 @@
-import {View, Text, ImageBackground, StyleSheet} from 'react-native';
+import {View, Text, ImageBackground, StyleSheet, TouchableOpacity} from 'react-native';
 import React from 'react';
 import {images} from '../constants';
 import {CustomButton} from '../components';
@@ -12,14 +12,10 @@ type Props = {};
 const GetStartedScreen = (_props: Props) => {
   const navigation = useNavigation<StackNavigationProp<RouteStackParamList>>();
 
-  const GetStarted = () => {
-    navigation.navigate('HomeScreen');
-  };
   return (
     <ImageBackground
       source={images.getStartedNew}
       style={styles.background}>
-      {/* push it to bottom instead of a big margin */}
       <View style={styles.spacer} />
       <View style={styles.content}>
         <Text style={styles.title}>
@@ -30,10 +26,23 @@ const GetStartedScreen = (_props: Props) => {
         </Text>
 
         <CustomButton
-          title="Get Started"
+          title="Start Shopping"
           containerStyle={styles.buttonContainer}
-          handlePress={GetStarted}
+          handlePress={() => navigation.navigate('HomeScreen')}
         />
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Signup')}
+          style={styles.secondaryLink}>
+          <Text style={styles.secondaryText}>
+            New here? <Text style={styles.secondaryAccent}>Sign Up</Text>
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <Text style={styles.secondaryText}>
+            Already have an account?{' '}
+            <Text style={styles.secondaryAccent}>Log In</Text>
+          </Text>
+        </TouchableOpacity>
       </View>
     </ImageBackground>
   );
@@ -46,11 +55,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   spacer: {
-    height: '60%',
+    height: '55%',
   },
   content: {
     paddingHorizontal: Spacing[3],
-    height: '40%',
+    height: '45%',
     paddingTop: Spacing[3],
     shadowColor: '#000',
     shadowOffset: {
@@ -78,7 +87,23 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     paddingVertical: Spacing[4],
-    marginVertical: Spacing[8],
+    marginTop: Spacing[6],
+    marginBottom: Spacing[4],
+  },
+  secondaryLink: {
+    marginBottom: Spacing[3],
+    alignItems: 'center',
+  },
+  secondaryText: {
+    color: '#F2F2F2',
+    fontSize: FontSizes.sm,
+    textAlign: 'center',
+    fontFamily: FontFamilies.pmedium,
+  },
+  secondaryAccent: {
+    color: Colors.white,
+    fontFamily: FontFamilies.mbold,
+    textDecorationLine: 'underline',
   },
 });
 

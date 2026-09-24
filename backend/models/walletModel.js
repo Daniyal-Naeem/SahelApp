@@ -61,7 +61,6 @@ const walletSchema = new Schema({
 })
 
 // Indexes for performance
-walletSchema.index({ userId: 1 })
 walletSchema.index({ balance: 1 })
 walletSchema.index({ lastTransactionAt: -1 })
 

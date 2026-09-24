@@ -49,17 +49,44 @@ const ProductItem = ({
     state.wishlist.items.some(item => item._id === itemDetails._id),
   );
   const NavigateToProductsDetails = () => {
+    if (!itemDetails?._id) {
+      return;
+    }
+    // Pass only the id — full products (esp. base64 images) exceed Android's
+    // Intent size limit and crash the app (TransactionTooLargeException).
     let rootNavigator = navigation;
     while (rootNavigator.getParent()) {
       rootNavigator = rootNavigator.getParent() as any;
     }
 
-    (rootNavigator as any).navigate('ProductDetails', {itemDetails});
+    (rootNavigator as any).navigate('ProductDetails', {
+      productId: itemDetails._id,
+    });
   };
 
-  const handleFavoritePress = (e: any) => {
+  const handleFavoritePress = async (e: any) => {
     e.stopPropagation();
+    const {getItem} = await import('../utils/AsyncStorage');
+    const token = await getItem('token');
+    if (!token) {
+      let rootNavigator = navigation;
+      while (rootNavigator.getParent()) {
+        rootNavigator = rootNavigator.getParent() as any;
+      }
+      (rootNavigator as any).navigate('Login');
+      return;
+    }
+
     dispatch(toggleWishlist(itemDetails));
+    try {
+      const {toggleWishlist: toggleWishlistApi} = await import(
+        '../services/wishlistService'
+      );
+      await toggleWishlistApi(itemDetails._id);
+    } catch {
+      // Revert on failure
+      dispatch(toggleWishlist(itemDetails));
+    }
   };
 
   const formatNumber = (num: number): string => {

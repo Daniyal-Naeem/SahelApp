@@ -50,9 +50,14 @@ const createOrder = async (req, res) => {
         const shippingCost = shippingAddress ? 10 : 0; // Default shipping cost
         const total = subtotal + shippingCost;
 
+        const orderNumber = `SAH-${Date.now().toString(36).toUpperCase()}-${Math.floor(
+            Math.random() * 900 + 100
+        )}`
+
         // Create order
         const newOrder = await orderModel.create({
             user: userId,
+            orderNumber,
             items: orderItems,
             subtotal,
             shippingCost,

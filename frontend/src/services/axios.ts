@@ -1,8 +1,9 @@
 import axios, {AxiosInstance, InternalAxiosRequestConfig} from 'axios';
 import {getItem} from '../utils/AsyncStorage';
+import {API_BASE_URL} from '../config/api';
 
 const getBaseURL = (): string => {
-  return 'http://localhost:4000/api';
+  return API_BASE_URL;
 };
 
 const createAxiosInstance = (): AxiosInstance => {
@@ -22,6 +23,9 @@ const createAxiosInstance = (): AxiosInstance => {
           config.headers.Authorization = `Bearer ${token}`;
         }
       } catch (error: any) {
+        // Storage read failed - send the request unauthenticated rather than
+        // failing outright, but make the cause visible.
+        console.warn('[api] could not read auth token from storage:', error);
       }
       return config;
     },
@@ -37,6 +41,7 @@ const createAxiosInstance = (): AxiosInstance => {
           await removeItem('token');
           await removeItem('user');
         } catch (err) {
+          console.warn('[api] failed to clear session after 401:', err);
         }
       }
       return Promise.reject(error);

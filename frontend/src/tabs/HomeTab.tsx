@@ -7,23 +7,26 @@ import {
   ImageSourcePropType,
   StyleSheet,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import FastImage from 'react-native-fast-image';
 import Carousel from 'react-native-reanimated-carousel';
 import {icons, images} from '../constants';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
 import {ProductItem, DealBanner, SummerSaleBanner, SponsoredSection} from '../components';
-import {CategoriesData, DetailedProductData} from '../constants/data';
+import {CategoriesData} from '../constants/data';
 import {ProductTypes} from '../constants/types';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {SvgXml} from 'react-native-svg';
 import {homeMenu} from '../assets/svgs/homeMenu';
 import {filterIcon} from '../assets/svgs/filter';
 import {sortIcon} from '../assets/svgs/sortIcon';
+import {api} from '../services/api';
+import {useAppSelector} from '../store';
 
 type Props = {};
 
@@ -33,26 +36,55 @@ const HomeTab = (_props: Props) => {
   >();
   const insets = useSafeAreaInsets();
   const width = Dimensions.get('window').width;
-  // Calculate carousel dimensions for dummy images
+  const user = useAppSelector(state => state.auth.user);
   const carouselWidth = width - Spacing[5] * 2;
   const carouselHeight = r(200);
-  // Use e-commerce dummy images with proper aspect ratio
   const bannerImages = [
-    {uri: `https://images.unsplash.com/photo-1607082349566-187342175e2f?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // Shopping
-    {uri: `https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // E-commerce
-    {uri: `https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // Store shopping
-    {uri: `https://images.unsplash.com/photo-1556740758-90de374c12ad?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // Retail
-    {uri: `https://images.unsplash.com/photo-1607083206968-13611e3d76db?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`}, // Fashion store
+    {uri: `https://images.unsplash.com/photo-1607082349566-187342175e2f?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`},
+    {uri: `https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`},
+    {uri: `https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`},
+    {uri: `https://images.unsplash.com/photo-1556740758-90de374c12ad?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`},
+    {uri: `https://images.unsplash.com/photo-1607083206968-13611e3d76db?w=${Math.round(carouselWidth)}&h=${Math.round(carouselHeight)}&fit=crop`},
   ];
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   type RootStackParamList = {
     Setting: undefined;
   };
-  // Use detailed product data matching UI designs
-  const [products] = useState<ProductTypes[]>(DetailedProductData);
+  const [products, setProducts] = useState<ProductTypes[]>([]);
+  const [categories, setCategories] = useState<any[]>(CategoriesData);
+  const [loading, setLoading] = useState(true);
+
+  const loadCatalogue = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [prods, cats] = await Promise.all([
+        api.getProducts(),
+        api.getCategories(),
+      ]);
+      if (prods.length) setProducts(prods);
+      if (cats.length) {
+        setCategories(
+          cats.map((c: any) => ({
+            id: c._id,
+            title: c.title || c.name,
+            image: c.image || c.icon || '',
+          })),
+        );
+      }
+    } catch {
+      // keep previous / empty
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadCatalogue();
+    }, [loadCatalogue]),
+  );
 
   const NavigateToProfile = () => {
-    // Navigate to Profile tab
     (navigation as any).navigate('HomeScreen', {
       screen: 'Dashboard',
       params: {
@@ -65,24 +97,20 @@ const HomeTab = (_props: Props) => {
   };
   const handleSelectCategory = (categoryTitle: string) => {
     try {
-      // Navigate to Category within the Home stack
       navigation.getParent()?.navigate('Home', {
         screen: 'Category',
         params: {categoryTitle},
       });
     } catch {
-      // Fallback to direct navigation
       navigation.navigate('Category' as any, {categoryTitle});
     }
   };
   const handleDealOfTheDayPress = () => {
     try {
-      // Navigate to DealOfTheDay within the Home stack
       navigation.getParent()?.navigate('Home', {
         screen: 'DealOfTheDay',
       });
     } catch {
-      // Fallback to direct navigation
       navigation.navigate('DealOfTheDay' as any);
     }
   };
@@ -111,7 +139,9 @@ const HomeTab = (_props: Props) => {
       </View>
       {/* greeting */}
       <View style={styles.greetingContainer}>
-        <Text style={styles.greetingText}>Hello, Jhon!!</Text>
+        <Text style={styles.greetingText}>
+          Hello, {user?.name?.split(' ')[0] || 'there'}!!
+        </Text>
       </View>
       {/* categories section */}
       <View style={styles.categoriesHeaderContainer}>
@@ -139,7 +169,7 @@ const HomeTab = (_props: Props) => {
       {/* categories */}
       <View style={styles.categoriesListContainer}>
         <FlatList
-          data={CategoriesData}
+          data={categories}
           renderItem={({item}) => (
             <View style={styles.categoryItemContainer}>
               <TouchableOpacity
@@ -250,16 +280,24 @@ const HomeTab = (_props: Props) => {
       />
       {/* Products */}
       <View style={styles.productsContainer}>
+        {loading && (
+          <ActivityIndicator color={Colors.primary} style={{marginVertical: 16}} />
+        )}
+        {!loading && products.length === 0 && (
+          <Text style={{paddingHorizontal: Spacing[2], color: Colors.gray[500]}}>
+            No products yet.
+          </Text>
+        )}
         <FlatList
           data={products}
           renderItem={({item}) => (
             <ProductItem
-              image={item.image[0]}
+              image={item.image?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500'}
               title={item.title}
               description={item.description}
               price={item.price}
               priceBeforeDeal={item.priceBeforeDeal}
-              priceOff={item.priceOff}
+              priceOff={String(item.priceOff ?? '')}
               stars={item.stars}
               numberOfReview={item.numberOfReview}
               itemDetails={item}
@@ -282,12 +320,12 @@ const HomeTab = (_props: Props) => {
           data={products}
           renderItem={({item}) => (
             <ProductItem
-              image={item.image[0]}
+              image={item.image?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500'}
               title={item.title}
               description={item.description}
               price={item.price}
               priceBeforeDeal={item.priceBeforeDeal}
-              priceOff={item.priceOff}
+              priceOff={String(item.priceOff ?? '')}
               stars={item.stars}
               numberOfReview={item.numberOfReview}
               itemDetails={item}

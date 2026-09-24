@@ -10,12 +10,12 @@ const {
     googleLogin,
     facebookLogin
 } = require('../controllers/authController')
-const { authenticate } = require('../middleware/authMiddleware')
+const { authenticate, optionalAuthenticate } = require('../middleware/authMiddleware')
 
 const router = express.Router()
 
 // Register a new user
-router.post('/register', registerUser)
+router.post('/register', optionalAuthenticate, registerUser)
 
 // Login user
 router.post('/login', loginUser)

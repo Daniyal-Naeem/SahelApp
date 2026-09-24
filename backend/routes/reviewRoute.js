@@ -24,6 +24,10 @@ const router = express.Router()
  * Phase 9: Review approval & moderation
  */
 
+// Admin listing routes — must be registered before '/reviews/:id' or they get shadowed by it
+router.get('/reviews/pending', authenticate, authorize('admin'), getPendingReviews)
+router.get('/reviews/flagged', authenticate, authorize('admin'), getFlaggedReviews)
+
 // Public routes
 router.get('/reviews', getReviews)
 router.get('/reviews/:id', getReviewById)
@@ -35,8 +39,6 @@ router.delete('/reviews/:id', authenticate, deleteReview)
 router.post('/reviews/:id/report', authenticate, reportReview)
 
 // Admin routes
-router.get('/reviews/pending', authenticate, authorize('admin'), getPendingReviews)
-router.get('/reviews/flagged', authenticate, authorize('admin'), getFlaggedReviews)
 router.post('/reviews/:id/approve', authenticate, authorize('admin'), approveReview)
 router.post('/reviews/:id/reject', authenticate, authorize('admin'), rejectReview)
 router.post('/reviews/:id/flag', authenticate, authorize('admin'), flagReview)

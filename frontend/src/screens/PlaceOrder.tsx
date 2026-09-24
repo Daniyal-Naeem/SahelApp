@@ -72,7 +72,11 @@ const PlaceOrder = () => {
 
   const productImage = itemDetails?.image?.[0] || '';
   const productTitle = itemDetails?.title || 'Product';
-  const productVendor = itemDetails?.vendor || '';
+  const rawVendor = (itemDetails as any)?.vendor;
+  const productVendor =
+    typeof rawVendor === 'string'
+      ? rawVendor
+      : rawVendor?.businessName || rawVendor?.name || '';
 
   return (
     <View style={styles.container}>

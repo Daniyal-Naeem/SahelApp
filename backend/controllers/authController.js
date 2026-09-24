@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
 const userModel = require('../models/userModel')
 const otpModel = require('../models/otpModel')
+const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/env')
 
 /**
  * registerUser,
@@ -31,18 +32,32 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ error: "User with this email already exists" })
         }
 
+        // Only an authenticated admin may create privileged accounts. Anonymous
+        // callers can self-register as 'user' or as a (pending) 'vendor' only.
+        const requestedRole = role || 'user'
+        const isAdminCaller = req.user && req.user.role === 'admin'
+        if (!['user', 'vendor', 'admin'].includes(requestedRole)) {
+            return res.status(400).json({ error: "Invalid role" })
+        }
+        if (requestedRole === 'admin' && !isAdminCaller) {
+            return res.status(403).json({ error: "Not allowed to create an admin account" })
+        }
+
         // Create new user
         const userData = {
             name,
             email: email.toLowerCase(),
             password,
             phone: phone || "",
-            role: role || 'user'
+            role: requestedRole
         }
 
         // Add vendor-specific fields if role is vendor
-        if (role === 'vendor') {
-            userData.vendorStatus = req.body.vendorStatus || 'pending'
+        if (requestedRole === 'vendor') {
+            // Self-registered vendors always start pending; only an admin may pre-approve.
+            userData.vendorStatus = isAdminCaller
+                ? (req.body.vendorStatus || 'pending')
+                : 'pending'
             if (req.body.businessName) userData.businessName = req.body.businessName
             if (req.body.businessAddress) userData.businessAddress = req.body.businessAddress
         }
@@ -52,8 +67,8 @@ const registerUser = async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { userId: newUser._id, role: newUser.role },
-            process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-            { expiresIn: '7d' }
+            JWT_SECRET,
+            { expiresIn: JWT_EXPIRES_IN }
         )
 
         return res.status(201).json({
@@ -103,8 +118,8 @@ const loginUser = async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, role: user.role },
-            process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-            { expiresIn: '7d' }
+            JWT_SECRET,
+            { expiresIn: JWT_EXPIRES_IN }
         )
 
         return res.status(200).json({
@@ -474,8 +489,8 @@ const googleLogin = async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, role: user.role },
-            process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-            { expiresIn: '7d' }
+            JWT_SECRET,
+            { expiresIn: JWT_EXPIRES_IN }
         )
 
         return res.status(200).json({
@@ -548,8 +563,8 @@ const facebookLogin = async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, role: user.role },
-            process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-            { expiresIn: '7d' }
+            JWT_SECRET,
+            { expiresIn: JWT_EXPIRES_IN }
         )
 
         return res.status(200).json({
