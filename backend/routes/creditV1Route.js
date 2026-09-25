@@ -2,7 +2,8 @@ const express = require('express')
 const {
     initiateTopup,
     confirmTopup,
-    getTopupStatus
+    getTopupStatus,
+    demoTopup
 } = require('../controllers/creditTopupController')
 const {
     transferCredits,
@@ -20,6 +21,7 @@ const router = express.Router()
 
 // Top-up routes
 router.post('/topup', authenticate, initiateTopup)
+router.post('/topup/demo', authenticate, demoTopup)
 router.get('/topup/:paymentIntentId', authenticate, getTopupStatus)
 
 // Webhook endpoint - authenticated by HMAC signature from the payment gateway,

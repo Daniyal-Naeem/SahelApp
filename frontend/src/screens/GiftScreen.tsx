@@ -1,112 +1,214 @@
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import FastImage from 'react-native-fast-image';
-import {CustomHeader} from '../components';
+import {CustomHeader, CustomButton} from '../components';
 import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {icons} from '../constants';
-import PurchaseIcon from '../assets/svgs/purchase.svg';
 import GiftIcon from '../assets/svgs/gift.svg';
+import {
+  getMyGiftCards,
+  redeemGiftCode,
+  sendGiftToEmail,
+} from '../services/creditGiftService';
+import {useAppSelector} from '../store';
+import {useI18n} from '../i18n/I18nContext';
+import {formatMoney} from '../utils/formatMoney';
 
-type GiftType = 'voucher' | 'gift';
-type GiftStatus = 'collected' | 'redeem';
+type GiftStatus = 'collected' | 'redeem' | 'active';
 
 interface GiftItem {
   id: string;
-  type: GiftType;
+  code: string;
+  type: 'gift';
   title: string;
   description: string;
   subDescription?: string;
   validUntil: string;
   status: GiftStatus;
+  amount: number;
 }
+
+const formatDate = (value?: string | Date) => {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return `${d.getMonth() + 1}.${d.getDate()}.${String(d.getFullYear()).slice(-2)}`;
+};
 
 const GiftScreen = () => {
   const navigation = useNavigation<any>();
+  const {t} = useI18n();
+  const user = useAppSelector(s => s.auth.user);
+  const isAuthenticated = useAppSelector(s => s.auth.isAuthenticated);
   const [activeTab, setActiveTab] = useState<'received' | 'shared'>('received');
+  const [receivedGifts, setReceivedGifts] = useState<GiftItem[]>([]);
+  const [sharedGifts, setSharedGifts] = useState<GiftItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [redeemCode, setRedeemCode] = useState('');
+  const [sendEmail, setSendEmail] = useState('');
+  const [sendAmount, setSendAmount] = useState('50');
+  const [sendMessage, setSendMessage] = useState('');
+  const [busy, setBusy] = useState(false);
 
   const handleGoBack = () => {
     navigation.goBack();
   };
 
   const navigateToProfile = () => {
-    // Navigate to Profile tab
     (navigation as any).navigate('HomeScreen', {
       screen: 'Dashboard',
-      params: {
-        screen: 'Profile',
-      },
+      params: {screen: 'Profile'},
     });
   };
 
-  const receivedGifts: GiftItem[] = [
-    {
-      id: '1',
-      type: 'voucher',
-      title: 'Voucher',
-      description: 'First Purchase',
-      subDescription: '25% off for your next order',
-      validUntil: '5.16.20',
-      status: 'collected',
-    },
-    {
-      id: '2',
-      type: 'gift',
-      title: 'Gift',
-      description: 'Gift From Ahmed Ali',
-      subDescription: 'Ahmed Ali sent you a gift of SAR 250',
-      validUntil: '6.20.20',
-      status: 'collected',
-    },
-    {
-      id: '3',
-      type: 'gift',
-      title: 'Gift',
-      description: 'Gift From Abu Rehan',
-      subDescription: 'Abu Rehan sent Women printed Kurta as a gift.',
-      validUntil: '6.20.20',
-      status: 'redeem',
-    },
-  ];
+  const mapCards = (cards: any[]): {received: GiftItem[]; shared: GiftItem[]} => {
+    const myId = String(user?._id || '');
+    const received: GiftItem[] = [];
+    const shared: GiftItem[] = [];
 
-  const sharedGifts: GiftItem[] = [
-    // Add shared gifts data here when available
-  ];
+    cards.forEach(card => {
+      const assignedId = String(card.assignedTo?._id || card.assignedTo || '');
+      const purchasedId = String(card.purchasedBy?._id || card.purchasedBy || '');
+      const redeemed = card.status === 'redeemed';
+      const item: GiftItem = {
+        id: String(card._id),
+        code: card.code,
+        type: 'gift',
+        title: t('gifts'),
+        description:
+          purchasedId && purchasedId !== myId
+            ? `Gift From ${card.purchasedBy?.name || card.purchasedBy?.email || 'Sahal'}`
+            : `Gift Card ${card.code}`,
+        subDescription: `SAR ${formatMoney(card.amount)} · ${card.code}`,
+        validUntil: formatDate(card.expiresAt),
+        status: redeemed ? 'collected' : 'redeem',
+        amount: Number(card.amount) || 0,
+      };
+
+      if (assignedId === myId || String(card.redeemedBy?._id || card.redeemedBy || '') === myId) {
+        received.push(item);
+      }
+      if (purchasedId === myId) {
+        shared.push({
+          ...item,
+          description: `Sent to ${card.assignedTo?.name || card.assignedTo?.email || 'recipient'}`,
+          status: redeemed ? 'collected' : 'active',
+        });
+      }
+    });
+
+    return {received, shared};
+  };
+
+  const loadGifts = useCallback(async () => {
+    if (!isAuthenticated) {
+      setReceivedGifts([]);
+      setSharedGifts([]);
+      return;
+    }
+    setLoading(true);
+    try {
+      const cards = await getMyGiftCards();
+      const mapped = mapCards(cards);
+      setReceivedGifts(mapped.received);
+      setSharedGifts(mapped.shared);
+    } catch {
+      // keep empty on error
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated, user?._id, t]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadGifts();
+    }, [loadGifts]),
+  );
+
+  const ensureAuth = () => {
+    if (!isAuthenticated) {
+      navigation.navigate('Login');
+      return false;
+    }
+    return true;
+  };
+
+  const handleRedeemCard = async (code: string) => {
+    if (!ensureAuth()) return;
+    setBusy(true);
+    try {
+      await redeemGiftCode(code);
+      Alert.alert(t('giftRedeemed'));
+      setRedeemCode('');
+      await loadGifts();
+    } catch (error: any) {
+      Alert.alert(
+        'Redeem failed',
+        error?.response?.data?.error || error?.message || 'Try again',
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSendGift = async () => {
+    if (!ensureAuth()) return;
+    const amount = parseFloat(sendAmount);
+    if (!sendEmail.trim() || !amount || amount <= 0) {
+      Alert.alert('Invalid', 'Enter recipient email and a positive amount');
+      return;
+    }
+    setBusy(true);
+    try {
+      await sendGiftToEmail({
+        email: sendEmail.trim(),
+        amount,
+        message: sendMessage.trim() || undefined,
+      });
+      Alert.alert(t('giftSent'));
+      setSendEmail('');
+      setSendMessage('');
+      setSendAmount('50');
+      setActiveTab('shared');
+      await loadGifts();
+    } catch (error: any) {
+      Alert.alert(
+        'Send failed',
+        error?.response?.data?.error || error?.message || 'Try again',
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const renderGiftCard = (item: GiftItem) => {
-    const isVoucher = item.type === 'voucher';
     const isCollected = item.status === 'collected';
+    const canRedeem = item.status === 'redeem' && activeTab === 'received';
 
     return (
       <View key={item.id} style={styles.cardWrapper}>
-        {/* Half circle cutout on left */}
         <View style={styles.cutoutLeft} />
-        
         <View style={styles.giftCard}>
-          {/* Top Section */}
           <View style={styles.cardTopSection}>
-            <Text style={styles.cardTitle}>{item.title}</Text>
+            <Text style={styles.cardTitle}>Gift</Text>
             <Text style={styles.validUntil}>Valid Until {item.validUntil}</Text>
           </View>
-
-          {/* Dashed divider line */}
           <View style={styles.dashedDivider} />
-
-          {/* Bottom Section */}
           <View style={styles.cardBottomSection}>
             <View style={styles.bottomLeftContent}>
               <View style={styles.iconContainer}>
-                {isVoucher ? (
-                  <PurchaseIcon width={r(24)} height={r(24)} />
-                ) : (
-                  <GiftIcon width={r(24)} height={r(24)} />
-                )}
+                <GiftIcon width={r(24)} height={r(24)} />
               </View>
               <View style={styles.textContent}>
                 <Text style={styles.description}>{item.description}</Text>
@@ -115,29 +217,30 @@ const GiftScreen = () => {
                 )}
               </View>
             </View>
-            <TouchableOpacity
-              style={[
-                styles.actionButton,
-                isCollected ? styles.collectedButton : styles.redeemButton,
-              ]}>
-              <Text
-                style={[
-                  styles.actionButtonText,
-                  isCollected
-                    ? styles.collectedButtonText
-                    : styles.redeemButtonText,
-                ]}>
-                {isCollected ? 'Collected' : 'Redeem'}
-              </Text>
-            </TouchableOpacity>
+            {canRedeem ? (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.redeemButton]}
+                disabled={busy}
+                onPress={() => handleRedeemCard(item.code)}>
+                <Text style={[styles.actionButtonText, styles.redeemButtonText]}>
+                  {t('redeem')}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={[styles.actionButton, styles.collectedButton]}>
+                <Text style={[styles.actionButtonText, styles.collectedButtonText]}>
+                  {isCollected ? t('collected') : item.status === 'active' ? 'Sent' : t('collected')}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
-
-      
         <View style={styles.cutoutRight} />
       </View>
     );
   };
+
+  const list = activeTab === 'received' ? receivedGifts : sharedGifts;
 
   return (
     <View style={styles.container}>
@@ -156,20 +259,16 @@ const GiftScreen = () => {
         showBorder={true}
       />
 
-      {/* Tabs */}
       <View style={styles.tabsContainer}>
         <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === 'received' && styles.tabActive,
-          ]}
+          style={[styles.tab, activeTab === 'received' && styles.tabActive]}
           onPress={() => setActiveTab('received')}>
           <Text
             style={[
               styles.tabText,
               activeTab === 'received' && styles.tabTextActive,
             ]}>
-            Received Gifts
+            {t('receivedGifts')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -180,29 +279,82 @@ const GiftScreen = () => {
               styles.tabText,
               activeTab === 'shared' && styles.tabTextActive,
             ]}>
-            Shared Gifts
+            {t('sharedGifts')}
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Content */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}>
-        {activeTab === 'received' ? (
-          receivedGifts.length > 0 ? (
-            receivedGifts.map(item => renderGiftCard(item))
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No received gifts</Text>
-            </View>
-          )
-        ) : sharedGifts.length > 0 ? (
-          sharedGifts.map(item => renderGiftCard(item))
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={loadGifts} />
+        }>
+        <View style={styles.formBox}>
+          <Text style={styles.formTitle}>{t('redeemCode')}</Text>
+          <TextInput
+            style={styles.input}
+            value={redeemCode}
+            onChangeText={setRedeemCode}
+            placeholder={t('enterCode')}
+            placeholderTextColor="#9E9E9E"
+            autoCapitalize="characters"
+          />
+          <CustomButton
+            title={t('redeem')}
+            handlePress={() => handleRedeemCard(redeemCode.trim())}
+            isLoading={busy}
+            containerStyle={styles.formButton}
+          />
+        </View>
+
+        <View style={styles.formBox}>
+          <Text style={styles.formTitle}>{t('sendGift')}</Text>
+          <TextInput
+            style={styles.input}
+            value={sendEmail}
+            onChangeText={setSendEmail}
+            placeholder={t('emailAddress')}
+            placeholderTextColor="#9E9E9E"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            value={sendAmount}
+            onChangeText={setSendAmount}
+            placeholder={t('amount')}
+            placeholderTextColor="#9E9E9E"
+            keyboardType="decimal-pad"
+          />
+          <TextInput
+            style={[styles.input, styles.messageInput]}
+            value={sendMessage}
+            onChangeText={setSendMessage}
+            placeholder="Message (optional)"
+            placeholderTextColor="#9E9E9E"
+          />
+          <CustomButton
+            title={t('send')}
+            handlePress={handleSendGift}
+            isLoading={busy}
+            containerStyle={styles.formButton}
+          />
+          <TouchableOpacity
+            onPress={() => navigation.navigate('BuyCredits')}
+            style={styles.buyLink}>
+            <Text style={styles.buyLinkText}>{t('buyCredits')}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {loading && list.length === 0 ? (
+          <ActivityIndicator color={Colors.primary} style={{marginTop: Spacing[6]}} />
+        ) : list.length > 0 ? (
+          list.map(item => renderGiftCard(item))
         ) : (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No shared gifts</Text>
+            <Text style={styles.emptyText}>{t('noGifts')}</Text>
           </View>
         )}
       </ScrollView>
@@ -256,10 +408,46 @@ const styles = StyleSheet.create({
     paddingTop: Spacing[4],
     paddingBottom: Spacing[8],
   },
+  formBox: {
+    marginBottom: Spacing[5],
+    padding: Spacing[4],
+    borderRadius: r(12),
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  formTitle: {
+    fontFamily: FontFamilies.msemibold,
+    fontSize: FontSizes.base,
+    marginBottom: Spacing[3],
+    color: Colors.black[100],
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: r(8),
+    padding: Spacing[3],
+    marginBottom: Spacing[3],
+    color: Colors.black[100],
+    fontFamily: FontFamilies.mregular,
+  },
+  messageInput: {
+    minHeight: r(64),
+  },
+  formButton: {
+    marginTop: Spacing[1],
+  },
+  buyLink: {
+    marginTop: Spacing[3],
+    alignItems: 'center',
+  },
+  buyLinkText: {
+    color: Colors.primary,
+    fontFamily: FontFamilies.msemibold,
+  },
   cardWrapper: {
     marginBottom: Spacing[4],
     position: 'relative',
-    marginHorizontal: r(10), // Space for cutouts
+    marginHorizontal: r(10),
   },
   giftCard: {
     backgroundColor: Colors.white,
@@ -278,7 +466,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     marginTop: r(-10),
     zIndex: 2,
-    // Create cutout effect by matching background and border
     borderWidth: r(1.5),
     borderColor: Colors.primary,
   },
@@ -292,7 +479,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     marginTop: r(-10),
     zIndex: 2,
-    // Create cutout effect by matching background and border
     borderWidth: r(1.5),
     borderColor: Colors.primary,
   },

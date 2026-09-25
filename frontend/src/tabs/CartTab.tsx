@@ -23,12 +23,15 @@ import {
 } from '../services/cartService';
 import {useAppSelector} from '../store';
 import {requireCheckoutAuth} from '../utils/requireCheckoutAuth';
+import {formatMoneyGrouped, roundMoney} from '../utils/formatMoney';
+import {useI18n} from '../i18n/I18nContext';
 
 type NavigationProp = StackNavigationProp<RouteStackParamList>;
 
 const CartTab = () => {
   const navigation = useNavigation<NavigationProp>();
   const dispatch = useDispatch();
+  const {t} = useI18n();
   const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const cartTotal = useSelector((state: RootState) => state.cart.total);
@@ -89,22 +92,20 @@ const CartTab = () => {
     navigation.navigate('Checkout');
   };
 
-  const formatNumber = (num: number): string => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  };
+  const formatNumber = (num: number): string => formatMoneyGrouped(num);
 
   const shippingFee = cartTotal > 0 ? 15 : 0;
-  const finalTotal = cartTotal + shippingFee;
+  const finalTotal = roundMoney(cartTotal + shippingFee);
 
   return (
     <View style={styles.container}>
-      <CustomHeader title="Shopping Bag" onBackPress={handleGoBack} showBorder />
+      <CustomHeader title={t('shoppingBag')} onBackPress={handleGoBack} showBorder />
       <ScrollView contentContainerStyle={styles.content}>
         {cartItems.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>Your cart is empty</Text>
+            <Text style={styles.emptyText}>{t('emptyCart')}</Text>
             <CustomButton
-              title="Continue Shopping"
+              title={t('continueShopping')}
               handlePress={() => (navigation as any).navigate('Home')}
             />
           </View>
@@ -148,18 +149,18 @@ const CartTab = () => {
 
             <View style={styles.summary}>
               <Text style={styles.summaryText}>
-                Items ({itemCount}): SAR {formatNumber(cartTotal)}
+                {t('items')} ({itemCount}): SAR {formatNumber(cartTotal)}
               </Text>
               <Text style={styles.summaryText}>
-                Shipping: SAR {formatNumber(shippingFee)}
+                {t('shipping')}: SAR {formatNumber(shippingFee)}
               </Text>
               <Text style={styles.total}>
-                Total: SAR {formatNumber(finalTotal)}
+                {t('total')}: SAR {formatNumber(finalTotal)}
               </Text>
             </View>
 
             <CustomButton
-              title="Proceed to Checkout"
+              title={t('proceedCheckout')}
               handlePress={handleProceedToCheckout}
               containerStyle={styles.checkoutButton}
             />

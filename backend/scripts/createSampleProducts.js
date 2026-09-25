@@ -100,6 +100,7 @@ const sampleCategories = [
     name: 'Electronics',
     description: 'Latest electronics and gadgets',
     icon: '📱',
+    image: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400',
     isActive: true,
     displayOrder: 1
   },
@@ -107,6 +108,7 @@ const sampleCategories = [
     name: 'Fashion',
     description: 'Trendy fashion items and accessories',
     icon: '👕',
+    image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400',
     isActive: true,
     displayOrder: 2
   },
@@ -114,6 +116,7 @@ const sampleCategories = [
     name: 'Sports & Fitness',
     description: 'Sports equipment and fitness gear',
     icon: '⚽',
+    image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba6851?w=400',
     isActive: true,
     displayOrder: 3
   }
@@ -144,7 +147,15 @@ async function createSampleData() {
         category = await categoryModel.create(catData);
         console.log(`   ✓ Created category: ${catData.name}`);
       } else {
-        console.log(`   ✓ Category already exists: ${catData.name}`);
+        // Keep images in sync for existing categories without overwriting custom names
+        if ((!category.image || !String(category.image).startsWith('http')) && catData.image) {
+          category.image = catData.image;
+          if (catData.icon) category.icon = catData.icon;
+          await category.save();
+          console.log(`   ✓ Updated category image: ${catData.name}`);
+        } else {
+          console.log(`   ✓ Category already exists: ${catData.name}`);
+        }
       }
       categories.push(category);
     }

@@ -328,7 +328,68 @@ const getTopupStatus = async (req, res) => {
 module.exports = {
     initiateTopup,
     confirmTopup,
-    getTopupStatus
+    getTopupStatus,
+    demoTopup
+}
+
+/**
+ * POST /api/v1/credits/topup/demo
+ * Demo-only instant top-up (no payment gateway). Authenticated users only.
+ */
+async function demoTopup(req, res) {
+    try {
+        const userId = req.user.userId
+        const amount = parseFloat(req.body.amount)
+
+        if (!amount || amount < 10) {
+            return res.status(400).json({ error: 'Minimum top-up amount is 10' })
+        }
+        if (amount > 10000) {
+            return res.status(400).json({ error: 'Maximum top-up amount is 10,000' })
+        }
+
+        await syncUserWallet(userId)
+
+        let wallet = await walletModel.findOne({ userId })
+        if (!wallet) {
+            return res.status(404).json({ error: 'Wallet not found' })
+        }
+
+        const newBalance = Number(wallet.balance || 0) + amount
+        wallet.balance = newBalance
+        await wallet.save()
+
+        await userModel.findByIdAndUpdate(userId, { credits: newBalance })
+
+        const transaction = await creditTransactionModel.create({
+            user: userId,
+            type: 'topup',
+            amount,
+            balanceAfter: newBalance,
+            description: `Demo credit top-up of ${amount}`,
+            status: 'completed',
+            paymentIntentId: `demo_${Date.now()}`,
+            paymentMethod: 'other',
+            paymentGateway: 'demo',
+            meta: {
+                ipAddress: req.ip || req.connection?.remoteAddress,
+                userAgent: req.headers['user-agent']
+            }
+        })
+
+        return res.status(200).json({
+            message: 'Credits added successfully',
+            balance: newBalance,
+            amount,
+            transaction: {
+                txId: transaction.txId,
+                status: transaction.status
+            }
+        })
+    } catch (error) {
+        console.error('Error in demo top-up:', error)
+        res.status(500).json({ error: error.message })
+    }
 }
 
 

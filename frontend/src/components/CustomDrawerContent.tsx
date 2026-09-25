@@ -25,10 +25,11 @@ import {logout} from '../assets/svgs/logout';
 import {orderIcon} from '../assets/svgs/orderIcon';
 import {useAppDispatch, useAppSelector} from '../store';
 import {performLogout} from '../services/session';
+import {useI18n} from '../i18n/I18nContext';
 
 interface MenuItem {
   id: string;
-  label: string;
+  labelKey: string;
   icon: string;
   route?: string;
 }
@@ -36,24 +37,26 @@ interface MenuItem {
 const CustomDrawerContent = (props: any) => {
   const dispatch = useAppDispatch();
   const user = useAppSelector(state => state.auth.user);
+  const {t} = useI18n();
   const [activeMenuItemId, setActiveMenuItemId] = useState<string>('1');
 
   const menuItems: MenuItem[] = useMemo(() => {
     const items: MenuItem[] = [
-      {id: '1', label: 'Join VIP Club', icon: VIPIcon, route: 'VIPClub'},
-      {id: '2', label: 'My Orders', icon: orderIcon, route: 'Orders'},
-      {id: '3', label: 'Wishlist', icon: wishlist, route: 'Wishlist'},
-      {id: '4', label: 'Notifications', icon: notification, route: 'Notifications'},
-      {id: '5', label: 'Send/Redeem Gifts', icon: sendGifts, route: 'Gifts'},
-      {id: '6', label: 'Support', icon: support, route: 'Support'},
-      {id: '7', label: 'Language', icon: language, route: 'Language'},
-      {id: '8', label: 'Settings', icon: settings, route: 'Profile'},
+      {id: '1', labelKey: 'vipClub', icon: VIPIcon, route: 'VIPClub'},
+      {id: '2', labelKey: 'myOrders', icon: orderIcon, route: 'Orders'},
+      {id: '3', labelKey: 'wishlist', icon: wishlist, route: 'Wishlist'},
+      {id: '4', labelKey: 'notifications', icon: notification, route: 'Notifications'},
+      {id: '5', labelKey: 'gifts', icon: sendGifts, route: 'Gifts'},
+      {id: 'bc', labelKey: 'buyCredits', icon: sendGifts, route: 'BuyCredits'},
+      {id: '6', labelKey: 'support', icon: support, route: 'Support'},
+      {id: '7', labelKey: 'language', icon: language, route: 'Language'},
+      {id: '8', labelKey: 'settings', icon: settings, route: 'Profile'},
     ];
 
     if (user?.role === 'vendor') {
       items.splice(2, 0,
-        {id: 'v1', label: 'My Products', icon: orderIcon, route: 'VendorProducts'},
-        {id: 'v2', label: 'Add Product', icon: sendGifts, route: 'VendorAddProduct'},
+        {id: 'v1', labelKey: 'myProducts', icon: orderIcon, route: 'VendorProducts'},
+        {id: 'v2', labelKey: 'addProduct', icon: sendGifts, route: 'VendorAddProduct'},
       );
     }
 
@@ -142,7 +145,7 @@ const CustomDrawerContent = (props: any) => {
                 />
                 <Text
                   style={[styles.menuText, isActive && styles.menuTextActive]}>
-                  {item.label}
+                  {t(item.labelKey)}
                 </Text>
               </TouchableOpacity>
             );
@@ -159,7 +162,7 @@ const CustomDrawerContent = (props: any) => {
               height={r(24)}
               style={styles.menuIcon}
             />
-            <Text style={styles.logoutText}>Logout</Text>
+            <Text style={styles.logoutText}>{t('logout')}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -169,7 +172,7 @@ const CustomDrawerContent = (props: any) => {
               const parent = props.navigation.getParent();
               (parent || props.navigation).navigate('Login');
             }}>
-            <Text style={styles.logoutText}>Sign In</Text>
+            <Text style={styles.logoutText}>{t('signIn')}</Text>
           </TouchableOpacity>
         )}
       </View>

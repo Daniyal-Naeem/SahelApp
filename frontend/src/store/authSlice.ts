@@ -9,6 +9,7 @@ export type AuthUser = {
   vendorStatus?: 'pending' | 'approved' | 'rejected';
   businessName?: string;
   profilePicture?: string;
+  avatar?: string;
   credits?: number;
   address?: string;
   city?: string;

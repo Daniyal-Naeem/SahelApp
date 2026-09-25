@@ -1,11 +1,42 @@
+import { useEffect, useState, useCallback } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { removeAuthToken, getUser } from '../utils/auth'
+import { adminAPI } from '../services/api'
 import './Layout.css'
 
 const Layout = ({ children }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const user = getUser()
+  const [pendingVendorRequests, setPendingVendorRequests] = useState(0)
+
+  const fetchPendingVendorRequests = useCallback(async () => {
+    try {
+      const response = await adminAPI.getAllVendors({
+        vendorStatus: 'pending',
+        page: 1,
+        limit: 1,
+      })
+      const total =
+        response.data?.pagination?.totalVendors ??
+        response.data?.vendors?.length ??
+        0
+      setPendingVendorRequests(Number(total) || 0)
+    } catch {
+      // Keep last known count if request fails
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchPendingVendorRequests()
+    const interval = setInterval(fetchPendingVendorRequests, 30000)
+    return () => clearInterval(interval)
+  }, [fetchPendingVendorRequests])
+
+  // Refresh when navigating (e.g. after approve/reject on Vendors page)
+  useEffect(() => {
+    fetchPendingVendorRequests()
+  }, [location.pathname, fetchPendingVendorRequests])
 
   const handleLogout = () => {
     removeAuthToken()
@@ -15,6 +46,9 @@ const Layout = ({ children }) => {
   const isActive = (path) => {
     if (path === '/products') {
       return location.pathname.startsWith('/products')
+    }
+    if (path === '/vendors') {
+      return location.pathname.startsWith('/vendors')
     }
     if (path === '/credits') {
       return location.pathname.startsWith('/credits')
@@ -47,83 +81,98 @@ const Layout = ({ children }) => {
           <h2>Sahal Admin</h2>
         </div>
         <nav className="sidebar-nav">
-          <Link 
-            to="/dashboard" 
+          <Link
+            to="/dashboard"
             className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}
           >
             <span>📊</span> Dashboard
           </Link>
-          <Link 
-            to="/products" 
+          <Link
+            to="/products"
             className={`nav-item ${isActive('/products') ? 'active' : ''}`}
           >
             <span>🛍️</span> Products
           </Link>
-          <Link 
-            to="/users" 
+          <Link
+            to="/users"
             className={`nav-item ${isActive('/users') ? 'active' : ''}`}
           >
             <span>👥</span> Users
           </Link>
-          <Link 
-            to="/vendors" 
+          <Link
+            to={pendingVendorRequests > 0 ? '/vendors?status=pending' : '/vendors'}
             className={`nav-item ${isActive('/vendors') ? 'active' : ''}`}
           >
-            <span>🏪</span> Vendors
+            <span>🏪</span>
+            <span className="nav-item-label">Vendors</span>
+            {pendingVendorRequests > 0 && (
+              <span
+                className="nav-notify"
+                title={`${pendingVendorRequests} pending vendor request${pendingVendorRequests === 1 ? '' : 's'}`}
+                aria-label={`${pendingVendorRequests} pending vendor requests`}
+              >
+                <span className="nav-notify-icon" aria-hidden="true">
+                  🔔
+                </span>
+                <span className="nav-notify-count">
+                  {pendingVendorRequests > 99 ? '99+' : pendingVendorRequests}
+                </span>
+              </span>
+            )}
           </Link>
           <div className="nav-section-divider"></div>
-          <Link 
-            to="/credits/balances" 
+          <Link
+            to="/credits/balances"
             className={`nav-item ${isActive('/credits') ? 'active' : ''}`}
           >
             <span>💰</span> Credit Balances
           </Link>
-          <Link 
-            to="/credits/transactions" 
+          <Link
+            to="/credits/transactions"
             className={`nav-item ${isActive('/credits/transactions') ? 'active' : ''}`}
           >
             <span>📝</span> Transactions
           </Link>
-          <Link 
-            to="/credits/adjust" 
+          <Link
+            to="/credits/adjust"
             className={`nav-item ${isActive('/credits/adjust') ? 'active' : ''}`}
           >
             <span>⚙️</span> Adjust Credits
           </Link>
           <div className="nav-section-divider"></div>
-          <Link 
-            to="/banners" 
+          <Link
+            to="/banners"
             className={`nav-item ${isActive('/banners') ? 'active' : ''}`}
           >
             <span>🖼️</span> Banners
           </Link>
-          <Link 
-            to="/deals" 
+          <Link
+            to="/deals"
             className={`nav-item ${isActive('/deals') ? 'active' : ''}`}
           >
             <span>🎯</span> Deals
           </Link>
-          <Link 
-            to="/gift-cards" 
+          <Link
+            to="/gift-cards"
             className={`nav-item ${isActive('/gift-cards') ? 'active' : ''}`}
           >
             <span>🎁</span> Gift Cards
           </Link>
-          <Link 
-            to="/coupons" 
+          <Link
+            to="/coupons"
             className={`nav-item ${isActive('/coupons') ? 'active' : ''}`}
           >
             <span>🎫</span> Coupons
           </Link>
-          <Link 
-            to="/reviews" 
+          <Link
+            to="/reviews"
             className={`nav-item ${isActive('/reviews') ? 'active' : ''}`}
           >
             <span>⭐</span> Reviews
           </Link>
           <div className="nav-section-divider"></div>
-          <Link 
-            to="/orders" 
+          <Link
+            to="/orders"
             className={`nav-item ${isActive('/orders') ? 'active' : ''}`}
           >
             <span>📦</span> Orders
@@ -145,7 +194,7 @@ const Layout = ({ children }) => {
             {location.pathname === '/dashboard' && 'Dashboard'}
             {location.pathname.startsWith('/products') && 'Product Management'}
             {location.pathname === '/users' && 'User Management'}
-            {location.pathname === '/vendors' && 'Vendor Management'}
+            {location.pathname.startsWith('/vendors') && 'Vendor Management'}
             {location.pathname.startsWith('/credits/balances') && 'Credit Balances'}
             {location.pathname.startsWith('/credits/transactions') && 'Credit Transactions'}
             {location.pathname.startsWith('/credits/adjust') && 'Adjust Credits'}
@@ -157,13 +206,10 @@ const Layout = ({ children }) => {
             {location.pathname.startsWith('/orders') && 'Order Management'}
           </h1>
         </header>
-        <div className="content-area">
-          {children}
-        </div>
+        <div className="content-area">{children}</div>
       </main>
     </div>
   )
 }
 
 export default Layout
-

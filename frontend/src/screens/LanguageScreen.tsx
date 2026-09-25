@@ -1,43 +1,60 @@
 import {useNavigation} from '@react-navigation/native';
-import React, {useState} from 'react';
+import React from 'react';
 import {
   ScrollView,
   Text,
   TouchableOpacity,
   View,
   StyleSheet,
+  Alert,
+  I18nManager,
 } from 'react-native';
 import {CustomHeader} from '../components';
 import {Colors, Spacing, FontFamilies, r, FontSizes} from '../constants/styles';
+import {useI18n} from '../i18n/I18nContext';
+import {LangCode} from '../i18n/translations';
 
 type Language = {
-  id: string;
-  name: string;
-  code: string;
+  id: LangCode;
+  nameKey: string;
+  code: LangCode;
   nativeName: string;
 };
 
 const LanguageScreen = () => {
   const navigation = useNavigation<any>();
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const {lang, setLang, t} = useI18n();
 
   const GoBack = () => {
     navigation.goBack();
   };
 
   const languages: Language[] = [
-    {id: 'en', name: 'English', code: 'en', nativeName: 'English'},
-    {id: 'ar', name: 'Arabic', code: 'ar', nativeName: 'العربية'},
+    {id: 'en', nameKey: 'english', code: 'en', nativeName: 'English'},
+    {id: 'ar', nameKey: 'arabic', code: 'ar', nativeName: 'العربية'},
   ];
 
-  const handleLanguageSelect = (code: string) => {
-    setSelectedLanguage(code);
+  const handleLanguageSelect = async (code: LangCode) => {
+    if (code === lang) {
+      return;
+    }
+    const wantRTL = code === 'ar';
+    const needsRestart = I18nManager.isRTL !== wantRTL;
+    await setLang(code);
+    if (needsRestart) {
+      Alert.alert(
+        t('language'),
+        code === 'ar'
+          ? 'تم تغيير اللغة. أعد تشغيل التطبيق لتطبيق الاتجاه من اليمين لليسار بالكامل.'
+          : 'Language changed. Restart the app to fully apply left-to-right layout.',
+      );
+    }
   };
 
   return (
     <View style={styles.container}>
       <CustomHeader
-        title="Language"
+        title={t('language')}
         onBackPress={GoBack}
         showBorder={true}
       />
@@ -47,25 +64,25 @@ const LanguageScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          <Text style={styles.title}>Select Language</Text>
-          <Text style={styles.description}>
-            Choose your preferred language for the app interface.
-          </Text>
+          <Text style={styles.title}>{t('selectLanguage')}</Text>
+          <Text style={styles.description}>{t('languageDescription')}</Text>
 
           <View style={styles.languagesContainer}>
-            {languages.map((language) => (
+            {languages.map(language => (
               <TouchableOpacity
                 key={language.id}
                 style={[
                   styles.languageItem,
-                  selectedLanguage === language.code && styles.languageItemSelected,
+                  lang === language.code && styles.languageItemSelected,
                 ]}
                 onPress={() => handleLanguageSelect(language.code)}>
                 <View style={styles.languageContent}>
-                  <Text style={styles.languageName}>{language.name}</Text>
-                  <Text style={styles.languageNativeName}>{language.nativeName}</Text>
+                  <Text style={styles.languageName}>{t(language.nameKey)}</Text>
+                  <Text style={styles.languageNativeName}>
+                    {language.nativeName}
+                  </Text>
                 </View>
-                {selectedLanguage === language.code && (
+                {lang === language.code && (
                   <View style={styles.checkmark}>
                     <Text style={styles.checkmarkText}>✓</Text>
                   </View>
@@ -158,4 +175,3 @@ const styles = StyleSheet.create({
 });
 
 export default LanguageScreen;
-

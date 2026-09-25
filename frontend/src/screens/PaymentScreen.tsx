@@ -20,6 +20,7 @@ import {
   getWalletBalance,
 } from '../services/checkoutService';
 import {requireCheckoutAuth} from '../utils/requireCheckoutAuth';
+import {formatMoneyGrouped, roundMoney} from '../utils/formatMoney';
 
 type ScreenRouteProps = RouteProp<RouteStackParamList, 'Payment'>;
 type ScreenNavigationProps = StackNavigationProp<RouteStackParamList, 'Payment'>;
@@ -44,11 +45,14 @@ const PaymentScreen = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const orderAmount = useMemo(
-    () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    () =>
+      roundMoney(
+        cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+      ),
     [cartItems],
   );
   const shippingFee = orderAmount > 0 ? 10 : 0;
-  const orderTotal = orderAmount + shippingFee;
+  const orderTotal = roundMoney(orderAmount + shippingFee);
 
   useEffect(() => {
     if (!requireCheckoutAuth(isAuthenticated, navigation)) {
@@ -130,8 +134,7 @@ const PaymentScreen = () => {
     );
   };
 
-  const formatNumber = (num: number): string =>
-    num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const formatNumber = (num: number): string => formatMoneyGrouped(num);
 
   return (
     <View style={styles.container}>

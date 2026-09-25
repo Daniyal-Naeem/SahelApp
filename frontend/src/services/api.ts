@@ -38,12 +38,14 @@ const mapProductToFrontend = (backendProduct: any): any => {
       : backendProduct.image 
         ? [backendProduct.image] 
         : [],
-    price: backendProduct.price || 0,
-    priceBeforeDeal: backendProduct.priceBeforeDeal || backendProduct.price || 0,
+    price: Number(Number(backendProduct.price || 0).toFixed(2)),
+    priceBeforeDeal: Number(
+      Number(backendProduct.priceBeforeDeal || backendProduct.price || 0).toFixed(2),
+    ),
     priceOff: backendProduct.priceOff 
       ? typeof backendProduct.priceOff === 'number' 
-        ? backendProduct.priceOff.toFixed(2) 
-        : backendProduct.priceOff
+        ? Number(backendProduct.priceOff).toFixed(2) 
+        : String(backendProduct.priceOff)
       : '0',
     stars: backendProduct.stars || 0,
     numberOfReview: backendProduct.numberOfReview || 0,
@@ -63,10 +65,22 @@ const mapProductToFrontend = (backendProduct: any): any => {
 
 // Map backend category to frontend format
 const mapCategoryToFrontend = (backendCategory: any): any => {
+  const image = backendCategory.image || '';
+  const icon = backendCategory.icon || '';
+  const preferred =
+    typeof image === 'string' &&
+    (image.startsWith('http') || image.startsWith('data:'))
+      ? image
+      : typeof icon === 'string' &&
+          (icon.startsWith('http') || icon.startsWith('data:'))
+        ? icon
+        : image || icon || '';
   return {
     _id: backendCategory._id,
     title: backendCategory.name || '',
-    image: backendCategory.image || backendCategory.icon || '',
+    name: backendCategory.name || '',
+    image: preferred,
+    icon,
     description: backendCategory.description || '',
   };
 };

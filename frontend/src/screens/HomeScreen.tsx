@@ -8,6 +8,7 @@ import SendGiftScreen from './SendGiftScreen';
 
 import {View, Text} from 'react-native';
 import {SvgXml} from 'react-native-svg';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {cartTabIcon} from '../assets/svgs/cartTabIcon';
 import {wishlistTabIcon} from '../assets/svgs/wishlistTabIcon';
 import {activeHeart} from '../assets/svgs/activeHeart';
@@ -16,6 +17,7 @@ import {searchTabIcon} from '../assets/svgs/searchTabIcon';
 import {profileTabIcon} from '../assets/svgs/profileTabIcon';
 import { ItemDetails } from '../constants/types';
 import {FontFamilies, r, Colors} from '../constants/styles';
+import {useI18n} from '../i18n/I18nContext';
 
 type TabBarItemProps = {
   icon: string;
@@ -168,24 +170,29 @@ const HomeStackNavigatorWithNavigation = () => {
 
 const HomeScreen = (_props: Props) => {
   const Tab = createBottomTabNavigator<RouteTabsParamList>();
+  const insets = useSafeAreaInsets();
+  const {t} = useI18n();
+  const bottomInset = Math.max(insets.bottom, r(8));
+  const tabBarHeight = r(56) + bottomInset;
 
   return (
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={{
         headerShown: false,
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: 'white',
           borderTopColor: '#E5E5E5',
           borderTopWidth: r(0.5),
-          height: r(80),           // increased height for icon + label
+          height: tabBarHeight,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: r(-2) },
           shadowOpacity: 0.1,
           shadowRadius: r(4),
           elevation: 5,
-          paddingBottom: r(8),     // space for label
-          paddingTop: r(8),
+          paddingBottom: bottomInset,
+          paddingTop: r(6),
         },
         tabBarIconStyle: {
           justifyContent: 'center',
@@ -204,7 +211,7 @@ const HomeScreen = (_props: Props) => {
         name="Cart"
         component={CartTab}
         options={{
-          tabBarLabel: ({focused}) => <TabBarLabel focused={focused}>Cart</TabBarLabel>,
+          tabBarLabel: ({focused}) => <TabBarLabel focused={focused}>{t('cart')}</TabBarLabel>,
           tabBarIcon: ({ focused }) => <TabBarItem icon={cartTabIcon} focused={focused} />,
         }}
       />
@@ -212,7 +219,7 @@ const HomeScreen = (_props: Props) => {
         name="Wishlist"
         component={WishlistTab}
         options={{
-          tabBarLabel: ({focused}) => <TabBarLabel focused={focused}>Wishlist</TabBarLabel>,
+          tabBarLabel: ({focused}) => <TabBarLabel focused={focused}>{t('wishlist')}</TabBarLabel>,
           tabBarIcon: ({ focused }) => <TabBarItem icon={focused ? activeHeart : wishlistTabIcon} focused={focused} />,
         }}
       />
@@ -228,7 +235,7 @@ const HomeScreen = (_props: Props) => {
         name="Search"
         component={SearchTab}
         options={{
-          tabBarLabel: ({focused}) => <TabBarLabel focused={focused}>Search</TabBarLabel>,
+          tabBarLabel: ({focused}) => <TabBarLabel focused={focused}>{t('search')}</TabBarLabel>,
           tabBarIcon: ({ focused }) => <TabBarItem icon={searchTabIcon} focused={focused} />,
         }}
       />
@@ -236,7 +243,7 @@ const HomeScreen = (_props: Props) => {
         name="Profile"
         component={SettingTab}
         options={{
-          tabBarLabel: ({focused}) => <TabBarLabel focused={focused}>Profile</TabBarLabel>,
+          tabBarLabel: ({focused}) => <TabBarLabel focused={focused}>{t('profile')}</TabBarLabel>,
           tabBarIcon: ({ focused }) => <TabBarItem icon={profileTabIcon} focused={focused} />,
         }}
       />

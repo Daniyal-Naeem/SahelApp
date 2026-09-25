@@ -7,6 +7,7 @@ import {Colors, Spacing, FontFamilies, r, FontSizes} from '../constants/styles';
 import {activeStar} from '../assets/svgs/activeStar';
 import {EmptyStar} from '../assets/svgs/emptyStar';
 import {halfStar} from '../assets/svgs/halfstar';
+import {formatMoney} from '../utils/formatMoney';
 
 type ProductCardProps = {
   itemDetails: ItemDetails;
@@ -15,9 +16,7 @@ type ProductCardProps = {
 };
 
 const ProductCard = ({itemDetails, showTotalItem = false, totalItems = 1}: ProductCardProps) => {
-  const formatNumber = (num: number): string => {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  };
+  const formatNumber = (num: number): string => formatMoney(num);
 
   const renderStars = (rating: number) => {
     const normalizedRating = Math.max(0, Math.min(5, rating || 0));

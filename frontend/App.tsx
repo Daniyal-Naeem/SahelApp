@@ -30,6 +30,7 @@ import {
 import GetStartedScreen from './src/screens/GetStartedScreen';
 import VendorProductsScreen from './src/screens/VendorProductsScreen';
 import VendorAddProductScreen from './src/screens/VendorAddProductScreen';
+import BuyCreditsScreen from './src/screens/BuyCreditsScreen';
 import {ItemDetails} from './src/constants/types';
 import {getItem, setItem} from './src/utils/AsyncStorage';
 import {ActivityIndicator, View, StyleSheet, Platform, StatusBar} from 'react-native';
@@ -41,6 +42,7 @@ import CustomDrawerContent from './src/components/CustomDrawerContent';
 import {ToastProvider} from 'react-native-toast-notifications';
 import {hydrateSession} from './src/services/session';
 import {CartItem} from './src/store/cartSlice';
+import {I18nProvider} from './src/i18n/I18nContext';
 
 export type RouteStackParamList = {
   Onboarding: undefined;
@@ -62,6 +64,7 @@ export type RouteStackParamList = {
   Support: undefined;
   Language: undefined;
   Gifts: undefined;
+  BuyCredits: undefined;
   Orders: undefined;
   OrderDetails: {order: any} | undefined;
   VendorProducts: undefined;
@@ -107,6 +110,11 @@ const DrawerNavigator = () => (
       name="Gifts"
       component={GiftScreen}
       options={{title: 'Gifts'}}
+    />
+    <Drawer.Screen
+      name="BuyCredits"
+      component={BuyCreditsScreen}
+      options={{title: 'Buy Credits'}}
     />
     <Drawer.Screen
       name="Orders"
@@ -197,6 +205,7 @@ const RootNavigator = () => {
         <Stack.Screen name="Support" component={SupportScreen} />
         <Stack.Screen name="Language" component={LanguageScreen} />
         <Stack.Screen name="Gifts" component={GiftScreen} />
+        <Stack.Screen name="BuyCredits" component={BuyCreditsScreen} />
         <Stack.Screen name="Orders" component={OrdersScreen} />
         <Stack.Screen name="OrderDetails" component={OrderDetailsScreen} />
         <Stack.Screen name="VendorProducts" component={VendorProductsScreen} />
@@ -213,17 +222,19 @@ const App = () => {
   return (
     <SafeAreaProvider>
       <Provider store={store}>
-        <ProductsProvider>
-          <ToastProvider
-            placement="bottom"
-            offsetBottom={50}
-            swipeEnabled={true}
-            normalColor="#333">
-            <GestureHandlerRootView style={{flex: 1}}>
-              <RootNavigator />
-            </GestureHandlerRootView>
-          </ToastProvider>
-        </ProductsProvider>
+        <I18nProvider>
+          <ProductsProvider>
+            <ToastProvider
+              placement="bottom"
+              offsetBottom={50}
+              swipeEnabled={true}
+              normalColor="#333">
+              <GestureHandlerRootView style={{flex: 1}}>
+                <RootNavigator />
+              </GestureHandlerRootView>
+            </ToastProvider>
+          </ProductsProvider>
+        </I18nProvider>
       </Provider>
     </SafeAreaProvider>
   );

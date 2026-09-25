@@ -28,6 +28,7 @@ import {useAppDispatch, useAppSelector} from '../store';
 import {addToCart} from '../store/cartSlice';
 import {requireCheckoutAuth} from '../utils/requireCheckoutAuth';
 import {getProductById} from '../services/productService';
+import {formatMoney} from '../utils/formatMoney';
 import {activeStar} from '../assets/svgs/activeStar';
 import {inactiveStar} from '../assets/svgs/inactiveStar';
 import {halfStar} from '../assets/svgs/halfstar';
@@ -561,10 +562,10 @@ const ProductsDetailsScreen = () => {
         <View style={styles.priceRow}>
           <View style={styles.priceContainer}>
             <Text style={styles.price}>
-              {currency} {itemDetails?.price}
+              {currency} {formatMoney(itemDetails?.price)}
             </Text>
             <Text style={styles.priceBeforeDeal}>
-              {currency} {itemDetails?.priceBeforeDeal}
+              {currency} {formatMoney(itemDetails?.priceBeforeDeal)}
             </Text>
           </View>
           <View style={styles.discountBadge}>
@@ -763,7 +764,7 @@ const ProductsDetailsScreen = () => {
                       </View>
                     </View>
                     <Text style={styles.deliveryPrice}>
-                      {currency} {option.price}
+                      {currency} {formatMoney(option.price)}
                     </Text>
                   </TouchableOpacity>
                 ),

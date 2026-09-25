@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { adminAPI } from '../services/api'
 import './VendorsPage.css'
 
 const VendorsPage = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [vendors, setVendors] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState(
+    searchParams.get('status') === 'pending' ? 'pending' : '',
+  )
   const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, totalVendors: 0 })
   const [rejectReason, setRejectReason] = useState('')
   const [rejectingId, setRejectingId] = useState(null)

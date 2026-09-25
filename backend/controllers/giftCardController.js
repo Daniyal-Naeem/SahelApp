@@ -17,8 +17,14 @@ const getGiftCards = async (req, res) => {
         const userId = req.user?.userId
 
         let query = {}
-        if (userRole === 'user') {
-            query.assignedTo = userId
+        if (userRole !== 'admin') {
+            query = {
+                $or: [
+                    { assignedTo: userId },
+                    { purchasedBy: userId },
+                    { redeemedBy: userId }
+                ]
+            }
         }
 
         const giftCards = await giftCardModel.find(query)
@@ -275,6 +281,84 @@ const deleteGiftCard = async (req, res) => {
     }
 }
 
+/**
+ * POST /api/gift-cards/send
+ * Send digital gift credits to another user by email (deducts from sender wallet).
+ */
+const sendGiftCard = async (req, res) => {
+    try {
+        const senderId = req.user.userId
+        const { email, amount, message } = req.body
+        const giftAmount = parseFloat(amount)
+
+        if (!email || !giftAmount || giftAmount <= 0) {
+            return res.status(400).json({ error: 'email and a positive amount are required' })
+        }
+
+        const recipient = await userModel.findOne({ email: String(email).toLowerCase().trim() })
+        if (!recipient) {
+            return res.status(404).json({ error: 'Recipient not found. They must have a Sahal account.' })
+        }
+        if (String(recipient._id) === String(senderId)) {
+            return res.status(400).json({ error: 'You cannot send a gift to yourself' })
+        }
+
+        const { syncUserWallet } = require('../utils/walletSync')
+        const walletModel = require('../models/walletModel')
+        const creditTransactionModel = require('../models/creditTransactionModel')
+
+        await syncUserWallet(senderId)
+        const senderWallet = await walletModel.findOne({ userId: senderId })
+        if (!senderWallet || Number(senderWallet.balance) < giftAmount) {
+            return res.status(400).json({ error: 'Insufficient wallet credits' })
+        }
+
+        senderWallet.balance = Number(senderWallet.balance) - giftAmount
+        await senderWallet.save()
+        await userModel.findByIdAndUpdate(senderId, { credits: senderWallet.balance })
+
+        const expiresAt = new Date()
+        expiresAt.setMonth(expiresAt.getMonth() + 6)
+
+        const giftCard = await giftCardModel.create({
+            amount: giftAmount,
+            currency: 'SAR',
+            type: 'digital',
+            status: 'active',
+            assignedTo: recipient._id,
+            purchasedBy: senderId,
+            expiresAt,
+            createdBy: senderId,
+            maxUses: 1
+        })
+
+        await creditTransactionModel.create({
+            user: senderId,
+            type: 'transfer',
+            amount: giftAmount,
+            balanceAfter: senderWallet.balance,
+            description: message
+                ? `Gift to ${recipient.email}: ${message}`
+                : `Gift to ${recipient.email}`,
+            status: 'completed',
+            meta: { giftCardId: giftCard._id, recipientId: recipient._id }
+        })
+
+        return res.status(200).json({
+            message: 'Gift sent successfully',
+            giftCard: {
+                code: giftCard.code,
+                amount: giftCard.amount,
+                assignedTo: { email: recipient.email, name: recipient.name },
+                expiresAt: giftCard.expiresAt
+            },
+            balance: senderWallet.balance
+        })
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+}
+
 module.exports = {
     getGiftCards,
     getGiftCardById,
@@ -283,7 +367,8 @@ module.exports = {
     createBulkGiftCards,
     redeemGiftCard,
     updateGiftCard,
-    deleteGiftCard
+    deleteGiftCard,
+    sendGiftCard
 }
 
 

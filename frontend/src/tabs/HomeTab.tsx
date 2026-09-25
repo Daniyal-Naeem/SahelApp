@@ -27,7 +27,25 @@ import {filterIcon} from '../assets/svgs/filter';
 import {sortIcon} from '../assets/svgs/sortIcon';
 import {api} from '../services/api';
 import {useAppSelector} from '../store';
+import {useI18n} from '../i18n/I18nContext';
 
+const CATEGORY_FALLBACK =
+  'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=200&h=200&fit=crop';
+
+const resolveCategoryVisual = (image?: string, icon?: string) => {
+  const candidates = [image, icon].filter(Boolean) as string[];
+  for (const c of candidates) {
+    if (c.startsWith('http://') || c.startsWith('https://') || c.startsWith('data:')) {
+      return {kind: 'uri' as const, value: c};
+    }
+  }
+  // Emoji / short icon string — render as text, not FastImage URI
+  const emoji = candidates.find(c => c.length > 0 && c.length <= 8 && !c.includes('/'));
+  if (emoji) {
+    return {kind: 'emoji' as const, value: emoji};
+  }
+  return {kind: 'uri' as const, value: CATEGORY_FALLBACK};
+};
 type Props = {};
 
 const HomeTab = (_props: Props) => {
@@ -53,6 +71,7 @@ const HomeTab = (_props: Props) => {
   const [products, setProducts] = useState<ProductTypes[]>([]);
   const [categories, setCategories] = useState<any[]>(CategoriesData);
   const [loading, setLoading] = useState(true);
+  const {t} = useI18n();
 
   const loadCatalogue = useCallback(async () => {
     setLoading(true);
@@ -64,11 +83,15 @@ const HomeTab = (_props: Props) => {
       if (prods.length) setProducts(prods);
       if (cats.length) {
         setCategories(
-          cats.map((c: any) => ({
-            id: c._id,
-            title: c.title || c.name,
-            image: c.image || c.icon || '',
-          })),
+          cats.map((c: any) => {
+            const visual = resolveCategoryVisual(c.image, c.icon);
+            return {
+              id: c._id,
+              title: c.title || c.name,
+              image: visual.kind === 'uri' ? visual.value : undefined,
+              emoji: visual.kind === 'emoji' ? visual.value : undefined,
+            };
+          }),
         );
       }
     } catch {
@@ -140,12 +163,12 @@ const HomeTab = (_props: Props) => {
       {/* greeting */}
       <View style={styles.greetingContainer}>
         <Text style={styles.greetingText}>
-          Hello, {user?.name?.split(' ')[0] || 'there'}!!
+          {t('hello')}, {user?.name?.split(' ')[0] || 'there'}!!
         </Text>
       </View>
       {/* categories section */}
       <View style={styles.categoriesHeaderContainer}>
-        <Text style={styles.categoriesTitle}>Categories</Text>
+        <Text style={styles.categoriesTitle}>{t('categories')}</Text>
         <View style={styles.categoriesButtons}>
           {FeaturesData.map(item => (
             <TouchableOpacity
@@ -175,10 +198,24 @@ const HomeTab = (_props: Props) => {
               <TouchableOpacity
                 onPress={() => handleSelectCategory(item.title)}
                 style={styles.categoryTouchable}>
-                <FastImage
-                  source={{uri: item.image}}
-                  style={styles.categoryImage}
-                />
+                {item.emoji ? (
+                  <View style={[styles.categoryImage, styles.categoryEmojiWrap]}>
+                    <Text style={styles.categoryEmoji}>{item.emoji}</Text>
+                  </View>
+                ) : (
+                  <FastImage
+                    source={{
+                      uri:
+                        (typeof item.image === 'string' &&
+                        (item.image.startsWith('http') ||
+                          item.image.startsWith('data:'))
+                          ? item.image
+                          : CATEGORY_FALLBACK),
+                    }}
+                    style={styles.categoryImage}
+                    resizeMode={FastImage.resizeMode.cover}
+                  />
+                )}
                 <Text
                   style={styles.categoryText}
                   numberOfLines={2}
@@ -425,6 +462,14 @@ const styles = StyleSheet.create({
     height: r(62),
     borderRadius: r(31), // Half of width/height for perfect circle
     alignSelf: 'center',
+    backgroundColor: '#F3F4F6',
+  },
+  categoryEmojiWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryEmoji: {
+    fontSize: r(28),
   },
   categoryText: {
     color: 'rgba(0, 0, 0, 0.8)',

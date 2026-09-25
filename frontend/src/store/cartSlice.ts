@@ -21,8 +21,12 @@ const initialState: CartState = {
   itemCount: 0,
 };
 
+const roundMoney = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
 const calculateTotal = (items: CartItem[]): number => {
-  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  return roundMoney(
+    items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+  );
 };
 
 const calculateItemCount = (items: CartItem[]): number => {

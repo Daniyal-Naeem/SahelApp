@@ -20,6 +20,8 @@ import {Colors, Spacing, FontSizes, FontFamilies, r} from '../constants/styles';
 import {useAppDispatch, useAppSelector} from '../store';
 import {getMe, updateProfile, getCreditBalance} from '../services/authService';
 import {setUser} from '../store/authSlice';
+import {useI18n} from '../i18n/I18nContext';
+import {formatMoney} from '../utils/formatMoney';
 
 type Props = {};
 
@@ -28,6 +30,7 @@ const SettingTab = (_props: Props) => {
   const route = useRoute();
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
+  const {t} = useI18n();
   const authUser = useAppSelector(state => state.auth.user);
   const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -89,6 +92,7 @@ const SettingTab = (_props: Props) => {
           pincode: (user as any).address?.zipCode || '',
         }));
         if ((user as any).avatar) setProfileImage((user as any).avatar);
+        else if ((user as any).profilePicture) setProfileImage((user as any).profilePicture);
         const bal = await getCreditBalance();
         setCredits(bal);
       } catch {
@@ -132,24 +136,33 @@ const SettingTab = (_props: Props) => {
 
   const openImagePicker = (source: 'camera' | 'gallery') => {
     const options = {
-      width: 400,
-      height: 400,
+      width: 320,
+      height: 320,
       cropping: true,
       cropperCircleOverlay: true,
       cropperToolbarTitle: 'Crop Profile Picture',
       cropperChooseText: 'Choose',
       cropperCancelText: 'Cancel',
-      compressImageQuality: 0.8,
-      includeBase64: false,
+      compressImageQuality: 0.55,
+      includeBase64: true,
       forceJpg: true,
+      mediaType: 'photo' as const,
+    };
+
+    const applyImage = (image: {path: string; data?: string | null; mime?: string}) => {
+      // Persistable URI for MongoDB — local file paths disappear after restart.
+      if (image.data) {
+        const mime = image.mime || 'image/jpeg';
+        setProfileImage(`data:${mime};base64,${image.data}`);
+      } else {
+        setProfileImage(image.path);
+      }
     };
 
     try {
       if (source === 'camera') {
         ImagePicker.openCamera(options)
-          .then((image) => {
-            setProfileImage(image.path);
-          })
+          .then(applyImage)
           .catch((error) => {
             if (error.code !== 'E_PICKER_CANCELLED') {
               if (error.code === 'E_PERMISSION_MISSING' || error.message?.includes('permission')) {
@@ -162,9 +175,7 @@ const SettingTab = (_props: Props) => {
           });
       } else {
         ImagePicker.openPicker(options)
-          .then((image) => {
-            setProfileImage(image.path);
-          })
+          .then(applyImage)
           .catch((error) => {
             if (error.code !== 'E_PICKER_CANCELLED') {
               if (error.code === 'E_PERMISSION_MISSING' || error.message?.includes('permission')) {
@@ -253,7 +264,14 @@ const SettingTab = (_props: Props) => {
           <Text style={styles.sectionTitle}>
             Personal Details
           </Text>
-          <Text style={styles.creditsLine}>Wallet: SAR {credits.toFixed(2)}</Text>
+          <Text style={styles.creditsLine}>
+            {t('wallet')}: SAR {formatMoney(credits)}
+          </Text>
+          <TouchableOpacity
+            style={styles.buyCreditsBtn}
+            onPress={() => navigation.navigate('BuyCredits' as any)}>
+            <Text style={styles.buyCreditsBtnText}>{t('buyCredits')}</Text>
+          </TouchableOpacity>
           <FormField
             title="Name"
             value={form.name}
@@ -632,6 +650,19 @@ const styles = StyleSheet.create({
     fontFamily: FontFamilies.mmedium,
     color: Colors.primary,
     marginBottom: Spacing[3],
+  },
+  buyCreditsBtn: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing[4],
+    paddingVertical: Spacing[2],
+    borderRadius: r(8),
+    marginBottom: Spacing[4],
+  },
+  buyCreditsBtnText: {
+    color: Colors.white,
+    fontFamily: FontFamilies.msemibold,
+    fontSize: FontSizes.sm,
   },
   section: {
     marginTop: Spacing[6],

@@ -12,6 +12,7 @@ import {halfStar} from '../assets/svgs/halfstar';
 import {inactiveStar} from '../assets/svgs/inactiveStar';
 import {useAppSelector, useAppDispatch} from '../store';
 import {toggleWishlist} from '../store/wishlistSlice';
+import {formatMoney} from '../utils/formatMoney';
 
 type ProductItemProps = {
   image: string;
@@ -160,12 +161,12 @@ const ProductItem = ({
         </Text>
         <View style={styles.priceRow}>
           <Text style={styles.price}>
-            {currency} {price}
+            {currency} {formatMoney(price)}
           </Text>
         </View>
         <View style={styles.priceContainer}>
           <Text style={styles.priceBeforeDeal}>
-            {currency} {priceBeforeDeal}
+            {currency} {formatMoney(priceBeforeDeal)}
           </Text>
           <Text style={styles.priceOff}>{priceOff}Off</Text>
         </View>
